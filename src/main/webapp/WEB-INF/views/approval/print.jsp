@@ -1,10 +1,11 @@
-<%@ page contentType="text/html; charset=UTF-8" %>
-
 <html>
 <head>
+<%@ page contentType="text/html; charset=UTF-8" %>
+
     <title>결재 문서</title>
 </head>
 <body>
+<jsp:include page="../includes/admin_header.jsp" />
 
 <h2>전자결재 문서</h2>
 

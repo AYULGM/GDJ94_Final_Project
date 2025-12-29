@@ -83,6 +83,11 @@
                 <p>결재 작성</p>
               </a>
             </li>
+            <li class="nav-item">
+              <a href="/approval/signature_saved" class="nav-link">
+                <p>서명창</p>
+              </a>
+            </li>
           </ul>
         </li>
 
