@@ -1,10 +1,8 @@
 package com.health.app.inventory.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class OptionDto {
     private Long id;
     private String name;

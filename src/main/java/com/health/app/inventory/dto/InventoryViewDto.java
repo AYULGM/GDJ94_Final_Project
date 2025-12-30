@@ -1,13 +1,10 @@
 package com.health.app.inventory.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
-@Getter
-@Setter
-@ToString
+@Data
 public class InventoryViewDto {
+
     private Long inventoryId;
 
     private Long branchId;
@@ -18,12 +15,6 @@ public class InventoryViewDto {
 
     private Long quantity;
 
-    private Long lowStockThreshold;
-    private Long reorderPoint;
-
-    // 기준수량 (지점 기준 우선, 없으면 상품 기준)
-    private Long thresholdValue;
-
-    // 부족 여부 (0/1)
-    private Integer lowStock;
+    private Long thresholdValue;   // 화면용 기준 수량
+    private Integer lowStock;      // 1=부족, 0=정상
 }

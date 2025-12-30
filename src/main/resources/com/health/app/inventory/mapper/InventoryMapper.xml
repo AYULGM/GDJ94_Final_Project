@@ -5,220 +5,262 @@
 
 <mapper namespace="com.health.app.inventory.mapper.InventoryMapper">
 
-    <!-- 재고 현황 조회 -->
+    <!-- =========================================================
+         1) 재고 목록 조회 (리스트)
+         - 기준수량(thresholdValue), 부족여부(lowStock) 계산
+       ========================================================= -->
     <select id="selectInventoryList"
+            parameterType="map"
             resultType="com.health.app.inventory.dto.InventoryViewDto">
-        <![CDATA[
+
         SELECT
-            i.inventory_id        AS inventoryId,
-            i.branch_id           AS branchId,
-            b.branch_name         AS branchName,
-            i.product_id          AS productId,
-            p.product_name        AS productName,
+        i.inventory_id      AS inventoryId,
+        i.branch_id         AS branchId,
+        b.branch_name       AS branchName,
+        i.product_id        AS productId,
+        p.product_name      AS productName,
+        i.quantity          AS quantity,
 
-            i.quantity            AS quantity,
-            i.low_stock_threshold AS lowStockThreshold,
-            p.reorder_point       AS reorderPoint,
+        CASE
+        WHEN i.low_stock_threshold IS NULL OR i.low_stock_threshold = 0
+        THEN p.reorder_point
+        ELSE i.low_stock_threshold
+        END AS thresholdValue,
 
-            CASE
+        CASE
+        WHEN i.quantity &lt;=
+        CASE
+        WHEN i.low_stock_threshold IS NULL OR i.low_stock_threshold = 0
+        THEN p.reorder_point
+        ELSE i.low_stock_threshold
+        END
+        THEN 1
+        ELSE 0
+        END AS lowStock
+
+        FROM inventory i
+        JOIN branch  b ON b.branch_id  = i.branch_id
+        JOIN product p ON p.product_id = i.product_id
+
+        <where>
+            AND i.use_yn = 1
+            AND b.use_yn = 1
+            AND p.use_yn = 1
+
+            <if test="branchId != null and branchId != 0">
+                AND i.branch_id = #{branchId}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                AND p.product_name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+
+            <if test="onlyLowStock != null and onlyLowStock == true">
+                AND i.quantity &lt;=
+                CASE
                 WHEN i.low_stock_threshold IS NULL OR i.low_stock_threshold = 0
                 THEN p.reorder_point
                 ELSE i.low_stock_threshold
-            END AS thresholdValue,
-
-            CASE
-                WHEN i.quantity <= CASE
-                    WHEN i.low_stock_threshold IS NULL OR i.low_stock_threshold = 0
-                    THEN p.reorder_point
-                    ELSE i.low_stock_threshold
                 END
-                THEN 1 ELSE 0
-            END AS lowStock
-
-        FROM inventory i
-        JOIN branch b  ON b.branch_id  = i.branch_id
-        JOIN product p ON p.product_id = i.product_id
-        ]]>
-        <where>
-            <if test="branchId != null">
-                <![CDATA[ i.branch_id = #{branchId} ]]>
-            </if>
-
-            <if test="keyword != null and keyword != ''">
-                <![CDATA[
-                AND (
-                    p.product_name LIKE CONCAT('%', #{keyword}, '%')
-                    OR b.branch_name LIKE CONCAT('%', #{keyword}, '%')
-                )
-                ]]>
-            </if>
-
-            <if test="onlyLowStock == true">
-                <![CDATA[
-                AND i.quantity <= CASE
-                    WHEN i.low_stock_threshold IS NULL OR i.low_stock_threshold = 0
-                    THEN p.reorder_point
-                    ELSE i.low_stock_threshold
-                END
-                ]]>
             </if>
         </where>
-        <![CDATA[
+
         ORDER BY lowStock DESC, i.quantity ASC, p.product_name ASC
-        ]]>
     </select>
 
-    <!-- 특정 지점 + 상품 재고 조회 -->
-    <select id="selectInventoryOne"
-            resultType="com.health.app.inventory.dto.InventoryViewDto">
-        <![CDATA[
-        SELECT
-            i.inventory_id        AS inventoryId,
-            i.branch_id           AS branchId,
-            b.branch_name         AS branchName,
-            i.product_id          AS productId,
-            p.product_name        AS productName,
-            i.quantity            AS quantity,
-            i.low_stock_threshold AS lowStockThreshold,
-            p.reorder_point       AS reorderPoint
-        FROM inventory i
-        JOIN branch b  ON b.branch_id  = i.branch_id
-        JOIN product p ON p.product_id = i.product_id
-        WHERE i.branch_id = #{branchId}
-          AND i.product_id = #{productId}
-        ]]>
-    </select>
 
-    <!-- 재고 행 생성(없으면) -->
-    <insert id="insertInventoryIfAbsent">
-        <![CDATA[
-        INSERT INTO inventory (
-            branch_id,
-            product_id,
-            quantity,
-            low_stock_threshold
-        )
-        SELECT
-            #{branchId},
-            #{productId},
-            #{quantity},
-            #{lowStockThreshold}
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM inventory
-            WHERE branch_id = #{branchId}
-              AND product_id = #{productId}
-        )
-        ]]>
-    </insert>
-
-    <!-- 재고 수량 증감 -->
-    <update id="updateInventoryQuantity">
-        <![CDATA[
-        UPDATE inventory
-        SET quantity = quantity + #{delta}
-        WHERE branch_id = #{branchId}
-          AND product_id = #{productId}
-        ]]>
-    </update>
-
-    <!-- 재고 이동 이력 저장 -->
-    <insert id="insertInventoryHistory">
-        <![CDATA[
-        INSERT INTO inventory_history (
-            branch_id,
-            product_id,
-            move_type,
-            quantity,
-            reason,
-            create_user,
-            create_date,
-            ref_type,
-            ref_id
-        ) VALUES (
-            #{branchId},
-            #{productId},
-            #{moveType},
-            #{quantity},
-            #{reason},
-            #{createUser},
-            NOW(),
-            #{refType},
-            #{refId}
-        )
-        ]]>
-    </insert>
-
-    <!-- 재고 이동 이력 조회 -->
-    <select id="selectInventoryHistory"
-            resultType="com.health.app.inventory.dto.InventoryHistoryViewDto">
-        <![CDATA[
-        SELECT
-            h.inventory_history_id AS inventoryHistoryId,
-            h.branch_id            AS branchId,
-            b.branch_name          AS branchName,
-            h.product_id           AS productId,
-            p.product_name         AS productName,
-            h.move_type            AS moveType,
-            h.quantity             AS quantity,
-            h.reason               AS reason,
-            h.create_user          AS createUser,
-            h.create_date          AS createDate,
-            h.ref_type             AS refType,
-            h.ref_id               AS refId
-        FROM inventory_history h
-        JOIN branch b  ON b.branch_id  = h.branch_id
-        JOIN product p ON p.product_id = h.product_id
-        ]]>
-        <where>
-            <if test="branchId != null">
-                <![CDATA[ h.branch_id = #{branchId} ]]>
-            </if>
-
-            <if test="keyword != null and keyword != ''">
-                <![CDATA[
-                AND (
-                    p.product_name LIKE CONCAT('%', #{keyword}, '%')
-                    OR b.branch_name LIKE CONCAT('%', #{keyword}, '%')
-                    OR h.reason LIKE CONCAT('%', #{keyword}, '%')
-                )
-                ]]>
-            </if>
-
-            <if test="moveType != null and moveType != ''">
-                <![CDATA[ AND h.move_type = #{moveType} ]]>
-            </if>
-
-            <if test="refType != null and refType != ''">
-                <![CDATA[ AND h.ref_type = #{refType} ]]>
-            </if>
-        </where>
-        <![CDATA[
-        ORDER BY h.inventory_history_id DESC
-        LIMIT 500
-        ]]>
-    </select>
-
-    <!-- 지점 옵션 -->
+    <!-- =========================================================
+         2) 지점 옵션
+       ========================================================= -->
     <select id="selectBranchOptions"
             resultType="com.health.app.inventory.dto.OptionDto">
-        <![CDATA[
-        SELECT branch_id AS id, branch_name AS name
+
+        SELECT
+        branch_id   AS id,
+        branch_name AS name
         FROM branch
-        WHERE use_yn = TRUE
+        WHERE use_yn = 1
         ORDER BY branch_name ASC
-        ]]>
     </select>
 
-    <!-- 상품 옵션 -->
+
+    <!-- =========================================================
+         3) 상품 옵션 (선택)
+       ========================================================= -->
     <select id="selectProductOptions"
+            parameterType="map"
             resultType="com.health.app.inventory.dto.OptionDto">
-        <![CDATA[
-        SELECT product_id AS id, product_name AS name
-        FROM product
-        WHERE use_yn = TRUE
-        ORDER BY product_name ASC
-        ]]>
+
+        SELECT
+        p.product_id   AS id,
+        p.product_name AS name
+        FROM product p
+        WHERE p.use_yn = 1
+
+        <if test="branchId != null and branchId != 0">
+            AND EXISTS (
+            SELECT 1
+            FROM inventory i
+            WHERE i.product_id = p.product_id
+            AND i.branch_id  = #{branchId}
+            AND i.use_yn     = 1
+            )
+        </if>
+
+        ORDER BY p.product_name ASC
     </select>
+
+
+    <!-- =========================================================
+         4) 재고 상세 조회 (정석: 상세 DTO)
+         - raw + 계산 값 제공
+       ========================================================= -->
+    <select id="selectInventoryDetail"
+            parameterType="map"
+            resultType="com.health.app.inventory.dto.InventoryDetailDto">
+
+        SELECT
+        i.branch_id           AS branchId,
+        b.branch_name         AS branchName,
+        i.product_id          AS productId,
+        p.product_name        AS productName,
+
+        i.quantity            AS quantity,
+
+        i.low_stock_threshold AS lowStockThreshold,
+        p.reorder_point       AS reorderPoint,
+
+        CASE
+        WHEN i.low_stock_threshold IS NULL OR i.low_stock_threshold = 0
+        THEN p.reorder_point
+        ELSE i.low_stock_threshold
+        END AS standardQuantity,
+
+        CASE
+        WHEN i.quantity &lt;=
+        CASE
+        WHEN i.low_stock_threshold IS NULL OR i.low_stock_threshold = 0
+        THEN p.reorder_point
+        ELSE i.low_stock_threshold
+        END
+        THEN 1
+        ELSE 0
+        END AS lowStock
+
+        FROM inventory i
+        JOIN branch  b ON b.branch_id  = i.branch_id
+        JOIN product p ON p.product_id = i.product_id
+
+        WHERE i.use_yn = 1
+        AND b.use_yn = 1
+        AND p.use_yn = 1
+        AND i.branch_id  = #{branchId}
+        AND i.product_id = #{productId}
+    </select>
+
+
+    <!-- =========================================================
+         5) 재고 이력 조회
+       ========================================================= -->
+    <select id="selectInventoryHistory"
+            parameterType="map"
+            resultType="com.health.app.inventory.dto.InventoryHistoryViewDto">
+
+        SELECT
+        h.inventory_history_id AS inventoryHistoryId,
+
+        h.branch_id            AS branchId,
+        b.branch_name          AS branchName,
+        h.product_id           AS productId,
+        p.product_name         AS productName,
+
+        h.move_type_code       AS moveTypeCode,
+        h.quantity             AS quantity,
+        h.reason               AS reason,
+        h.ref_type             AS refType,
+        h.ref_id               AS refId,
+
+        h.create_user          AS createUser,
+        h.create_date          AS createDate,
+        h.update_user          AS updateUser,
+        h.update_date          AS updateDate
+
+        FROM inventory_history h
+        JOIN branch  b ON b.branch_id  = h.branch_id
+        JOIN product p ON p.product_id = h.product_id
+
+        <where>
+            AND h.use_yn = 1
+            AND b.use_yn = 1
+            AND p.use_yn = 1
+
+            <if test="branchId != null and branchId != 0">
+                AND h.branch_id = #{branchId}
+            </if>
+
+            <if test="productId != null and productId != 0">
+                AND h.product_id = #{productId}
+            </if>
+        </where>
+
+        ORDER BY h.create_date DESC, h.inventory_history_id DESC
+    </select>
+
+
+    <!-- =========================================================
+         6) 재고 수량 업데이트
+       ========================================================= -->
+    <update id="updateInventoryQuantity" parameterType="map">
+        UPDATE inventory
+        SET
+        quantity = #{quantity}
+        <if test="lowStockThreshold != null">
+            , low_stock_threshold = #{lowStockThreshold}
+        </if>
+        <if test="updateUser != null">
+            , update_user = #{updateUser}
+        </if>
+        , update_date = NOW()
+        WHERE use_yn = 1
+        AND branch_id  = #{branchId}
+        AND product_id = #{productId}
+    </update>
+
+
+    <!-- =========================================================
+         7) 재고 이력 INSERT
+       ========================================================= -->
+    <insert id="insertInventoryHistory" parameterType="map">
+        INSERT INTO inventory_history
+        (
+        branch_id,
+        product_id,
+        move_type_code,
+        quantity,
+        reason,
+        ref_type,
+        ref_id,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        )
+        VALUES
+        (
+        #{branchId},
+        #{productId},
+        #{moveTypeCode},
+        #{quantity},
+        #{reason},
+        #{refType},
+        #{refId},
+        #{createUser},
+        NOW(),
+        #{createUser},
+        NOW(),
+        1
+        )
+    </insert>
 
 </mapper>
