@@ -1,45 +1,79 @@
 package com.health.app.inventory;
 
+import com.health.app.inventory.dto.InventoryDetailDto;
+import com.health.app.inventory.dto.InventoryHistoryViewDto;
 import com.health.app.inventory.dto.InventoryViewDto;
 import com.health.app.inventory.dto.OptionDto;
 import com.health.app.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
 @Controller
-@RequestMapping("/inventory")
 @RequiredArgsConstructor
 public class InventoryController {
 
     private final InventoryService inventoryService;
 
-    @GetMapping
+    // 목록
+    @GetMapping("/inventory")
     public String inventoryList(
             @RequestParam(required = false) Long branchId,
-            @RequestParam(required = false, defaultValue = "") String keyword,
-            @RequestParam(required = false, defaultValue = "false") boolean onlyLowStock,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Boolean onlyLowStock,
             Model model
     ) {
-        model.addAttribute("pageTitle", "재고 관리");
+        List<OptionDto> branches = inventoryService.getBranchOptions();
+        List<InventoryViewDto> list = inventoryService.getInventoryList(branchId, keyword, onlyLowStock);
 
-        List<OptionDto> branchOptions = inventoryService.getBranchOptions();
-        List<InventoryViewDto> inventoryList =
-                inventoryService.getInventoryList(branchId, keyword, onlyLowStock);
+        model.addAttribute("branches", branches);
+        model.addAttribute("list", list);
 
-        model.addAttribute("branchOptions", branchOptions);
-        model.addAttribute("inventoryList", inventoryList);
-
-        // 검색값 유지
         model.addAttribute("branchId", branchId);
         model.addAttribute("keyword", keyword);
         model.addAttribute("onlyLowStock", onlyLowStock);
 
         return "inventory/list";
+    }
+
+    // 상세 + 이력
+    @GetMapping("/inventory/detail")
+    public String inventoryDetail(
+            @RequestParam Long branchId,
+            @RequestParam Long productId,
+            Model model
+    ) {
+        InventoryDetailDto detail = inventoryService.getInventoryDetail(branchId, productId);
+        List<InventoryHistoryViewDto> history = inventoryService.getInventoryHistory(branchId, productId);
+
+        model.addAttribute("detail", detail);
+        model.addAttribute("history", history);
+
+        return "inventory/detail";
+    }
+
+    // 재고 조정(입고/출고/조정)
+    @PostMapping("/inventory/adjust")
+    public String adjustInventory(
+            @RequestParam Long branchId,
+            @RequestParam Long productId,
+            @RequestParam String moveTypeCode,
+            @RequestParam Long quantity,
+            @RequestParam String reason,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            // TODO: 로그인 사용자 ID 연동 시 교체
+            Long userId = 1L;
+            inventoryService.adjustInventory(branchId, productId, moveTypeCode, quantity, reason, userId);
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+
+        return "redirect:/inventory/detail?branchId=" + branchId + "&productId=" + productId;
     }
 }
