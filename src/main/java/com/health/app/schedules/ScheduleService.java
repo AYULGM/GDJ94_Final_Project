@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import com.health.app.schedules.ScheduleStatus;
+import com.health.app.schedules.search.AttendeeSearchDto;
 import com.health.app.schedules.AttendanceStatus;
 import com.health.app.files.FileService;
 import com.health.app.attachments.AttachmentLinkRepository; // AttachmentLinkRepository 임포트
