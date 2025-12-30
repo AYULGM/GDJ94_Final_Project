@@ -1,4 +1,4 @@
-# GEMINI.md
+# 프로세스 진행현황
 
 ## 프로젝트 개요
 
@@ -47,11 +47,11 @@
 
 #### **생성 및 수정된 주요 파일**
 *   **Controller**: `src/main/java/com/health/app/files/FileController.java`
-*   **Service**: `src/main/java/com.health.app/files/FileService.java`
+*   **Service**: `src/main/java/com/health/app/files/FileService.java`
 *   **Entity**: `src/main/java/com/health.app/attachments/Attachment.java`
-*   **Entity**: `src/main/java/com.health.app/attachments/AttachmentLink.java`
-*   **Repository**: `src/main/java/com.health.app/attachments/AttachmentRepository.java`
-*   **Repository**: `src/main/java/com.health.app/attachments/AttachmentLinkRepository.java`
+*   **Entity**: `src/main/java/com/health.app/attachments/AttachmentLink.java`
+*   **Repository**: `src/main/java/com/health.app/attachments/AttachmentRepository.java`
+*   **Repository**: `src/main/java/com/health.app/attachments/AttachmentLinkRepository.java`
 *   **View**: `src/main/webapp/WEB-INF/views/files/upload.jsp`
 *   **Configuration**: `pom.xml` (`spring-boot-starter-data-jpa` 의존성 추가)
 *   **Configuration**: `.gitignore` (`sql/` 디렉토리 제외 설정)
@@ -118,4 +118,54 @@
 
 ---
 
+### 2025-12-29: 일정 관리 (SC) 기능 개발 계획 수립
 
+`CODING_PLAN.md`의 "일정 관리" 요구사항과 추가 논의된 내용을 바탕으로 상세 개발 계획을 수립했습니다.
+
+#### **주요 기능 명세**
+1.  **일정 구분**:
+    *   개인(`PERSONAL`), 부서(`DEPARTMENT`), 전사(`COMPANY`) 일정으로 구분하고, UI에서 각각 다른 색상으로 표시합니다.
+    *   전사 일정은 `MASTER` 권한, 부서 일정은 `ADMIN` 권한 사용자만 생성할 수 있습니다.
+
+2.  **일정 생성**:
+    *   일정 등록 시 **참석자 지정**이 가능합니다.
+    *   참석자들의 기존 일정을 조회하여 **실시간으로 충돌 여부를 확인**하고, 가능한 시간을 안내합니다.
+    *   일정 확정 시, 모든 참석자의 캘린더에 해당 일정이 자동으로 추가됩니다.
+
+3.  **부가 기능**:
+    *   일정에 **파일 첨부** 기능을 포함합니다. (`FileService` 연동)
+    *   반복 일정(매주/매월) 설정 기능을 제공합니다.
+    *   일정 등록/변경 시 관련자에게 알림을 발송합니다. (`NotificationService` 연동)
+
+4.  **UI/UX 개선**:
+    *   사이드바 메뉴(`전체`, `내`, `부서`, `전사`)를 통해 캘린더에 표시될 일정을 필터링합니다.
+    *   캘린더 하단에 오늘 또는 선택한 날짜의 일정 목록을 리스트 형태로 제공하고, 추가 필터링 옵션(오늘/이번 주, 유형별)을 둡니다.
+    *   별도의 '일정 관리' 페이지에서 내가 생성한 일정 목록을 관리(수정, 삭제, 상태 변경)할 수 있습니다.
+
+#### **개발 순서 계획**
+*   **1단계 (기본 골격)**: `Schedule` 엔티티 및 기본 CRUD API 구현, 캘린더 연동 및 색상 구분 표시
+*   **2단계 (일정 등록 고도화)**: `ScheduleAttendee` 엔티티 추가, 참석자 지정 및 실시간 충돌 확인 기능 구현
+*   **3단계 (부가 기능)**: 파일 첨부 및 반복 일정 기능 구현
+*   **4단계 (관리 기능)**: '일정 관리' 페이지 및 관련 기능 구현
+*   **5단계 (사용자 경험 개선)**: 캘린더 하단 리스트 뷰 및 필터링 기능 구현
+*   **6단계 (최종 연동)**: 알림 서비스 연동
+
+### 2025-12-29: 일정 관리 (SC) 기능 기반 클래스 생성 완료
+
+상세 개발 계획에 따라, MyBatis 기반의 데이터 처리를 위한 기반 클래스 및 설정 파일 생성을 완료했습니다.
+
+#### **주요 구현 내용**
+1.  **데이터베이스 스키마 수정 (`VITALCORE.sql`)**:
+    *   `calendar_events` 테이블에 `location`, `status_code`, `department_code` 등 상세 기능 구현을 위한 컬럼을 추가하고 주석을 보강했습니다.
+    *   일정 참석자 관리를 위한 `schedule_attendees` 테이블을 새로 추가했습니다.
+    *   테이블 간의 관계 설정을 위한 외래 키(FK) 제약 조건을 추가했습니다.
+
+2.  **기반 클래스 생성 (`com.health.app.schedules` 패키지)**:
+    *   **Enum (3개)**: `ScheduleType`, `ScheduleStatus`, `AttendanceStatus`
+    *   **DTO (2개)**: `CalendarEventDto`, `ScheduleAttendeeDto`
+    *   **MyBatis 매퍼 인터페이스 (2개)**: `CalendarEventMapper`, `ScheduleAttendeeMapper`
+    *   **MyBatis XML 매퍼 파일 (2개)**: `CalendarEventMapper.xml`, `ScheduleAttendeeMapper.xml`
+
+#### **다음 작업 계획**
+*   **서비스(Service) 계층 구현**: `ScheduleService` 클래스를 생성하여 오늘 만든 매퍼들을 이용한 비즈니스 로직을 구현합니다.
+*   **컨트롤러(Controller) 수정**: `ScheduleController`에 `ScheduleService`를 주입하고, FullCalendar 연동을 위한 RESTful API 엔드포인트를 구현합니다.
