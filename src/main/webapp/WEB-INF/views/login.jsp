@@ -30,7 +30,7 @@
     />
     <!--end::Third Party Plugin(Bootstrap Icons)-->
     <!--begin::Required Plugin(AdminLTE)-->
-    <link rel="stylesheet" href="<c:url value='/template/css/adminlte.css'/>" />
+    <link rel="stylesheet" href="<c:url value='/css/adminlte.css'/>" />
     <!--end::Required Plugin(AdminLTE)-->
   </head>
   <!--end::Head-->
@@ -48,11 +48,12 @@
         </div>
         <div class="card-body login-card-body">
           <p class="login-box-msg">로그인하여 세션을 시작하세요.</p>
+          
           <form action="<c:url value='/login'/>" method="post">
             <div class="input-group mb-1">
               <div class="form-floating">
-                <input id="username" name="username" type="text" class="form-control" placeholder="Username" />
-                <label for="username">아이디</label>
+                <input id="loginId" name="loginId" type="text" class="form-control" placeholder="Username" />
+                <label for="loginId">아이디</label>
               </div>
               <div class="input-group-text"><span class="bi bi-envelope"></span></div>
             </div>
@@ -95,7 +96,7 @@
     ></script>
     <!--end::Required Plugin(Bootstrap 5)-->
     <!--begin::Required Plugin(AdminLTE)-->
-    <script src="<c:url value='/template/js/adminlte.js'/>"></script>
+    <script src="<c:url value='/js/adminlte.js'/>"></script>
     <!--end::Required Plugin(AdminLTE)-->
   </body>
   <!--end::Body-->

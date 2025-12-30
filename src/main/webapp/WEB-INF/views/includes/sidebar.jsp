@@ -8,7 +8,7 @@
   <div class="sidebar-brand">
     <a href="<c:url value='/'/>" class="brand-link">
       <img
-        src="<c:url value='/template/assets/img/AdminLTELogo.png'/>"
+        src="<c:url value='/img/doge.jpg'/>"
         alt="AdminLTE Logo"
         class="brand-image opacity-75 shadow"
       />

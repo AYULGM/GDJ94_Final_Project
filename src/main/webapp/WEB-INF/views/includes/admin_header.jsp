@@ -144,7 +144,7 @@
             <li class="nav-item dropdown user-menu">
               <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
                 <img
-                  src="<c:url value='/template/assets/img/user2-160x160.jpg'/>"
+                  src="<c:url value='/img/doge.jpg'/>"
                   class="user-image rounded-circle shadow"
                   alt="User Image"
                 />
@@ -153,7 +153,7 @@
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <li class="user-header text-bg-primary">
                   <img
-                    src="<c:url value='/template/assets/img/user2-160x160.jpg'/>"
+                    src="<c:url value='/img/doge.jpg'/>"
                     class="rounded-circle shadow"
                     alt="User Image"
                   />
@@ -171,7 +171,7 @@
                 </li>
                 <li class="user-footer">
                   <a href="#" class="btn btn-default btn-flat">Profile</a>
-                  <a href="<c:url value='/login'/>" class="btn btn-default btn-flat float-end">Sign out</a>
+                  <a href="<c:url value='/logout'/>" class="btn btn-default btn-flat float-end">Sign out</a>
                 </li>
               </ul>
             </li>
