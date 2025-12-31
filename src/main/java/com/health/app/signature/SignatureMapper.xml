@@ -1,8 +1,101 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.health.app.signature.SignatureMapper">
 
-	<!-- SQL들 -->
+    <!-- 목록 조회: use_yn=TRUE만 -->
+    <select id="selectListByUserId"
+            resultType="com.health.app.signature.SignatureDTO">
+        SELECT
+            us.signature_id AS signatureId,
+            us.user_id      AS userId,
+            us.file_id      AS fileId,
+            us.create_user  AS createUser,
+            us.create_date  AS createDate,
+            us.use_yn       AS useYn,
+            us.is_primary   AS isPrimary
+        FROM user_signatures us
+        WHERE us.user_id = #{userId}
+          AND us.use_yn = TRUE
+        ORDER BY us.is_primary DESC, us.signature_id DESC
+    </select>
+
+    <!-- 저장: user_signatures insert -->
+    <insert id="insertUserSignature"
+            parameterType="com.health.app.signature.SignatureDTO"
+            useGeneratedKeys="true"
+            keyProperty="signatureId">
+        INSERT INTO user_signatures
+            (user_id, file_id, is_primary, create_user, create_date, use_yn)
+        VALUES
+            (#{userId}, #{fileId}, #{isPrimary}, #{createUser}, NOW(), TRUE)
+    </insert>
+
+    <!-- 삭제: use_yn=FALSE + 대표 해제 -->
+    <update id="softDeleteSignature">
+        UPDATE user_signatures
+        SET
+            use_yn = FALSE,
+            is_primary = FALSE,
+            update_user = #{updateUser},
+            update_date = NOW()
+        WHERE user_id = #{userId}
+          AND signature_id = #{signatureId}
+          AND use_yn = TRUE
+    </update>
+
+    <!-- 대표 변경: 기존 대표 해제 -->
+    <update id="clearPrimary">
+        UPDATE user_signatures
+        SET
+            is_primary = FALSE,
+            update_user = #{updateUser},
+            update_date = NOW()
+        WHERE user_id = #{userId}
+          AND use_yn = TRUE
+          AND is_primary = TRUE
+    </update>
+
+    <!-- 대표 변경: 선택한 서명을 대표로 -->
+    <update id="setPrimary">
+        UPDATE user_signatures
+        SET
+            is_primary = TRUE,
+            update_user = #{updateUser},
+            update_date = NOW()
+        WHERE user_id = #{userId}
+          AND signature_id = #{signatureId}
+          AND use_yn = TRUE
+    </update>
+
+    <!-- 대표 존재 여부 -->
+    <select id="countPrimary" resultType="int">
+        SELECT COUNT(*)
+        FROM user_signatures
+        WHERE user_id = #{userId}
+          AND use_yn = TRUE
+          AND is_primary = TRUE
+    </select>
+
+    <!-- (선택) 대표 1건 조회: 필요하면 사용 -->
+    <select id="selectPrimaryByUserId"
+            resultType="com.health.app.signature.SignatureDTO">
+        SELECT
+            us.signature_id AS signatureId,
+            us.user_id      AS userId,
+            us.file_id      AS fileId,
+            us.create_user  AS createUser,
+            us.create_date  AS createDate,
+            us.use_yn       AS useYn,
+            us.is_primary   AS isPrimary
+        FROM user_signatures us
+        WHERE us.user_id = #{userId}
+          AND us.use_yn = TRUE
+          AND us.is_primary = TRUE
+        ORDER BY us.signature_id DESC
+        LIMIT 1
+    </select>
+
 </mapper>

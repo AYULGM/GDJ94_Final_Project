@@ -13,7 +13,6 @@ public class ApprovalController {
 
     @GetMapping("form")
     public void approvalForm() {
-           
     }
     
     @GetMapping("signature")

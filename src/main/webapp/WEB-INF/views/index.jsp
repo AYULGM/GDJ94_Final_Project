@@ -5,6 +5,14 @@
 
 <jsp:include page="includes/admin_header.jsp" />
 
+<button type="button"
+        onclick="location.href='<c:url value="/auth/login"/>'">
+  로그인 페이지로 이동
+</button>
+<c:set var="u" value="${sessionScope.LOGIN_USER}" />
+
+안녕하세요, ${u.name} (${u.loginId})
+
 <!-- Main content from original index.html -->
 <!--begin::Row-->
 <div class="row">
