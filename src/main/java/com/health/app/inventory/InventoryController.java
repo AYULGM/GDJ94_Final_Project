@@ -1,10 +1,5 @@
 package com.health.app.inventory;
 
-import com.health.app.inventory.dto.InventoryDetailDto;
-import com.health.app.inventory.dto.InventoryHistoryViewDto;
-import com.health.app.inventory.dto.InventoryViewDto;
-import com.health.app.inventory.dto.OptionDto;
-import com.health.app.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

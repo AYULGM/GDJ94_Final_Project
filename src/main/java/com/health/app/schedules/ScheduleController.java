@@ -109,9 +109,9 @@ public class ScheduleController {
      * @param ids 조회할 사용자 ID 목록
      * @return AttendeeSearchDto 리스트
      */
-    @GetMapping("/users/details")
-    @ResponseBody
-    public List<AttendeeSearchDto> getUsersDetails(@RequestParam("ids") List<Long> ids) {
-        return scheduleService.getUsersByIds(ids);
-    }
+//    @GetMapping("/users/details")
+//    @ResponseBody
+//    public List<AttendeeSearchDto> getUsersDetails(@RequestParam("ids") List<Long> ids) {
+//        return scheduleService.getUsersByIds(ids);
+//    }
 }

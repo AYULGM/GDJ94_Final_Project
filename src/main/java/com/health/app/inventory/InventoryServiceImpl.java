@@ -1,10 +1,5 @@
-package com.health.app.inventory.service;
+package com.health.app.inventory;
 
-import com.health.app.inventory.dto.InventoryDetailDto;
-import com.health.app.inventory.dto.InventoryHistoryViewDto;
-import com.health.app.inventory.dto.InventoryViewDto;
-import com.health.app.inventory.dto.OptionDto;
-import com.health.app.inventory.mapper.InventoryMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

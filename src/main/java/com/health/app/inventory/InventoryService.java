@@ -1,9 +1,4 @@
-package com.health.app.inventory.service;
-
-import com.health.app.inventory.dto.InventoryDetailDto;
-import com.health.app.inventory.dto.InventoryHistoryViewDto;
-import com.health.app.inventory.dto.InventoryViewDto;
-import com.health.app.inventory.dto.OptionDto;
+package com.health.app.inventory;
 
 import java.util.List;
 
