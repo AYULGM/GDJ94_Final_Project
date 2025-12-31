@@ -217,22 +217,101 @@
 
 ---
 
-#### **향후 작업 계획 (TODO List)**
+### 2025-12-30: 일정 관리 (SC) 기능 구현 및 리팩토링 진행 상황
 
-현재까지 진행된 작업과 논의를 바탕으로, 남은 작업은 다음과 같습니다.
+#### **주요 구현 내용**
 
-1.  **고급 회의 생성 기능 (시간 충돌 확인 및 추천)**:
-    *   일정 등록 시, 참석자들의 다른 일정과 시간이 겹치는지 확인하는 백엔드 로직 및 API 구현.
-    *   프론트엔드에서 충돌 정보를 표시하고 가능한 시간을 안내하는 UI/UX 구현.
-2.  **일정 수정 기능 완성**:
-    *   `manage.jsp`의 '수정' 버튼 클릭 시, 모달에 해당 일정 데이터를 로드하고 (현재 `getEventById` 엔드포인트 사용), 수정 후 `PUT` 요청을 보내는 프론트엔드 로직 구현.
-    *   `ScheduleService.java`에 `updateCalendarEvent` 메소드 추가 및 `ScheduleController.java`에 `PUT /schedules/events` 엔드포인트를 구현하여 일정 업데이트 처리.
-3.  **권한 제어 기능 구현**:
-    *   (`로그인 기능 구현 후 진행 예정`)
-    *   일정 유형별(전사, 부서) 생성/수정/삭제 권한 확인 로직 구현 (백엔드 및 프론트엔드).
-4.  **캘린더 하단 리스트 고급 필터링**:
-    *   ('오늘/이번 주' 토글, '개인/부서/전사' 체크박스) - 필요성 재검토 후 진행.
-5.  **반복 일정 기능 구현**.
-6.  **알림 설정 기능 구현**.
+*   **기본 일정 등록 기능 구현**:
+    *   `ScheduleService.java`: `createCalendarEvent` 메소드 추가 (기본 필드, `allDay`/`repeating` 기본값 설정).
+    *   `ScheduleController.java`: `POST /schedules/events` 엔드포인트 추가.
+    *   `view.jsp`: 일정 등록 모달 UI, `FormData`를 통한 데이터/파일 전송 로직 구현.
+*   **사이드바 메뉴 및 캘린더 필터링**:
+    *   `sidebar.jsp`: 일정 관련 메뉴 (`전체 일정`, `내 일정`, `부서 일정`, `전사 일정`, `일정 등록`, `일정 관리`) 구조 개편.
+    *   `schedules.js`: `currentScope` 변수를 이용한 필터링 로직 구현, `scope` 파라미터로 이벤트 조회.
+    *   `ScheduleController.java`: `getEvents` 메소드에 `scope` 파라미터 처리 로직 추가.
+*   **캘린더 하단 일정 리스트**:
+    *   `view.jsp`: 캘린더 하단에 일정 목록을 표시하는 `div` 영역 추가.
+    *   `schedules.js`: `updateEventList` 함수를 통해 선택된 날짜의 이벤트를 목록으로 표시. (다중일정 포함, 시간/종일 표시)
+*   **참석자 이름 검색 기능 구현**:
+    *   **리팩토링**: `users` 패키지와의 분리를 위해 `UserSearchDto`, `UserMapper.java`, `UserMapper.xml`을 `com.health.app.schedules.search` 패키지로 이동 및 `AttendeeSearchDto`, `AttendeeSearchMapper.java`, `AttendeeSearchMapper.xml`로 이름 변경. `UserController.java` 원복.
+    *   **백엔드**: `ScheduleController.java`에 `AttendeeSearchMapper` 주입 및 `GET /schedules/users/search` 엔드포인트 추가. `ScheduleService.java`에 `getUsersByIds` 메소드 추가.
+    *   **프론트엔드**: `schedules.js`에 이름 검색, 결과 표시, 참석자 선택/제거 로직 구현 및 백엔드 API 연동.
+*   **파일 첨부 기능 연동**:
+    *   `view.jsp`: `FormData`를 통한 파일 첨부 UI 연동.
+    *   `ScheduleController.java`: `POST /schedules/events` 메소드에서 `List<MultipartFile>`을 `@RequestPart`로 받도록 수정.
+    *   `ScheduleService.java`: `createCalendarEvent` 메소드에 파일 저장 및 일정 연결 로직 추가.
+*   **'일정 관리' 페이지 구현**:
+    *   **페이지 구조**: `manage.jsp` 및 `ScheduleController.java`에 `GET /schedules/manage` 엔드포인트 추가 (404 오류 해결).
+    *   **데이터 표시**: 로그인한 사용자(임시 `1L`)가 생성한 일정 목록을 `manage.jsp` 테이블에 표시.
+    *   **일정 삭제 기능**:
+        *   `AttachmentLinkRepository.java`: `logicalDeleteByEntityTypeAndEntityId` 메소드 추가.
+        *   `ScheduleAttendeeMapper.java/xml`: `deleteAttendeesByEventId` 메소드 추가.
+        *   `ScheduleService.java`: `deleteCalendarEvent` 메소드 추가 (일정, 참석자, 파일 링크 논리적 삭제).
+        *   `ScheduleController.java`: `POST /schedules/events/{eventId}/delete` 엔드포인트 추가.
+        *   `manage.jsp`: 삭제 버튼 핸들러 (확인, API 호출, UI 업데이트).
+    *   **일정 조회 (수정을 위한)**: `ScheduleService.java`에 `getEventById` 메소드 추가. `ScheduleController.java`에 `GET /schedules/events/{eventId}` 엔드포인트 추가.
+*   **모달 UI 개선**:
+    *   `view.jsp`: 일정 등록 모달의 'X' 버튼 제거, '취소' 버튼 `data-bs-dismiss="modal"`로 수정.
+    *   `sidebar.jsp`: '일정 설정' 메뉴 제거 (스코프 변경).
 
----
+#### **주요 트러블슈팅 및 리팩토링**
+
+*   **JSP EL 파싱 오류 해결**: `view.jsp` 내 인라인 JavaScript에서 발생하는 `jakarta.el.ELException` 오류 해결을 위해 `schedules.js`로 JavaScript 코드를 분리하고, `view.jsp`가 이를 참조하도록 리팩토링.
+*   **jQuery `$ is not defined` 오류 해결**: `admin_footer.jsp`에 jQuery CDN 추가.
+*   **`Column 'is_all_day' cannot be null` 오류 해결**: `ScheduleService.java`에서 `allDay`, `repeating` 필드의 `null` 값에 대한 기본값 설정.
+*   **`Cannot convert LocalDateTime to java.util.Date` 오류 해결**: `CalendarEventMapper.xml`의 `resultMap`에서 `LocalDateTime` 필드들에 `javaType="java.time.LocalDateTime" jdbcType="TIMESTAMP"`를 명시하여 매핑 오류 해결. `manage.jsp`에서 `fn:replace`를 사용하여 `LocalDateTime` 문자열을 원하는 형식으로 출력.
+
+### 2025-12-31: 일정 관리 (SC) 기능 추가 구현 및 주요 트러블슈팅
+
+`CODING_PLAN.md` 및 `PROGRESS.md`의 "일정 관리" 요구사항을 기반으로 다음과 같은 기능 구현 및 문제 해결을 진행했습니다.
+
+#### **주요 구현 내용**
+
+*   **일정 수정 기능 추가**:
+    *   `ScheduleService.java`에 `updateCalendarEvent` 메서드를 구현하고, `ScheduleController.java`에 `PUT /schedules/events` 엔드포인트를 추가하여 일정 수정 기능을 완성했습니다.
+    *   `CalendarEventDto`에 참석자 상세 정보(`List<AttendeeSearchDto> attendees`) 필드를 추가하고, `ScheduleAttendeeMapper.java` 및 `ScheduleAttendeeMapper.xml`에 참석자 상세 정보를 조회하는 `selectAttendeesByEventId` 쿼리를 구현했습니다. 이를 통해 `ScheduleService.getEventById`에서 이벤트와 함께 참석자 정보를 로드할 수 있도록 했습니다.
+    *   `manage.jsp`에 "수정" 버튼 클릭 시 이벤트 정보를 불러와 모달을 채우고 수정할 수 있는 프론트엔드 로직을 구현했습니다.
+*   **고급 회의 생성 기능 (시간 충돌 확인 및 추천) 구현**:
+    *   `ScheduleService.java`에 `checkTimeConflicts` 메서드를 구현하고, `TimeConflictException` 사용자 정의 예외를 정의하여 참석자들의 일정 중 충돌이 발생하는지 확인하는 백엔드 로직을 추가했습니다.
+    *   `CalendarEventMapper.xml`에 `selectConflictingEventsForAttendee` 쿼리를 추가하여 특정 참석자의 충돌 일정을 효율적으로 조회할 수 있도록 했습니다.
+    *   `ScheduleController.java`의 `createEvent` 및 `updateEvent` 메서드에 `TimeConflictException`을 처리하는 로직을 추가하여 충돌 발생 시 `HttpStatus.CONFLICT (409)` 상태 코드와 함께 충돌 상세 정보를 반환하도록 했습니다.
+    *   `schedules.js`에 백엔드에서 반환하는 충돌 정보를 파싱하고 사용자에게 상세한 알림 메시지로 표시하는 프론트엔드 로직을 구현했습니다.
+*   **JavaScript 모듈화 및 견고성 향상 (리팩토링)**:
+    *   `schedules.js` 코드를 가독성과 유지보수성을 높이기 위해 `initAttendeeSearch()`, `initFullCalendar()`, `initEventModalLogic()`, `initManagePageLogic()` 등의 페이지별 초기화 함수로 분리했습니다.
+    *   `DOMContentLoaded` 이벤트 리스너 내에서 각 페이지의 DOM 요소 존재 여부에 따라 해당 초기화 함수를 조건부로 호출하도록 변경하여 스크립트의 견고성을 높였습니다.
+
+#### **주요 트러블슈팅 및 해결 과정**
+
+1.  **일정 삭제/수정 요청 404 오류 (`No static resource ...wrwnwtat`)**:
+    *   **문제**: `manage.jsp`에서 일정 삭제/수정 요청 시 브라우저 개발자 도구의 Request URL에 `//delete` 또는 `//1`과 같이 `eventId`가 누락되거나, `wrwnwtat`와 같은 알 수 없는 문자열이 붙어 404 `No static resource` 오류가 발생했습니다. `console.log` 상으로는 `eventId`가 올바르게 전달되는 것으로 보였으나, 실제 네트워크 요청 URL은 달랐습니다.
+    *   **진단**: 초기에는 `contextPath` 변수 처리 문제로 의심했으나, `console.log` 확인 결과 `eventId` 자체는 올바르게 인식되고 있었고, `contextPath` 사용 여부와 상관없이 URL이 잘못 구성되는 현상이 발생했습니다. 이는 JavaScript가 URL을 구성한 후 HTTP 요청이 보내지기 전, 혹은 서버의 어떤 레이어에서 URL이 변조되거나 잘못 해석되는 것으로 판단되었습니다.
+    *   **해결**: `manage.jsp`에서 삭제 및 수정 URL을 `contextPath` 없이 절대 경로(`deleteUrl = `/schedules/events/${eventId}/delete`;`와 같이)로 명시적으로 구성하도록 수정했습니다. 이 조치 이후 삭제 기능이 정상 작동하기 시작했습니다. (URL 문제에 대한 최종 원인 분석은 추가 네트워크 분석이 필요할 수 있습니다.)
+2.  **`AttachmentLinkRepository cannot be resolved to a type` 컴파일 오류**:
+    *   **문제**: `ScheduleService.java`에서 `AttachmentLinkRepository` 클래스를 찾을 수 없다는 컴파일 오류가 발생했습니다.
+    *   **원인**: `ScheduleService.java`에서 `AttachmentLinkRepository`에 대한 import 문이 누락되었습니다.
+    *   **해결**: `ScheduleService.java`에 `import com.health.app.attachments.AttachmentLinkRepository;` import 문을 추가하여 해결했습니다.
+3.  **`schedules.js` JavaScript 런타임 오류 (`TypeError: Cannot read properties of null`)**:
+    *   **문제**: `schedules.js`가 로드되는 페이지(`manage.jsp`)에 해당 DOM 요소(`attendeeSearch`, `calendar` 등)가 존재하지 않아 `document.getElementById`가 `null`을 반환하고, 이어서 `addEventListener`나 FullCalendar 초기화 시 `TypeError`가 발생했습니다. 이로 인해 스크립트 실행이 중단되어 버튼이 클릭되지 않는 문제가 발생했습니다.
+    *   **원인**: `schedules.js`가 여러 JSP 페이지에서 공용으로 사용되면서, 페이지별로 존재 여부가 다른 DOM 요소에 대한 접근 시 예외 처리가 미흡했습니다. 특히 `manage.jsp`에는 `eventModal`과 캘린더 관련 요소가 없었습니다.
+    *   **해결**:
+        *   `manage.jsp`에 `view.jsp`에 있던 `eventModal` HTML 구조를 복사하여 추가했습니다.
+        *   `schedules.js`를 모듈화하여 `initAttendeeSearch()`, `initFullCalendar()`, `initEventModalLogic()`, `initManagePageLogic()`과 같은 함수로 분리했습니다. 각 초기화 함수는 해당 DOM 요소가 페이지에 실제로 존재하는 경우에만 실행되도록 조건부 로직을 추가했습니다. 이는 스크립트의 견고성과 재사용성을 크게 향상시켰습니다.
+4.  **일정 수정 시 `SQLSyntaxErrorException: Table 'user03.departments' doesn't exist`**:
+    *   **문제**: 일정 수정 시 참석자 상세 정보를 가져오는 쿼리(`ScheduleAttendeeMapper.xml`의 `selectAttendeesByEventId`)가 `departments` 테이블을 참조했으나, 해당 테이블이 데이터베이스에 존재하지 않아 SQL 오류가 발생했습니다.
+    *   **원인**: 데이터베이스 스키마에 `departments` 테이블이 누락되었거나, 참석자 상세 정보에 부서 정보가 필수적이지 않았습니다.
+    *   **해결**: `ScheduleAttendeeMapper.xml`의 `selectAttendeesByEventId` 쿼리에서 `LEFT JOIN departments d` 및 `d.name as department_name` 부분을 제거하고, `attendeeSearchResultMap`에서도 `departmentName` 매핑을 제거했습니다. 이는 부서 이름 없이 참석자 정보만 조회하도록 하여 즉각적인 SQL 오류를 해결했습니다. (향후 부서 정보가 필요하면 `departments` 테이블 생성 및 재연결 필요)
+5.  **이미지 리소스 404 오류**:
+    *   **문제**: `user1-128x128.jpg`, `AdminLTELogo.png` 등 이미지 파일 로드 시 404 오류가 발생했습니다.
+    *   **원인**: 해당 이미지 파일들이 `src/main/resources/static` 경로에 존재하지 않았습니다.
+    *   **해결**: 이미지 파일들을 `src/main/resources/static` 또는 그 하위 디렉토리에 배치하고, `admin_header.jsp` 등에서 올바른 경로로 참조하도록 해야 합니다. (현재 코드 수정으로 직접 해결되지는 않았으며, 사용자에게 가이드 제공 예정)
+
+#### **남아있는 작업 / 다음 단계 (TODO List)**
+
+1.  **일정 수정 기능 최종 확인**: 현재 `manage.jsp`에 모달 HTML이 추가되고 SQL 오류가 해결되었으므로, "수정" 버튼 클릭 시 모달이 올바르게 열리고 데이터가 채워지는지 확인해야 합니다. 저장 기능까지 테스트하여 최종적으로 작동하는지 확인합니다.
+2.  **`wrwnwtat` 오류 최종 확인**: 삭제/수정 URL 문제 (`//delete` 및 `wrwnwtat` 접미사)가 완전히 해결되었는지 네트워크 탭을 통해 최종 확인이 필요합니다. (현재까지의 수정으로 해결되었을 것으로 예상되나, 재확인 필요)
+3.  **이미지 리소스 404 오류 해결**: 이미지 파일들을 프로젝트의 정적 리소스 경로에 배치하고, HTML에서 올바르게 참조하도록 수정해야 합니다.
+4.  **TODO List (기존):**
+    *   권한 제어 기능 구현 (로그인 기능 구현 후 진행 예정)
+    *   캘린더 하단 리스트 고급 필터링
+    *   반복 일정 기능 구현
+    *   알림 설정 기능 구현

@@ -8,6 +8,8 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.health.app.schedules.search.AttendeeSearchDto;
+
 /**
  * calendar_events 테이블에 매핑되는 DTO 클래스
  */
@@ -33,6 +35,7 @@ public class CalendarEventDto {
 
     // --- 추가 필드 ---
     private List<Long> attendeeIds; // 참석자 ID 목록
+    private List<AttendeeSearchDto> attendees; // 참석자 상세 정보 목록
 
     private Long createUser;
     private LocalDateTime createDate;

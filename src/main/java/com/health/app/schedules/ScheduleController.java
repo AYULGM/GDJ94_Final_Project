@@ -15,6 +15,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import com.health.app.schedules.search.AttendeeSearchDto;
 import com.health.app.schedules.search.AttendeeSearchMapper;
+import org.springframework.web.bind.annotation.PutMapping;
+
+
+import com.health.app.schedules.TimeConflictException; // TimeConflictException 임포트
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,12 +64,40 @@ public class ScheduleController {
     }
 
     @PostMapping("/events")
-    public ResponseEntity<CalendarEventDto> createEvent(
+    public ResponseEntity<?> createEvent( // ResponseEntity의 제네릭 타입을 와일드카드로 변경
             @RequestPart("event") CalendarEventDto calendarEvent,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
         
-        CalendarEventDto createdEvent = scheduleService.createCalendarEvent(calendarEvent, files);
-        return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
+        try {
+            CalendarEventDto createdEvent = scheduleService.createCalendarEvent(calendarEvent, files);
+            return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
+        } catch (TimeConflictException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("conflicts", e.getConflicts());
+            // Content-Type을 application/json으로 명시하여 프론트엔드에서 파싱할 수 있도록 함
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            return new ResponseEntity<>(errorResponse, headers, HttpStatus.CONFLICT); // 409 Conflict
+        }
+    }
+
+    @PutMapping("/events")
+    public ResponseEntity<?> updateEvent( // ResponseEntity의 제네릭 타입을 와일드카드로 변경
+            @RequestPart("event") CalendarEventDto calendarEvent,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+        
+        try {
+            CalendarEventDto updatedEvent = scheduleService.updateCalendarEvent(calendarEvent, files);
+            return new ResponseEntity<>(updatedEvent, HttpStatus.OK);
+        } catch (TimeConflictException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("conflicts", e.getConflicts());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            return new ResponseEntity<>(errorResponse, headers, HttpStatus.CONFLICT); // 409 Conflict
+        }
     }
 
     @GetMapping("/users/search")
