@@ -38,9 +38,7 @@
         UPDATE user_signatures
         SET
             use_yn = FALSE,
-            is_primary = FALSE,
-            update_user = #{updateUser},
-            update_date = NOW()
+            is_primary = FALSE
         WHERE user_id = #{userId}
           AND signature_id = #{signatureId}
           AND use_yn = TRUE
@@ -50,9 +48,7 @@
     <update id="clearPrimary">
         UPDATE user_signatures
         SET
-            is_primary = FALSE,
-            update_user = #{updateUser},
-            update_date = NOW()
+            is_primary = FALSE
         WHERE user_id = #{userId}
           AND use_yn = TRUE
           AND is_primary = TRUE
@@ -62,9 +58,7 @@
     <update id="setPrimary">
         UPDATE user_signatures
         SET
-            is_primary = TRUE,
-            update_user = #{updateUser},
-            update_date = NOW()
+            is_primary = TRUE
         WHERE user_id = #{userId}
           AND signature_id = #{signatureId}
           AND use_yn = TRUE

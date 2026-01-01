@@ -30,7 +30,37 @@ public class SignatureService {
         List<SignatureDTO> list = signatureMapper.selectListByUserId(userId);
         for (SignatureDTO dto : list) {
             if (dto.getFileId() != null) {
-                dto.setImageUrl("/files/preview/" + dto.getFileId());
+                String previewUrl = "/files/preview/" + dto.getFileId();
+                try {
+                    Attachment att = attachmentRepository.findById(dto.getFileId()).orElse(null);
+                    if (att != null) {
+                        Path base = Paths.get(uploadBaseDir).toAbsolutePath().normalize();
+                        Path altBase = Paths.get("uploads").toAbsolutePath().normalize();
+
+                        Path[] candidates = new Path[] {
+                            base.resolve(att.getStorageKey()).normalize(),
+                            base.resolve(Paths.get(att.getStorageKey()).getFileName()).normalize(),
+                            altBase.resolve(att.getStorageKey()).normalize(),
+                            altBase.resolve(Paths.get(att.getStorageKey()).getFileName()).normalize(),
+                            altBase.resolve("signatures").resolve(Paths.get(att.getStorageKey()).getFileName()).normalize()
+                        };
+
+                        for (Path p : candidates) {
+                            if (Files.exists(p)) {
+                                byte[] bytes = Files.readAllBytes(p);
+                                String ct = att.getContentType() == null || att.getContentType().isBlank() ? "image/png" : att.getContentType();
+                                String b64 = Base64.getEncoder().encodeToString(bytes);
+                                dto.setImageUrl("data:" + ct + ";base64," + b64);
+                                break;
+                            }
+                        }
+                        if (dto.getImageUrl() == null) dto.setImageUrl(previewUrl);
+                        continue;
+                    }
+                } catch (Exception ignored) {
+                }
+
+                dto.setImageUrl(previewUrl);
             }
         }
         return list;
@@ -93,16 +123,16 @@ public class SignatureService {
      */
     private Long storeSignatureAsAttachment(Long actorId, byte[] pngBytes) throws Exception {
         Path baseDir = Paths.get(uploadBaseDir).toAbsolutePath().normalize();
-        Path signatureDir = baseDir.resolve("signatures");
-        Files.createDirectories(signatureDir);
+        Files.createDirectories(baseDir);
 
         String storageKey = UUID.randomUUID().toString() + ".png";
-        Path target = signatureDir.resolve(storageKey);
+        Path target = baseDir.resolve(storageKey);
         Files.write(target, pngBytes);
 
         Attachment attachment = new Attachment();
         attachment.setStorageProvider("LOCAL");
-        attachment.setStorageKey("signatures/" + storageKey); // baseDir 하위 상대경로 형태
+        // FileService expects storageKey to be the filename only
+        attachment.setStorageKey(storageKey);
         attachment.setOriginalName("signature.png");
         attachment.setContentType("image/png");
         attachment.setFileSize((long) pngBytes.length);
