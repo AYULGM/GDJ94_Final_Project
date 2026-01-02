@@ -1,0 +1,12 @@
+package com.health.app.users.mapper;
+
+import com.health.app.users.dto.UserDTO;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface UserMapper {
+
+    int countByLoginId(String loginId);
+
+    int insertUser(UserDTO userDTO);
+}

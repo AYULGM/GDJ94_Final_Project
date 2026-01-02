@@ -71,22 +71,10 @@
               </a>
             </li>
             <li class="nav-item d-none d-md-block"><a href="<c:url value='/'/>" class="nav-link">Home</a></li>
-            <li class="nav-item d-none d-md-block"><a href="#" class="nav-link">Contact</a></li>
           </ul>
 
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" data-widget="navbar-search" href="#" role="button">
-                <i class="bi bi-search"></i>
-              </a>
-            </li>
-
-            <!-- Messages -->
-            <li class="nav-item dropdown">
-              <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                <i class="bi bi-chat-text"></i>
-                <span class="navbar-badge badge text-bg-danger">3</span>
-              </a>
+              
               <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <!-- 이미지 경로는 프로젝트에 실제 파일이 있어야 표시됩니다 -->
                 <a href="#" class="dropdown-item">
@@ -134,12 +122,6 @@
               </div>
             </li>
 
-            <li class="nav-item">
-              <a class="nav-link" href="#" data-lte-toggle="fullscreen">
-                <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
-                <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
-              </a>
-            </li>
 
             <li class="nav-item dropdown user-menu">
               <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
@@ -148,7 +130,7 @@
                   class="user-image rounded-circle shadow"
                   alt="User Image"
                 />
-                <span class="d-none d-md-inline">Alexander Pierce</span>
+                <span class="d-none d-md-inline">Doge</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <li class="user-header text-bg-primary">
@@ -158,19 +140,20 @@
                     alt="User Image"
                   />
                   <p>
-                    Alexander Pierce - Web Developer
-                    <small>Member since Nov. 2023</small>
+                    Doge - Web Developer
+                    <small>안녕하세요</small>
                   </p>
                 </li>
-                <li class="user-body">
+<!--                 <li class="user-body">
                   <div class="row">
                     <div class="col-4 text-center"><a href="#">Followers</a></div>
                     <div class="col-4 text-center"><a href="#">Sales</a></div>
                     <div class="col-4 text-center"><a href="#">Friends</a></div>
                   </div>
-                </li>
-                <li class="user-footer">
-                  <a href="#" class="btn btn-default btn-flat">Profile</a>
+                </li> 
+-->
+                <li class="user-body">
+                  <a href="#" class="btn btn-default btn-flat">My page</a>
                   <a href="<c:url value='/logout'/>" class="btn btn-default btn-flat float-end">Sign out</a>
                 </li>
               </ul>

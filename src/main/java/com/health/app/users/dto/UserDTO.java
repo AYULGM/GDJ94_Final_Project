@@ -1,0 +1,29 @@
+package com.health.app.users.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class UserDTO {
+
+    private Long userId;
+    private String loginId;
+    private String password;
+    private String name;
+    private Long postNo;
+    private String baseAddress;
+    private String detailAddress;
+    
+    private String departmentCode;
+    private String email;
+    private String phone;
+
+    private Long createUser;
+
+    private String statusCode;
+    private String roleCode;
+    private String lockStatusCode;
+    private Integer failCount;
+    private Boolean useYn;
+}

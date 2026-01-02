@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.users.mapper.UserMapper">
+
+    <select id="countByLoginId" resultType="int">
+        SELECT COUNT(*)
+        FROM users
+        WHERE login_id = #{loginId}
+    </select>
+
+    <insert id="insertUser" parameterType="com.health.app.users.dto.UserDTO">
+        INSERT INTO users (
+            login_id,
+            password,
+            name,
+            post_no,
+            base_address,
+    		detail_address,
+            department_code,
+            email,
+            phone,
+            status_code,
+            role_code,
+            lock_status_code,
+            fail_count,
+            use_yn,
+            create_user,
+            create_date
+        ) VALUES (
+            #{loginId},
+            #{password},
+            #{name},
+            #{postNo},
+		    #{baseAddress},
+		    #{detailAddress},
+            #{departmentCode},
+            #{email},
+            #{phone},
+            #{statusCode},
+            #{roleCode},
+            #{lockStatusCode},
+            #{failCount},
+            #{useYn},
+            #{createUser},
+            NOW()
+        )
+    </insert>
+
+</mapper>

@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-	<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+
 <!doctype html>
 <html lang="en">
   <!--begin::Head-->
@@ -50,6 +52,21 @@
           <p class="login-box-msg">로그인하여 세션을 시작하세요.</p>
           
           <form action="<c:url value='/login'/>" method="post">
+            <sec:csrfInput/>
+
+			  <c:if test="${param.error eq 'true'}">
+			    <div class="alert alert-danger py-2">
+			      로그인 실패:
+			      <c:out value="${param.reason}" />
+			    </div>
+			  </c:if>
+			
+			  <c:if test="${param.logout eq 'true'}">
+			    <div class="alert alert-info py-2">
+			      로그아웃 되었습니다.
+			    </div>
+			  </c:if>
+          
             <div class="input-group mb-1">
               <div class="form-floating">
                 <input id="loginId" name="loginId" type="text" class="form-control" placeholder="Username" />
@@ -73,6 +90,8 @@
                 </div>
               </div>
               <!-- /.col -->
+              
+              
               <div class="col-4">
                 <div class="d-grid gap-2">
                   <button type="submit" class="btn btn-primary">로그인</button>
@@ -82,7 +101,9 @@
             </div>
             <!--end::Row-->
           </form>
-
+			<p class="mb-1">
+  				<a href="<c:url value='/users/join'/>">회원가입</a>
+			</p>
           <p class="mb-1"><a href="#">비밀번호를 잊으셨나요?</a></p>
         </div>
         <!-- /.login-card-body -->
