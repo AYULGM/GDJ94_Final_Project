@@ -110,7 +110,7 @@
     <!-- 버튼 -->
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-outline-primary" onclick="submitTemp()">임시저장</button>
-      <button type="submit" class="btn btn-primary">저장</button>
+      <button type="submit" class="btn btn-primary">다음</button>
       <a class="btn btn-outline-secondary" href="<c:url value='/approval/list'/>">취소</a>
     </div>
 
