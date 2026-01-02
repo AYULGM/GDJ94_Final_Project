@@ -22,6 +22,7 @@
             department_code,
             email,
             phone,
+            branch_id,
             status_code,
             role_code,
             lock_status_code,
@@ -39,6 +40,7 @@
             #{departmentCode},
             #{email},
             #{phone},
+            #{branchId},
             #{statusCode},
             #{roleCode},
             #{lockStatusCode},
@@ -48,5 +50,66 @@
             NOW()
         )
     </insert>
+    
+    <select id="selectByLoginId"
+        parameterType="java.lang.String"
+        resultType="com.health.app.users.dto.UserDTO">
+    SELECT
+        user_id,
+        login_id,
+        name,
+        email,
+        phone,
+        department_code,
+        branch_id,
+        post_no,
+        base_address,
+        detail_address,
+        role_code,
+        status_code,
+        lock_status_code
+    FROM users
+    WHERE login_id = #{loginId}
+      AND use_yn = TRUE
+</select>
+
+<update id="updateUser" parameterType="com.health.app.users.dto.UserDTO">
+    UPDATE users
+    SET
+        name = #{name},
+        email = #{email},
+        phone = #{phone},
+        department_code = #{departmentCode},
+        branch_id = #{branchId},
+        post_no = #{postNo},
+        base_address = #{baseAddress},
+        detail_address = #{detailAddress}
+    WHERE login_id = #{loginId}
+</update>
+
+<update id="updatePassword">
+    UPDATE users
+    SET password = #{password}
+    WHERE login_id = #{loginId}
+</update>
+
+    <select id="selectForPasswordCheck"
+        parameterType="java.lang.String"
+        resultType="com.health.app.users.dto.UserDTO">
+    SELECT login_id, password
+    FROM users
+    WHERE login_id = #{loginId}
+      AND use_yn = TRUE
+</select>
+
+<update id="withdraw" parameterType="string">
+    UPDATE users
+    SET
+        use_yn = FALSE,
+        update_date = NOW()
+    WHERE login_id = #{loginId}
+</update>
+
+    
 
 </mapper>

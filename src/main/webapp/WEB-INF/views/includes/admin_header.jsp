@@ -75,35 +75,6 @@
 
           <ul class="navbar-nav ms-auto">
               
-              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                <!-- 이미지 경로는 프로젝트에 실제 파일이 있어야 표시됩니다 -->
-                <a href="#" class="dropdown-item">
-                  <div class="d-flex">
-                    <div class="flex-shrink-0">
-                      <img
-                        src="<c:url value='/template/assets/img/user1-128x128.jpg'/>"
-                        alt="User Avatar"
-                        class="img-size-50 rounded-circle me-3"
-                      />
-                    </div>
-                    <div class="flex-grow-1">
-                      <h3 class="dropdown-item-title">
-                        Brad Diesel
-                        <span class="float-end fs-7 text-danger"><i class="bi bi-star-fill"></i></span>
-                      </h3>
-                      <p class="fs-7">Call me whenever you can...</p>
-                      <p class="fs-7 text-secondary">
-                        <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
-                      </p>
-                    </div>
-                  </div>
-                </a>
-                <div class="dropdown-divider"></div>
-
-                <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
-              </div>
-            </li>
-
             <!-- Notifications -->
             <li class="nav-item dropdown">
               <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
@@ -153,7 +124,7 @@
                 </li> 
 -->
                 <li class="user-body">
-                  <a href="#" class="btn btn-default btn-flat">My page</a>
+                  <a href="/users/mypage" class="btn btn-default btn-flat">My page</a>
                   <a href="<c:url value='/logout'/>" class="btn btn-default btn-flat float-end">Sign out</a>
                 </li>
               </ul>
