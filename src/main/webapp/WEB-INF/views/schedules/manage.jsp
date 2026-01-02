@@ -19,6 +19,24 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
+                <!-- 상태 필터 -->
+                <div class="mb-3">
+                    <div class="btn-group" role="group" aria-label="상태 필터">
+                        <button type="button" class="btn btn-outline-primary status-filter active" data-status="all">
+                            전체
+                        </button>
+                        <button type="button" class="btn btn-outline-success status-filter" data-status="SCHEDULED">
+                            예정
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary status-filter" data-status="COMPLETED">
+                            완료
+                        </button>
+                        <button type="button" class="btn btn-outline-danger status-filter" data-status="CANCELLED">
+                            취소
+                        </button>
+                    </div>
+                </div>
+
                 <table id="eventManageTable" class="table table-bordered table-hover">
                     <thead>
                         <tr>
@@ -34,7 +52,7 @@
                         <c:choose>
                             <c:when test="${not empty eventList}">
                                 <c:forEach var="event" items="${eventList}">
-                                    <tr>
+                                    <tr data-status="${event.statusCode}">
                                         <td><c:out value="${event.title}" /></td>
                                         <td><c:out value="${event.scope.displayName}" /></td>
                                         <td><c:set var="startAtStr" value="${event.startAt.toString()}" /><c:out value="${fn:replace(startAtStr, 'T', ' ')}" /></td>
@@ -127,9 +145,15 @@
                                         <label class="form-check-label" for="eventRepeating">반복 여부</label>
                                     </div>
                                     <div class="form-group">
-                                        <label for="eventAttachments">파일 첨부</label>
+                                        <label>기존 첨부파일</label>
+                                        <div id="existingAttachments" class="mb-2">
+                                            <!-- 기존 첨부파일 목록이 여기에 표시됩니다 -->
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eventAttachments">파일 추가</label>
                                         <input type="file" class="form-control-file" id="eventAttachments" multiple>
-                                        <small class="form-text text-muted">다중 파일 첨부 가능. 실제 업로드 로직은 추후 추가 예정입니다.</small>
+                                        <small class="form-text text-muted">다중 파일 첨부 가능</small>
                                     </div>
                                     <div class="form-group form-check">
                                         <input type="checkbox" class="form-check-input" id="eventNotification">

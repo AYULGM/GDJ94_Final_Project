@@ -93,7 +93,8 @@ public class ScheduleController {
     @PutMapping("/events")
     public ResponseEntity<?> updateEvent(
             @RequestPart("event") String eventJson,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "filesToDelete", required = false) List<Long> filesToDelete) {
 
         try {
             // JSON 문자열을 수동으로 파싱
@@ -101,7 +102,7 @@ public class ScheduleController {
             objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
             CalendarEventDto calendarEvent = objectMapper.readValue(eventJson, CalendarEventDto.class);
 
-            CalendarEventDto updatedEvent = scheduleService.updateCalendarEvent(calendarEvent, files);
+            CalendarEventDto updatedEvent = scheduleService.updateCalendarEvent(calendarEvent, files, filesToDelete);
             return new ResponseEntity<>(updatedEvent, HttpStatus.OK);
         } catch (TimeConflictException e) {
             Map<String, Object> errorResponse = new HashMap<>();

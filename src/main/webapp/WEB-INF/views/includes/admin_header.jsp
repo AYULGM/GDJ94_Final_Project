@@ -117,20 +117,22 @@
             </li>
 
             <!-- Notifications -->
-            <li class="nav-item dropdown">
-              <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+            <li class="nav-item dropdown" id="notification-dropdown">
+              <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false" id="notification-toggle">
                 <i class="bi bi-bell-fill"></i>
-                <span class="navbar-badge badge text-bg-warning">15</span>
+                <span class="navbar-badge badge text-bg-warning" id="notification-badge" style="display: none;">0</span>
               </a>
-              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                <span class="dropdown-item dropdown-header">15 Notifications</span>
+              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" id="notification-menu" style="max-height: 400px; overflow-y: auto;">
+                <span class="dropdown-item dropdown-header">
+                  <span id="notification-count-text">0</span> 개의 알림
+                  <button class="btn btn-sm btn-link float-end" id="mark-all-read-btn" style="display: none;">모두 읽음</button>
+                </span>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                  <i class="bi bi-envelope me-2"></i> 4 new messages
-                  <span class="float-end text-secondary fs-7">3 mins</span>
-                </a>
+                <div id="notification-list">
+                  <div class="dropdown-item text-center text-secondary">알림이 없습니다</div>
+                </div>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item dropdown-footer"> See All Notifications </a>
+                <a href="#" class="dropdown-item dropdown-footer" id="view-all-notifications">모든 알림 보기</a>
               </div>
             </li>
 

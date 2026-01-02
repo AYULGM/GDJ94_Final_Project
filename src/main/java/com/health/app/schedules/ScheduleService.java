@@ -13,6 +13,8 @@ import com.health.app.files.FileService;
 import com.health.app.attachments.AttachmentLinkRepository; // AttachmentLinkRepository 임포트
 import com.health.app.schedules.search.AttendeeSearchDto;
 import com.health.app.schedules.search.AttendeeSearchMapper; // AttendeeSearchMapper 임포트
+import com.health.app.notifications.NotificationService;
+import com.health.app.notifications.NotificationType;
 
 import java.util.List;
 import java.util.Map;
@@ -32,23 +34,29 @@ public class ScheduleService {
     private final FileService fileService;
     private final AttachmentLinkRepository attachmentLinkRepository;
     private final AttendeeSearchMapper attendeeSearchMapper; // AttendeeSearchMapper 주입
+    private final NotificationService notificationService; // NotificationService 주입
 
     @Autowired
-    public ScheduleService(CalendarEventMapper calendarEventMapper, ScheduleAttendeeMapper scheduleAttendeeMapper, FileService fileService, AttachmentLinkRepository attachmentLinkRepository, AttendeeSearchMapper attendeeSearchMapper) {
+    public ScheduleService(CalendarEventMapper calendarEventMapper, ScheduleAttendeeMapper scheduleAttendeeMapper, FileService fileService, AttachmentLinkRepository attachmentLinkRepository, AttendeeSearchMapper attendeeSearchMapper, NotificationService notificationService) {
         this.calendarEventMapper = calendarEventMapper;
         this.scheduleAttendeeMapper = scheduleAttendeeMapper;
         this.fileService = fileService;
         this.attachmentLinkRepository = attachmentLinkRepository;
         this.attendeeSearchMapper = attendeeSearchMapper; // 초기화
+        this.notificationService = notificationService; // 초기화
     }
 
     /**
      * 파라미터에 맞는 캘린더 이벤트 목록을 조회합니다.
+     * 조회 전에 지난 일정의 상태를 자동으로 업데이트합니다.
      *
      * @param params 필터링을 위한 파라미터 맵
      * @return 캘린더 이벤트 DTO 목록
      */
     public List<CalendarEventDto> getCalendarEvents(Map<String, Object> params) {
+        // 지난 일정 자동 상태 업데이트
+        calendarEventMapper.updatePastEventsToCompleted();
+
         return calendarEventMapper.selectCalendarEvents(params);
     }
     
@@ -103,16 +111,40 @@ public class ScheduleService {
                 }
             }
         }
-        
+
+        // 알림 전송: 참석자들에게 일정 등록 알림
+        if (calendarEvent.getAttendeeIds() != null && !calendarEvent.getAttendeeIds().isEmpty()) {
+            String notificationTitle = "새로운 일정: " + calendarEvent.getTitle();
+            String notificationMessage = String.format(
+                "일정이 등록되었습니다.\n시작: %s\n종료: %s",
+                calendarEvent.getStartAt(),
+                calendarEvent.getEndAt()
+            );
+
+            notificationService.send(
+                NotificationType.EVENT_CREATED,
+                notificationTitle,
+                notificationMessage,
+                "CALENDAR_EVENT",
+                eventId,
+                calendarEvent.getAttendeeIds(),
+                calendarEvent.getCreateUser()
+            );
+        }
+
         return calendarEvent;
     }
     
     /**
      * 특정 사용자가 생성한 모든 일정을 조회합니다.
+     * 조회 전에 지난 일정의 상태를 자동으로 업데이트합니다.
      * @param ownerUserId 사용자 ID
      * @return 캘린더 이벤트 DTO 목록
      */
     public List<CalendarEventDto> getEventsByOwner(Long ownerUserId) {
+        // 지난 일정 자동 상태 업데이트
+        calendarEventMapper.updatePastEventsToCompleted();
+
         return calendarEventMapper.selectEventsByOwner(ownerUserId);
     }
 
@@ -123,7 +155,16 @@ public class ScheduleService {
     @Transactional
     public void deleteCalendarEvent(Long eventId) {
         // TODO: 삭제 권한 확인 로직 추가 필요
-        
+
+        // 0. 알림 전송을 위해 이벤트 정보 조회 (삭제 전)
+        CalendarEventDto event = getEventById(eventId);
+        List<Long> attendeeIds = new ArrayList<>();
+        if (event != null && event.getAttendees() != null) {
+            for (AttendeeSearchDto attendee : event.getAttendees()) {
+                attendeeIds.add(attendee.getUserId());
+            }
+        }
+
         // 1. 연결된 파일 링크 논리적 삭제
         attachmentLinkRepository.logicalDeleteByEntityTypeAndEntityId("CALENDAR_EVENT", eventId);
 
@@ -132,6 +173,25 @@ public class ScheduleService {
 
         // 3. 메인 이벤트 논리적 삭제
         calendarEventMapper.deleteCalendarEvent(eventId);
+
+        // 4. 알림 전송: 참석자들에게 일정 취소 알림
+        if (!attendeeIds.isEmpty() && event != null) {
+            String notificationTitle = "일정 취소: " + event.getTitle();
+            String notificationMessage = String.format(
+                "일정이 취소되었습니다.\n시작 예정이었던 시간: %s",
+                event.getStartAt()
+            );
+
+            notificationService.send(
+                NotificationType.EVENT_CANCELLED,
+                notificationTitle,
+                notificationMessage,
+                "CALENDAR_EVENT",
+                eventId,
+                attendeeIds,
+                1L // TODO: 실제 로그인 사용자 ID로 변경 필요
+            );
+        }
     }
 
     /**
@@ -146,6 +206,11 @@ public class ScheduleService {
             // 참석자 정보 조회 및 설정
             List<AttendeeSearchDto> attendees = scheduleAttendeeMapper.selectAttendeesByEventId(eventId);
             event.setAttendees(attendees);
+
+            // 첨부파일 정보 조회 및 설정
+            List<com.health.app.attachments.Attachment> attachments =
+                attachmentLinkRepository.findAttachmentsByEntityTypeAndEntityId("CALENDAR_EVENT", eventId);
+            event.setAttachments(attachments);
         }
         return event;
     }
@@ -154,10 +219,11 @@ public class ScheduleService {
      * 캘린더 이벤트를 업데이트하고 관련 참석자 및 파일 링크를 처리합니다.
      * @param calendarEvent 업데이트할 이벤트 데이터
      * @param files 첨부 파일 목록
+     * @param filesToDelete 삭제할 파일 ID 목록
      * @return 업데이트된 캘린더 이벤트 DTO
      */
     @Transactional
-    public CalendarEventDto updateCalendarEvent(CalendarEventDto calendarEvent, List<MultipartFile> files) {
+    public CalendarEventDto updateCalendarEvent(CalendarEventDto calendarEvent, List<MultipartFile> files, List<Long> filesToDelete) {
         if (calendarEvent.getEventId() == null) {
             throw new IllegalArgumentException("Event ID cannot be null for update operation.");
         }
@@ -189,8 +255,14 @@ public class ScheduleService {
             }
         }
 
-        // 3. 파일 첨부 업데이트: 새로 추가된 파일 처리
-        // TODO: 기존 파일 삭제/수정 로직 추가 필요 (현재는 새로 첨부된 파일만 처리)
+        // 3. 첨부파일 삭제 처리
+        if (filesToDelete != null && !filesToDelete.isEmpty()) {
+            for (Long fileId : filesToDelete) {
+                fileService.deleteAttachment(fileId, calendarEvent.getUpdateUser());
+            }
+        }
+
+        // 4. 파일 첨부 업데이트: 새로 추가된 파일 처리
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
@@ -198,6 +270,26 @@ public class ScheduleService {
                     fileService.linkFileToEntity(fileId, "CALENDAR_EVENT", calendarEvent.getEventId(), "reference", calendarEvent.getUpdateUser());
                 }
             }
+        }
+
+        // 알림 전송: 참석자들에게 일정 수정 알림
+        if (calendarEvent.getAttendeeIds() != null && !calendarEvent.getAttendeeIds().isEmpty()) {
+            String notificationTitle = "일정 수정: " + calendarEvent.getTitle();
+            String notificationMessage = String.format(
+                "일정이 수정되었습니다.\n시작: %s\n종료: %s",
+                calendarEvent.getStartAt(),
+                calendarEvent.getEndAt()
+            );
+
+            notificationService.send(
+                NotificationType.EVENT_UPDATED,
+                notificationTitle,
+                notificationMessage,
+                "CALENDAR_EVENT",
+                calendarEvent.getEventId(),
+                calendarEvent.getAttendeeIds(),
+                calendarEvent.getUpdateUser()
+            );
         }
 
         return calendarEvent;

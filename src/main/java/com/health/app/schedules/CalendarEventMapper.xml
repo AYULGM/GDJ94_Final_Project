@@ -136,4 +136,15 @@
         ORDER BY ce.start_at ASC
     </select>
 
+    <!-- 종료 시간이 지난 SCHEDULED 일정을 자동으로 COMPLETED로 변경 -->
+    <update id="updatePastEventsToCompleted">
+        UPDATE calendar_events
+        SET
+            status_code = 'COMPLETED',
+            update_date = NOW()
+        WHERE status_code = 'SCHEDULED'
+          AND end_at &lt; NOW()
+          AND use_yn = TRUE
+    </update>
+
 </mapper>

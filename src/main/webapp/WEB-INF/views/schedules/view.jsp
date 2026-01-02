@@ -92,9 +92,15 @@
                                         <label class="form-check-label" for="eventRepeating">반복 여부</label>
                                     </div>
                                     <div class="form-group">
-                                        <label for="eventAttachments">파일 첨부</label>
+                                        <label>기존 첨부파일</label>
+                                        <div id="existingAttachments" class="mb-2">
+                                            <!-- 기존 첨부파일 목록이 여기에 표시됩니다 -->
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eventAttachments">파일 추가</label>
                                         <input type="file" class="form-control-file" id="eventAttachments" multiple>
-                                        <small class="form-text text-muted">다중 파일 첨부 가능. 실제 업로드 로직은 추후 추가 예정입니다.</small>
+                                        <small class="form-text text-muted">다중 파일 첨부 가능</small>
                                     </div>
                                     <div class="form-group form-check">
                                         <input type="checkbox" class="form-check-input" id="eventNotification">

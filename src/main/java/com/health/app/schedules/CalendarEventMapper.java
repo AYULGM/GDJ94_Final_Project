@@ -16,4 +16,10 @@ public interface CalendarEventMapper {
     void deleteCalendarEvent(Long eventId); // 논리적 삭제를 위한 update
     List<CalendarEventDto> selectEventsByOwner(Long ownerUserId);
     List<CalendarEventDto> selectConflictingEventsForAttendee(Map<String, Object> params);
+
+    /**
+     * 종료 시간이 지난 SCHEDULED 일정을 자동으로 COMPLETED로 변경합니다.
+     * @return 업데이트된 행의 수
+     */
+    int updatePastEventsToCompleted();
 }

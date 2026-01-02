@@ -2,6 +2,7 @@
 let currentScope = 'all'; // 현재 필터 scope 저장 변수 (캘린더 필터링에 사용)
 let selectedAttendees = []; // {userId, name, departmentName} 객체의 배열 (모달 참석자 관리용)
 let calendarInstance; // FullCalendar 인스턴스를 저장할 변수 (캘린더 인스턴스를 전역에서 접근하기 위해)
+let filesToDelete = []; // 삭제할 첨부파일 ID 목록
 
 // --- Helper Functions ---
 
@@ -242,6 +243,14 @@ function initEventModalLogic() {
         document.getElementById('eventStart').value = now.toISOString().slice(0, 16);
         now.setHours(now.getHours() + 1);
         document.getElementById('eventEnd').value = now.toISOString().slice(0, 16);
+
+        // 첨부파일 관련 초기화
+        filesToDelete = [];
+        const existingAttachmentsContainer = document.getElementById('existingAttachments');
+        if (existingAttachmentsContainer) {
+            existingAttachmentsContainer.innerHTML = '<span class="text-muted">기존 첨부파일이 없습니다.</span>';
+        }
+
         const modal = new bootstrap.Modal(document.getElementById('eventModal'));
         modal.show();
         });
@@ -309,6 +318,13 @@ function initEventModalLogic() {
             for (let i = 0; i < files.length; i++) {
                 formData.append('files', files[i]);
             }
+        }
+
+        // 삭제할 파일 ID 목록 추가
+        if (filesToDelete && filesToDelete.length > 0) {
+            filesToDelete.forEach(fileId => {
+                formData.append('filesToDelete', fileId);
+            });
         }
 
         const saveUrl = contextPath + '/schedules/events';
@@ -441,6 +457,10 @@ function initManagePageLogic() {
                     const selectedAttendeesContainer = document.getElementById('selected-attendees');
                     renderSelectedAttendees(selectedAttendeesContainer); // 컨테이너 전달
 
+                    // 기존 첨부파일 표시 및 삭제 목록 초기화
+                    filesToDelete = [];
+                    renderExistingAttachments(event.attachments || []);
+
                     const modal = new bootstrap.Modal(document.getElementById('eventModal'));
                     modal.show();
                 })
@@ -450,6 +470,30 @@ function initManagePageLogic() {
                 });
         }
     });
+
+    // 상태 필터 버튼 이벤트 리스너
+    const statusFilters = document.querySelectorAll('.status-filter');
+    if (statusFilters.length > 0) {
+        statusFilters.forEach(button => {
+            button.addEventListener('click', function() {
+                // 활성 버튼 스타일 변경
+                statusFilters.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                const selectedStatus = this.dataset.status;
+                const rows = tableBody.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    const rowStatus = row.dataset.status;
+                    if (selectedStatus === 'all' || rowStatus === selectedStatus) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    }
 }
 
 
@@ -520,8 +564,8 @@ function showEventDetail(eventId) {
                     fileLink.className = 'mb-1';
                     fileLink.innerHTML = `
                         <i class="bi bi-file-earmark-arrow-down"></i>
-                        <a href="${contextPath}/schedules/attachments/${file.fileId}/download" target="_blank">
-                            ${file.fileName}
+                        <a href="${contextPath}/files/download/${file.fileId}" target="_blank">
+                            ${file.originalName}
                         </a>
                         <span class="text-muted ms-2">(${formatFileSize(file.fileSize)})</span>
                     `;
@@ -556,6 +600,56 @@ function formatFileSize(bytes) {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
+ * 기존 첨부파일 목록을 표시합니다.
+ * @param {Array} attachments - 첨부파일 배열
+ */
+function renderExistingAttachments(attachments) {
+    const container = document.getElementById('existingAttachments');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!attachments || attachments.length === 0) {
+        container.innerHTML = '<span class="text-muted">기존 첨부파일이 없습니다.</span>';
+        return;
+    }
+
+    attachments.forEach(file => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'd-flex align-items-center mb-2 p-2 border rounded';
+        fileItem.dataset.fileId = file.fileId;
+        fileItem.innerHTML = `
+            <i class="bi bi-file-earmark me-2"></i>
+            <span class="flex-grow-1">${file.originalName}</span>
+            <span class="text-muted me-2">(${formatFileSize(file.fileSize)})</span>
+            <button type="button" class="btn btn-sm btn-danger delete-attachment-btn" data-file-id="${file.fileId}">
+                <i class="bi bi-trash"></i> 삭제
+            </button>
+        `;
+        container.appendChild(fileItem);
+    });
+
+    // 삭제 버튼에 이벤트 리스너 추가
+    container.querySelectorAll('.delete-attachment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const fileId = parseInt(this.dataset.fileId);
+            // 삭제 목록에 추가
+            if (!filesToDelete.includes(fileId)) {
+                filesToDelete.push(fileId);
+            }
+            // UI에서 제거
+            const fileItem = this.closest('div[data-file-id]');
+            fileItem.remove();
+
+            // 파일이 모두 삭제되었으면 안내 메시지 표시
+            if (container.querySelectorAll('div[data-file-id]').length === 0) {
+                container.innerHTML = '<span class="text-muted">기존 첨부파일이 없습니다.</span>';
+            }
+        });
+    });
 }
 
 // DOMContentLoaded 이벤트 리스너
@@ -612,6 +706,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedAttendees = event.attendees || [];
                     const selectedAttendeesContainer = document.getElementById('selected-attendees');
                     renderSelectedAttendees(selectedAttendeesContainer);
+
+                    // 기존 첨부파일 표시 및 삭제 목록 초기화
+                    filesToDelete = [];
+                    renderExistingAttachments(event.attachments || []);
 
                     const modal = new bootstrap.Modal(document.getElementById('eventModal'));
                     modal.show();
