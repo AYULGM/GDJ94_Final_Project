@@ -4,5 +4,116 @@
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.health.app.approval.ApprovalMapper">
-	<!-- SQL들 -->
+
+    <!-- 1) documents -->
+    <insert id="insertDocument"
+            parameterType="com.health.app.approval.ApprovalDraftDTO"
+            useGeneratedKeys="true"
+            keyProperty="docId">
+        INSERT INTO approval_documents
+        (
+            doc_no,
+            type_code,
+            form_code,
+            status_code,
+            drafter_user_id,
+            drafter_branch_id,
+            current_doc_ver_id,
+            create_user,
+            create_date,
+            update_user,
+            update_date,
+            use_yn
+        )
+        VALUES
+        (
+            #{docNo},
+            #{typeCode},
+            #{formCode},
+            #{statusCode},
+            #{drafterId},
+            #{branchId},
+            NULL,
+            #{createUser},
+            NOW(),
+            #{updateUser},
+            NOW(),
+            1
+        )
+    </insert>
+
+    <!-- 2) versions -->
+    <insert id="insertDocumentVersion"
+            parameterType="com.health.app.approval.ApprovalDraftDTO"
+            useGeneratedKeys="true"
+            keyProperty="docVerId">
+        INSERT INTO approval_document_versions
+        (
+            doc_id,
+            version_no,
+            ver_status_code,
+            title,
+            body,
+            create_user,
+            create_date,
+            use_yn
+        )
+        VALUES
+        (
+            #{docId},
+            #{versionNo},
+            #{verStatusCode},
+            #{title},
+            #{body},
+            #{createUser},
+            NOW(),
+            TRUE
+        )
+    </insert>
+
+    <!-- 3) ext (개별 컬럼 저장) -->
+    <insert id="insertDocumentExt"
+            parameterType="com.health.app.approval.ApprovalDraftDTO">
+        INSERT INTO approval_document_ext
+        (
+            doc_ver_id,
+            ext_dt1, ext_dt2, ext_dt3, ext_dt4,
+            ext_no1, ext_no2, ext_no3, ext_no4,
+            ext_txt1, ext_txt2, ext_txt3, ext_txt4, ext_txt5, ext_txt6,
+            ext_code1, ext_code2, ext_code3, ext_code4,
+            create_user,
+            create_date,
+            use_yn
+        )
+        VALUES
+        (
+            #{docVerId},
+            #{extDt1}, #{extDt2}, #{extDt3}, #{extDt4},
+            #{extNo1}, #{extNo2}, #{extNo3}, #{extNo4},
+            #{extTxt1}, #{extTxt2}, #{extTxt3}, #{extTxt4}, #{extTxt5}, #{extTxt6},
+            #{extCode1}, #{extCode2}, #{extCode3}, #{extCode4},
+            #{createUser},
+            NOW(),
+            TRUE
+        )
+    </insert>
+
+    <!-- 4) documents.current_doc_ver_id -->
+    <update id="updateCurrentVersion"
+            parameterType="com.health.app.approval.ApprovalDraftDTO">
+        UPDATE approval_documents
+        SET
+            current_doc_ver_id = #{docVerId},
+            update_user = #{updateUser},
+            update_date = NOW()
+        WHERE doc_id = #{docId}
+    </update>
+
+    <!-- ✅ userId로 branchId 조회 -->
+    <select id="selectBranchIdByUserId" resultType="long">
+        SELECT branch_id
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
 </mapper>
