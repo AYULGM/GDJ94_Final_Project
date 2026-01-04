@@ -133,6 +133,11 @@
                 <p>서명창</p>
               </a>
             </li>
+			<li class="nav-item">
+              <a href="/approval/line" class="nav-link">
+                <p>결재 라인</p>
+              </a>
+            </li>
           </ul>
         </li>
 
