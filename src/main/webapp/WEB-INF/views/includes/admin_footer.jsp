@@ -65,6 +65,44 @@
         }
       });
     </script>
+
+    <!-- 알림 시스템 -->
+    <script src="/js/notifications.js"></script>
+    <script>
+      // 알림 클라이언트 초기화
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('========== 알림 시스템 초기화 시작 ==========');
+
+        // notificationClient가 정의되어 있는지 확인
+        if (typeof notificationClient === 'undefined') {
+          console.error('notificationClient가 정의되지 않았습니다!');
+          return;
+        }
+
+        console.log('notificationClient 확인됨:', notificationClient);
+
+        // TODO: 로그인 기능 구현 후 실제 사용자 ID로 변경
+        const currentUserId = 1;
+        const contextPath = '${pageContext.request.contextPath}';
+
+        console.log('사용자 ID:', currentUserId);
+        console.log('Context Path:', contextPath);
+
+        // 알림 클라이언트 초기화
+        notificationClient.init(currentUserId, contextPath);
+
+        // 브라우저 알림 권한 요청
+        notificationClient.requestNotificationPermission();
+
+        // 새 알림 수신 시 콜백 (선택 사항)
+        notificationClient.onNewNotification(function(notification) {
+          console.log('새 알림 도착:', notification);
+          // 필요시 추가 UI 업데이트 로직
+        });
+
+        console.log('========== 알림 시스템 초기화 완료 ==========');
+      });
+    </script>
     <!--end::Script-->
   </body>
 </html>

@@ -315,3 +315,838 @@
     *   캘린더 하단 리스트 고급 필터링
     *   반복 일정 기능 구현
     *   알림 설정 기능 구현
+
+---
+
+### 2026-01-02: 일정 수정 기능 안정화 및 상세보기 모달 구현
+
+일정 수정 기능의 다양한 NULL 필드 오류를 해결하고, 사용자 경험 개선을 위한 상세보기 모달을 구현했습니다.
+
+#### **주요 구현 내용**
+
+*   **일정 상세보기 모달 구현**:
+    *   `view.jsp`에 새로운 읽기 전용 상세보기 모달(`eventDetailModal`)을 추가했습니다.
+    *   깔끔한 Bootstrap 그리드 레이아웃으로 모든 일정 정보를 표시하도록 구현했습니다.
+    *   일정 유형과 상태를 색상 배지(badge)로 시각화했습니다.
+    *   **첨부파일 다운로드 기능**: "참고 파일" 섹션에 첨부파일 목록을 표시하고, 각 파일에 다운로드 아이콘과 링크를 제공했습니다.
+    *   파일 크기를 자동으로 포맷(B, KB, MB, GB)하는 `formatFileSize()` 유틸리티 함수를 구현했습니다.
+    *   하단에 "수정" 및 "삭제" 버튼을 추가하여 상세보기에서 바로 편집/삭제할 수 있도록 했습니다.
+
+*   **FullCalendar 이벤트 클릭 핸들러 추가**:
+    *   `schedules.js`의 `initFullCalendar()` 함수에 `eventClick` 콜백을 추가하여 캘린더에서 일정 클릭 시 상세보기 모달이 자동으로 표시되도록 구현했습니다.
+    *   `showEventDetail(eventId)` 함수를 생성하여 서버에서 일정 상세 정보를 가져와 모달에 표시하는 로직을 구현했습니다.
+
+*   **UI 개선**:
+    *   **사이드바 캘린더 메뉴 기본 닫힘 설정**: `sidebar.jsp`의 캘린더 메뉴 항목에서 `menu-open` 클래스를 제거하여 페이지 로드 시 메뉴가 기본적으로 닫혀있도록 변경했습니다.
+    *   **일정 관리 페이지 등록 버튼 추가**: `manage.jsp`의 카드 헤더에 "일정 등록" 버튼을 추가하여 일정 관리 페이지에서도 새 일정을 등록할 수 있도록 개선했습니다.
+
+#### **주요 트러블슈팅 및 해결 과정**
+
+1.  **`Column 'status_code' cannot be null` SQL 무결성 제약 조건 위반**:
+    *   **문제**: 일정 수정 시 `status_code` 컬럼이 NULL이어서 데이터베이스 무결성 제약 조건 오류가 발생했습니다.
+    *   **원인**: 일정 수정 모달에 상태 코드를 선택하는 필드가 없었고, JavaScript에서도 `statusCode` 값을 전송하지 않았습니다.
+    *   **해결**:
+        *   `manage.jsp`와 `view.jsp`의 모달 폼에 상태 선택 드롭다운(`eventStatus`)을 추가했습니다. (옵션: SCHEDULED, COMPLETED, CANCELLED)
+        *   `schedules.js`의 `eventData` 객체에 `statusCode: document.getElementById('eventStatus').value` 필드를 추가했습니다.
+        *   새 일정 등록 시 기본값을 `SCHEDULED`로 설정하고, 수정 시에는 기존 값을 로드하도록 구현했습니다.
+
+2.  **`Column 'is_all_day' cannot be null` SQL 무결성 제약 조건 위반**:
+    *   **문제**: 일정 수정 시 `is_all_day` 컬럼이 NULL이어서 오류가 발생했습니다.
+    *   **원인**: 일정 모달에 종일 여부를 선택하는 체크박스가 없었고, JavaScript에서도 `allDay` 값을 전송하지 않았습니다.
+    *   **해결**:
+        *   `manage.jsp`와 `view.jsp`의 모달 폼에 종일 체크박스(`eventAllDay`)를 추가했습니다.
+        *   `schedules.js`의 `eventData` 객체에 `allDay: document.getElementById('eventAllDay').checked` 필드를 추가했습니다.
+        *   새 일정 등록 시 기본값을 `false`로 설정하고, 수정 시에는 기존 값을 로드하도록 구현했습니다.
+
+3.  **`Column 'use_yn' cannot be null` SQL 무결성 제약 조건 위반**:
+    *   **문제**: 일정 수정 시 `use_yn` 컬럼이 NULL이어서 오류가 발생했습니다.
+    *   **원인**: `use_yn`은 삭제 여부를 나타내는 플래그로, 사용자 입력 필드가 아니라 서버에서 관리해야 하는 값이지만 JavaScript에서 전송되지 않았습니다.
+    *   **해결**: `schedules.js`의 `eventData` 객체에 `useYn: true`를 추가하여 항상 활성 상태로 전송하도록 했습니다.
+
+4.  **`Column 'create_user'/'update_user' cannot be null` (CalendarEvent 관련)**:
+    *   **문제**: 일정 등록/수정 시 `createUser` 또는 `updateUser` 필드가 NULL이어서 오류가 발생했습니다.
+    *   **원인**: 사용자 인증 기능이 구현되지 않아 현재 로그인한 사용자 ID를 가져올 수 없었고, JavaScript에서도 해당 값을 전송하지 않았습니다.
+    *   **해결**: 임시로 하드코딩된 사용자 ID(`1`)를 사용하도록 `schedules.js`를 수정했습니다.
+        *   신규 등록 시: `createUser: 1`
+        *   수정 시: `updateUser: 1`
+        *   향후 로그인 기능 구현 시 세션에서 실제 사용자 ID를 가져오도록 수정 필요합니다.
+
+5.  **`not-null property references a null or transient value: com.health.app.attachments.AttachmentLink.createUser`**:
+    *   **문제**: 일정 수정 시 파일을 첨부할 때 `AttachmentLink` 엔티티의 `createUser` 필드가 NULL이어서 Hibernate 오류가 발생했습니다.
+    *   **원인**: `ScheduleService.java`의 `updateCalendarEvent` 메서드에서 첨부파일 링크를 생성할 때 `calendarEvent.getCreateUser()`를 사용했는데, 수정 모드에서는 `createUser`가 `null`이었습니다.
+    *   **해결**: `ScheduleService.java`의 198번 라인을 수정하여 일정 수정 시 첨부파일 링크를 생성할 때 `calendarEvent.getUpdateUser()`를 사용하도록 변경했습니다.
+        ```java
+        // 변경 전
+        fileService.linkFileToEntity(fileId, "CALENDAR_EVENT", calendarEvent.getEventId(), "reference", calendarEvent.getCreateUser());
+
+        // 변경 후
+        fileService.linkFileToEntity(fileId, "CALENDAR_EVENT", calendarEvent.getEventId(), "reference", calendarEvent.getUpdateUser());
+        ```
+
+#### **생성 및 수정된 주요 파일**
+
+*   **View**: `src/main/webapp/WEB-INF/views/schedules/view.jsp` (상세보기 모달 추가)
+*   **View**: `src/main/webapp/WEB-INF/views/schedules/manage.jsp` (상태/종일 필드 추가, 일정 등록 버튼 추가)
+*   **View**: `src/main/webapp/WEB-INF/views/includes/sidebar.jsp` (캘린더 메뉴 기본 닫힘 설정)
+*   **JavaScript**: `src/main/resources/static/js/schedules.js` (필수 필드 추가, 상세보기 로직, eventClick 핸들러)
+*   **Service**: `src/main/java/com/health/app/schedules/ScheduleService.java` (첨부파일 링크 생성 시 updateUser 사용)
+
+#### **다음 작업 계획 (상세 TODO List)**
+
+##### 🔴 **높은 우선순위 (핵심 기능)**
+
+1.  **일정 첨부파일 조회 API 구현** ⭐ 최우선!
+    *   **현재 상태**: 상세보기 모달에서 첨부파일 목록이 표시되지 않음 (`event.attachments`가 항상 비어있음)
+    *   **필요 작업**:
+        *   `ScheduleService.getEventById()` 메서드에서 첨부파일 목록 조회 로직 추가
+        *   `AttachmentLinkRepository`를 사용하여 `CALENDAR_EVENT` 타입의 첨부파일 조회
+        *   `CalendarEventDto`의 `attachments` 필드에 첨부파일 정보 매핑
+    *   **관련 파일**: `ScheduleService.java`, `CalendarEventDto.java`, `AttachmentLinkRepository.java`
+
+2.  **로그인/인증 기능 구현**
+    *   **현재 상태**: 모든 사용자 ID가 하드코딩된 `1L` 사용 중
+    *   **필요 작업**:
+        *   Spring Security 설정 활성화 및 구성
+        *   로그인 페이지 및 세션 관리
+        *   `createUser`, `updateUser`, `ownerUserId` 등을 실제 로그인 사용자 ID로 설정
+    *   **영향 범위**: 전체 애플리케이션 (공지사항, 전자결재 등 모든 모듈)
+
+3.  **부서 정보 연동**
+    *   **현재 상태**: `departments` 테이블이 없어서 부서 일정 생성 및 참석자 부서명 표시 불가
+    *   **필요 작업**:
+        *   `departments` 테이블 생성 (DDL)
+        *   `users` 테이블과 부서 연결 (FK 추가)
+        *   `AttendeeSearchMapper.xml`에 부서 정보 조인 쿼리 재추가
+    *   **영향 범위**: 부서 일정, 참석자 정보 표시
+
+##### 🟡 **중간 우선순위 (사용자 경험 개선)**
+
+4.  **첨부파일 관리 기능 개선**
+    *   **현재 상태**: 파일 추가만 가능, 삭제/수정 불가
+    *   **필요 작업**:
+        *   일정 수정 모달에 기존 첨부파일 목록 표시
+        *   각 파일별 삭제 버튼 추가
+        *   `ScheduleService.updateCalendarEvent()`에서 파일 삭제 처리 로직 추가
+    *   **UX 개선**: 사용자가 첨부파일을 더 쉽게 관리할 수 있음
+
+5.  **캘린더 하단 리스트 고급 필터링**
+    *   **현재 상태**: 날짜별 일정만 표시
+    *   **필요 작업**:
+        *   오늘/이번 주/이번 달 탭 또는 버튼 추가
+        *   일정 유형별(개인/부서/전사) 필터 드롭다운 추가
+        *   `schedules.js`에 필터링 로직 구현
+    *   **UX 개선**: 사용자가 원하는 일정을 빠르게 찾을 수 있음
+
+6.  **일정 상태 관리 개선**
+    *   **필요 작업**:
+        *   자동 상태 변경: 지난 일정을 자동으로 `COMPLETED`로 변경 (스케줄러 또는 조회 시)
+        *   일정 관리 페이지에서 상태별 필터링 기능 추가
+        *   상태 변경 이력 관리 (선택 사항)
+
+##### 🟢 **낮은 우선순위 (부가 기능)**
+
+7.  **반복 일정 기능**
+    *   **필요 작업**:
+        *   매주/매월 반복 패턴 설정 UI 추가
+        *   `repeat_info` 컬럼에 반복 규칙 JSON 저장
+        *   반복 일정 생성 로직 구현
+        *   반복 일정 수정 시 전체/개별 선택 옵션
+    *   **기술 고려**: iCal RRULE 표준 활용 검토
+
+8.  **알림 설정 기능**
+    *   **필요 작업**:
+        *   일정 시작 N분 전 알림 설정 UI
+        *   `NotificationService` 연동
+        *   이메일/푸시 알림 발송 (스케줄러 사용)
+    *   **의존성**: 알림 서비스 구현 필요
+
+9.  **일정 가져오기/내보내기**
+    *   **필요 작업**:
+        *   iCal (.ics) 형식 지원
+        *   다른 캘린더 서비스 연동 (Google Calendar API 등)
+    *   **비즈니스 가치**: 기존 일정 데이터 마이그레이션
+
+10. **참석자 응답 기능**
+    *   **필요 작업**:
+        *   참석자가 일정 초대에 수락/거절/보류 선택
+        *   `schedule_attendees.acceptance_status` 업데이트 API
+        *   일정 상세보기에서 참석 현황 표시
+    *   **UX 개선**: 회의 참석 여부 확인 가능
+
+##### 🔧 **기술 부채 & 리팩토링**
+
+11. **이미지 리소스 404 오류 해결**
+    *   **문제**: AdminLTE 템플릿 이미지 파일 누락
+    *   **해결**: `src/main/resources/static` 경로에 이미지 파일 추가 및 경로 확인
+
+12. **서버 측 권한 체크 로직 구현**
+    *   **현재 상태**: `// TODO: 권한 확인 로직 추가 필요` 주석만 존재
+    *   **필요 작업**:
+        *   일정 삭제/수정 시 소유자 확인
+        *   부서 일정 생성 권한 체크 (`ADMIN` 권한)
+        *   전사 일정 생성 권한 체크 (`MASTER` 권한)
+    *   **보안**: 무단 수정/삭제 방지
+
+13. **에러 처리 개선**
+    *   **필요 작업**:
+        *   사용자 친화적인 에러 메시지 (현재는 기술적 오류 메시지 그대로 노출)
+        *   프론트엔드 validation 강화 (날짜 형식, 필수 필드 등)
+        *   백엔드 로깅 개선 (에러 추적 용이)
+
+---
+
+##### 🎯 **추천 작업 순서**
+
+**1단계** (이번 주 우선 작업):
+1.  첨부파일 조회 API 구현 ← **가장 먼저!**
+2.  첨부파일 삭제 기능 추가
+3.  이미지 리소스 404 해결
+
+**2단계** (다음 주):
+4.  로그인/인증 기능 구현
+5.  부서 정보 연동
+6.  권한 체크 로직 구현
+
+**3단계** (이후 단계적 개선):
+7.  캘린더 필터링 고급 기능
+8.  반복 일정 기능
+9.  알림 기능
+
+---
+
+### 2026-01-03: 일정 첨부파일 조회/삭제 및 상태 관리 개선
+
+1단계 우선 작업들을 완료하고, 사용자 경험을 크게 개선했습니다.
+
+#### **주요 구현 내용**
+
+##### **1. 일정 첨부파일 조회 API 구현** ⭐ 최우선 작업 완료
+
+*   **AttachmentLinkRepository 개선**:
+    *   `findAttachmentsByEntityTypeAndEntityId()` 메서드 추가
+    *   JOIN 쿼리를 사용하여 AttachmentLink와 Attachment를 한 번에 효율적으로 조회
+    *   `useYn = true`인 활성 첨부파일만 조회하며, `sortOrder`로 정렬
+    *   파일: `AttachmentLinkRepository.java:29-30`
+
+*   **CalendarEventDto 확장**:
+    *   `List<Attachment> attachments` 필드 추가
+    *   일정 조회 시 첨부파일 정보를 함께 전달
+    *   파일: `CalendarEventDto.java:40`
+
+*   **ScheduleService 자동 로딩**:
+    *   `getEventById()` 메서드 수정
+    *   일정 조회 시 참석자 정보와 함께 첨부파일 목록을 자동으로 로드
+    *   파일: `ScheduleService.java:150-153`
+
+*   **프론트엔드 버그 수정**:
+    *   `schedules.js`에서 잘못된 필드명(`file.fileName`)과 URL 경로 수정
+    *   `file.originalName` 사용 및 올바른 다운로드 경로(`/files/download/${file.fileId}`) 적용
+    *   파일: `schedules.js:523-524`
+
+##### **2. 첨부파일 삭제 기능 구현**
+
+*   **UI 개선**:
+    *   `view.jsp`와 `manage.jsp`의 일정 수정 모달에 "기존 첨부파일" 섹션 추가
+    *   각 파일마다 삭제 버튼 표시 (파일명, 크기, 삭제 버튼이 깔끔하게 정렬)
+    *   파일: `view.jsp:95-99`, `manage.jsp:130-134`
+
+*   **프론트엔드 로직**:
+    *   전역 변수 `filesToDelete` 배열 추가로 삭제할 파일 ID 추적
+    *   `renderExistingAttachments()` 함수 구현:
+        *   기존 첨부파일 목록 표시
+        *   삭제 버튼 클릭 시 UI에서 즉시 제거 및 삭제 목록에 추가
+    *   모달 열기 시 자동으로 기존 첨부파일 로드
+    *   저장 버튼 클릭 시 `filesToDelete` 배열을 FormData에 추가하여 서버로 전송
+    *   파일: `schedules.js:5`, `schedules.js:566-610`, `schedules.js:323-328`
+
+*   **백엔드 처리**:
+    *   `ScheduleController.updateEvent()`: `filesToDelete` 파라미터 추가
+    *   `ScheduleService.updateCalendarEvent()`: 삭제할 파일 목록 순회하며 `FileService.deleteAttachment()` 호출
+    *   논리적 삭제 처리 (`use_yn = false`)
+    *   파일: `ScheduleController.java:97`, `ScheduleService.java:198-203`
+
+##### **3. 일정 상태 관리 개선**
+
+*   **자동 상태 업데이트 (백엔드)**:
+    *   `CalendarEventMapper`에 `updatePastEventsToCompleted()` 메서드 추가
+    *   SQL 쿼리: 종료 시간이 지난 `SCHEDULED` 일정을 자동으로 `COMPLETED`로 변경
+    *   `ScheduleService.getCalendarEvents()` 및 `getEventsByOwner()`에서 조회 전 자동 실행
+    *   동작 방식: 사용자가 캘린더나 일정 관리 페이지에 접속할 때마다 자동으로 지난 일정 상태 업데이트
+    *   파일: `CalendarEventMapper.java:24`, `CalendarEventMapper.xml:140-148`, `ScheduleService.java:54`, `ScheduleService.java:122`
+
+*   **상태별 필터링 (프론트엔드)**:
+    *   `manage.jsp`에 필터 버튼 그룹 추가: 전체 / 예정 / 완료 / 취소
+    *   각 테이블 행에 `data-status` 속성 추가
+    *   `schedules.js`에 필터링 로직 구현: 버튼 클릭 시 선택된 상태만 표시, 나머지 숨김
+    *   파일: `manage.jsp:23-38`, `manage.jsp:55`, `schedules.js:474-496`
+
+#### **생성 및 수정된 주요 파일**
+
+**백엔드**:
+*   `AttachmentLinkRepository.java` (첨부파일 조회 메서드 추가)
+*   `CalendarEventDto.java` (attachments 필드 추가)
+*   `ScheduleService.java` (첨부파일 로딩, 삭제 처리, 자동 상태 업데이트)
+*   `ScheduleController.java` (filesToDelete 파라미터 추가)
+*   `CalendarEventMapper.java` (자동 상태 업데이트 메서드)
+*   `CalendarEventMapper.xml` (상태 업데이트 SQL 쿼리)
+
+**프론트엔드**:
+*   `view.jsp` (기존 첨부파일 섹션, 상태 필드)
+*   `manage.jsp` (기존 첨부파일 섹션, 상태 필터 버튼)
+*   `schedules.js` (첨부파일 표시/삭제 로직, 상태 필터링 로직)
+
+#### **다음 작업 계획 (업데이트된 TODO List)**
+
+##### 🟢 **간단한 작업** (빠르게 완료 가능)
+
+1.  **이미지 리소스 404 오류 해결**
+    *   AdminLTE 템플릿 이미지 파일 추가
+    *   콘솔 에러 정리
+
+2.  **캘린더 하단 리스트 고급 필터링**
+    *   오늘/이번 주/이번 달 탭 추가
+    *   일정 유형별 드롭다운 필터
+
+##### 🟡 **중간 우선순위**
+
+3.  **반복 일정 기능**
+    *   매주/매월 반복 패턴 설정 UI 추가
+    *   `repeat_info` 컬럼에 반복 규칙 JSON 저장
+    *   반복 일정 생성 로직 구현
+
+4.  **알림 설정 기능**
+    *   일정 시작 N분 전 알림 설정 UI
+    *   `NotificationService` 연동
+    *   이메일/푸시 알림 발송
+
+##### 🔴 **높은 우선순위** (대규모 작업)
+
+5.  **로그인/인증 기능 구현**
+    *   모든 사용자 ID가 하드코딩된 `1L` 사용 중
+    *   Spring Security 설정 활성화 및 구성
+    *   로그인 페이지 및 세션 관리
+    *   영향 범위: 전체 애플리케이션
+
+6.  **부서 정보 연동**
+    *   `departments` 테이블이 없어서 부서 일정 생성 및 참석자 부서명 표시 불가
+    *   `departments` 테이블 생성 (DDL)
+    *   `users` 테이블과 부서 연결 (FK 추가)
+
+7.  **서버 측 권한 체크 로직 구현**
+    *   일정 삭제/수정 시 소유자 확인
+    *   부서 일정 생성 권한 체크 (`ADMIN` 권한)
+    *   전사 일정 생성 권한 체크 (`MASTER` 권한)
+
+---
+
+### 2026-01-03: 알림(Notification) 시스템 구현 완료 및 일정 파트 연동
+
+`CODING_PLAN.md`의 알림 요구사항에 따라 실시간 알림 시스템을 완전히 구현하고, 일정 파트와의 연동을 완료했습니다.
+
+#### **주요 구현 내용**
+
+##### **1. 알림 백엔드 핵심 구조 구현 (100% 완료)**
+
+*   **엔티티 설계**:
+    *   `Notification.java` - 알림 본문 정보 저장 (`notifications` 테이블 매핑)
+    *   `NotificationRecipient.java` - 수신자 및 읽음 상태 관리 (`notification_recipients` 테이블 매핑)
+    *   `NotificationType.java` - 알림 타입 Enum (일정, 공지, 정산, 파일, 시스템 알림)
+    *   파일: `src/main/java/com/health/app/notifications/`
+
+*   **데이터 접근 계층**:
+    *   `NotificationRepository.java` - 알림 조회, 읽지 않은 알림 개수 쿼리
+    *   `NotificationRecipientRepository.java` - 수신자 관리, 읽음 처리 쿼리
+    *   JPQL을 사용한 효율적인 조인 쿼리 구현
+
+*   **비즈니스 로직 (`NotificationService.java`)**:
+    *   `send()` 메서드 - 알림 생성 + 수신자 추가 + 저장 + WebSocket 실시간 푸시까지 원스톱 처리
+    *   `getNotificationsByUserId()` - 특정 사용자의 알림 목록 조회 (최신순)
+    *   `getUnreadCount()` - 읽지 않은 알림 개수 조회
+    *   `markAsRead()` - 특정 알림 읽음 처리
+    *   `markAllAsRead()` - 모든 알림 일괄 읽음 처리
+    *   파일: `NotificationService.java:43-126`
+
+##### **2. REST API 엔드포인트 구현 (`NotificationController.java`)**
+
+*   `GET /api/notifications` - 알림 목록 조회
+*   `GET /api/notifications/unread-count` - 읽지 않은 알림 개수 조회
+*   `POST /api/notifications/{notifId}/read` - 특정 알림 읽음 처리
+*   `POST /api/notifications/read-all` - 모든 알림 읽음 처리
+*   현재 임시로 `currentUserId = 1L` 사용 (로그인 기능 구현 후 세션 연동 필요)
+
+##### **3. WebSocket 실시간 알림 시스템**
+
+*   **WebSocket 설정 (`WebSocketConfig.java`)**:
+    *   WebSocket 엔드포인트 `/ws/notifications` 등록
+    *   모든 출처 허용 (개발 단계, 프로덕션에서는 제한 필요)
+
+*   **실시간 푸시 핸들러 (`NotificationWebSocketHandler.java`)**:
+    *   사용자별 WebSocket 세션 관리 (`ConcurrentHashMap` 사용)
+    *   한 사용자가 여러 탭/디바이스에서 동시 접속 지원 (`CopyOnWriteArrayList`)
+    *   URL 쿼리 파라미터로 사용자 인증 (`?userId=1`)
+    *   `pushNotification()` 메서드로 특정 사용자들에게 실시간 알림 전송
+    *   파일: `NotificationWebSocketHandler.java:73-91`
+
+*   **의존성 확인**:
+    *   `pom.xml`에 `spring-boot-starter-websocket` 의존성 이미 추가됨 (pom.xml:80-84)
+
+##### **4. 프론트엔드 알림 클라이언트 (`notifications.js`)**
+
+*   **NotificationClient 클래스 구현**:
+    *   WebSocket 연결 및 자동 재연결 로직 (최대 10회 시도, 5초 간격)
+    *   실시간 알림 수신 및 핸들러
+    *   브라우저 푸시 알림 표시 (권한 요청 기능 포함)
+    *   읽지 않은 알림 배지 자동 업데이트
+    *   HTTP API를 통한 알림 목록 조회/읽음 처리
+
+*   **주요 메서드**:
+    *   `init(userId, contextPath)` - 클라이언트 초기화 및 연결 시작
+    *   `connect()` - WebSocket 연결 수립
+    *   `handleNewNotification(notification)` - 새 알림 수신 처리
+    *   `loadUnreadCount()` - 읽지 않은 알림 개수 로드 및 배지 업데이트
+    *   `markAsRead(notifId)` - 특정 알림 읽음 처리
+    *   `markAllAsRead()` - 모든 알림 읽음 처리
+    *   파일: `notifications.js:1-214`
+
+##### **5. UI 구현 (`admin_header.jsp`)**
+
+*   **헤더 알림 드롭다운 추가**:
+    *   종 아이콘 (`bi bi-bell-fill`) 및 읽지 않은 알림 개수 배지
+    *   알림 목록 드롭다운 (최대 높이 400px, 스크롤 가능)
+    *   "모두 읽음" 버튼 및 "모든 알림 보기" 링크
+    *   알림 목록 표시 영역 (`#notification-list`)
+    *   파일: `admin_header.jsp:120-137`
+
+##### **6. 일정 파트와 알림 연동 완료**
+
+*   **ScheduleService에 NotificationService 주입**:
+    *   생성자 주입 방식으로 `NotificationService` 의존성 추가
+    *   파일: `ScheduleService.java:37, 40, 46`
+
+*   **일정 등록 시 알림 발송**:
+    *   `createCalendarEvent()` 메서드에서 참석자들에게 `EVENT_CREATED` 알림 발송
+    *   알림 제목: "새로운 일정: [일정 제목]"
+    *   알림 메시지: 일정 시작/종료 시간 포함
+    *   파일: `ScheduleService.java:115-133`
+
+*   **일정 수정 시 알림 발송**:
+    *   `updateCalendarEvent()` 메서드에서 참석자들에게 `EVENT_UPDATED` 알림 발송
+    *   알림 제목: "일정 수정: [일정 제목]"
+    *   알림 메시지: 수정된 일정 시작/종료 시간 포함
+    *   파일: `ScheduleService.java:275-293`
+
+*   **일정 취소 시 알림 발송**:
+    *   `deleteCalendarEvent()` 메서드에서 삭제 전 이벤트 정보 및 참석자 조회
+    *   참석자들에게 `EVENT_CANCELLED` 알림 발송
+    *   알림 제목: "일정 취소: [일정 제목]"
+    *   알림 메시지: 취소된 일정 시작 예정 시간 포함
+    *   파일: `ScheduleService.java:159-194`
+
+#### **생성된 주요 파일**
+
+**백엔드**:
+*   `src/main/java/com/health/app/notifications/Notification.java`
+*   `src/main/java/com/health/app/notifications/NotificationRecipient.java`
+*   `src/main/java/com/health/app/notifications/NotificationType.java`
+*   `src/main/java/com/health/app/notifications/NotificationRepository.java`
+*   `src/main/java/com/health/app/notifications/NotificationRecipientRepository.java`
+*   `src/main/java/com/health/app/notifications/NotificationService.java`
+*   `src/main/java/com/health/app/notifications/NotificationController.java`
+*   `src/main/java/com/health/app/notifications/WebSocketConfig.java`
+*   `src/main/java/com/health/app/notifications/NotificationWebSocketHandler.java`
+
+**프론트엔드**:
+*   `src/main/resources/static/js/notifications.js`
+
+**수정된 파일**:
+*   `src/main/webapp/WEB-INF/views/includes/admin_header.jsp` (알림 드롭다운 UI 추가)
+*   `src/main/java/com/health/app/schedules/ScheduleService.java` (알림 연동)
+*   `pom.xml` (WebSocket 의존성)
+
+#### **다음 작업 계획 (업데이트된 TODO List)**
+
+##### 🔴 **높은 우선순위** (알림 시스템 완성)
+
+1.  **알림 클라이언트 초기화 스크립트 추가**
+    *   `admin_footer.jsp`에 NotificationClient 초기화 코드 추가
+    *   페이지 로드 시 자동으로 WebSocket 연결
+    *   브라우저 알림 권한 요청
+
+2.  **알림 목록 표시 로직 구현**
+    *   알림 드롭다운에서 실제 알림 데이터 표시
+    *   알림 클릭 시 읽음 처리 및 관련 페이지로 이동
+    *   알림 타입별 아이콘 및 스타일 적용
+
+3.  **로그인/인증 기능 구현**
+    *   모든 사용자 ID가 하드코딩된 `1L` 사용 중
+    *   Spring Security 설정 활성화 및 구성
+    *   로그인 페이지 및 세션 관리
+    *   NotificationController에서 실제 로그인 사용자 ID 사용
+    *   영향 범위: 전체 애플리케이션
+
+##### 🟢 **간단한 작업** (빠르게 완료 가능)
+
+4.  **이미지 리소스 404 오류 해결**
+    *   AdminLTE 템플릿 이미지 파일 추가
+    *   콘솔 에러 정리
+
+5.  **캘린더 하단 리스트 고급 필터링**
+    *   오늘/이번 주/이번 달 탭 추가
+    *   일정 유형별 드롭다운 필터
+
+##### 🟡 **중간 우선순위**
+
+6.  **반복 일정 기능**
+    *   매주/매월 반복 패턴 설정 UI 추가
+    *   `repeat_info` 컬럼에 반복 규칙 JSON 저장
+    *   반복 일정 생성 로직 구현
+
+7.  **일정 알림 고급 기능**
+    *   일정 시작 N분 전 알림 설정 UI
+    *   스케줄러를 사용한 예약 알림 발송
+    *   이메일 알림 통합 (선택 사항)
+
+8.  **부서 정보 연동**
+    *   `departments` 테이블이 없어서 부서 일정 생성 및 참석자 부서명 표시 불가
+    *   `departments` 테이블 생성 (DDL)
+    *   `users` 테이블과 부서 연결 (FK 추가)
+
+9.  **서버 측 권한 체크 로직 구현**
+    *   일정 삭제/수정 시 소유자 확인
+    *   부서 일정 생성 권한 체크 (`ADMIN` 권한)
+    *   전사 일정 생성 권한 체크 (`MASTER` 권한)
+
+---
+
+### 2026-01-05: 알림 시스템 프론트엔드 완성 및 정산/통계 기능 계획 수립
+
+알림 시스템의 백엔드(2026-01-03 완성)에 이어 프론트엔드 UI 연동을 완료하여 실시간 알림 시스템을 100% 완성했습니다.
+
+#### **주요 구현 내용**
+
+##### **1. 알림 클라이언트 초기화 스크립트 추가** ✅
+
+*   **파일**: `admin_footer.jsp`
+*   **구현 내용**:
+    *   `notifications.js` 스크립트 로드
+    *   페이지 로드 시(`DOMContentLoaded`) 자동으로 `notificationClient` 초기화
+    *   WebSocket 연결 자동 수립 (`ws://localhost/ws/notifications?userId=1`)
+    *   브라우저 알림 권한 자동 요청 (`Notification.requestPermission()`)
+    *   새 알림 수신 시 콜백 함수 등록
+    *   디버깅을 위한 상세 로그 추가
+
+*   **코드 예시** (admin_footer.jsp:70-105):
+    ```jsp
+    <script src="/js/notifications.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const currentUserId = 1; // TODO: 로그인 기능 구현 후 변경
+        const contextPath = '${pageContext.request.contextPath}';
+
+        notificationClient.init(currentUserId, contextPath);
+        notificationClient.requestNotificationPermission();
+      });
+    </script>
+    ```
+
+##### **2. 알림 목록 표시 로직 구현** ✅
+
+*   **파일**: `notifications.js`
+*   **구현 메서드**:
+
+    *   `renderNotifications(notifications)` - 알림 목록 UI 렌더링
+        *   알림 목록을 드롭다운에 동적 생성
+        *   읽지 않은 알림은 밝은 배경 (`bg-light`) 및 "New" 배지 표시
+        *   각 알림에 클릭 이벤트 핸들러 등록
+
+    *   `getNotificationIcon(notifType)` - 알림 타입별 아이콘 반환
+        *   `EVENT_CREATED`: 🟢 `bi bi-calendar-plus text-success` (초록색 캘린더)
+        *   `EVENT_UPDATED`: 🔵 `bi bi-calendar-event text-primary` (파란색 캘린더)
+        *   `EVENT_CANCELLED`: 🔴 `bi bi-calendar-x text-danger` (빨간색 캘린더)
+        *   `ANNOUNCEMENT`: 🔵 `bi bi-megaphone text-info` (확성기)
+        *   `SETTLEMENT`: 🟡 `bi bi-cash-coin text-warning` (동전)
+        *   `FILE_UPLOAD`: ⚫ `bi bi-file-earmark-arrow-up text-secondary` (파일)
+        *   `SYSTEM`: ⚫ `bi bi-gear text-dark` (톱니바퀴)
+
+    *   `formatNotificationTime(timestamp)` - 사용자 친화적 시간 표시
+        *   1분 미만: "방금 전"
+        *   1시간 미만: "N분 전"
+        *   24시간 미만: "N시간 전"
+        *   7일 미만: "N일 전"
+        *   7일 이상: "YYYY-MM-DD" 형식
+
+    *   `setupEventHandlers()` - UI 이벤트 핸들러 설정
+        *   알림 드롭다운 클릭 시 알림 목록 자동 로드
+        *   "모두 읽음" 버튼 클릭 시 전체 알림 읽음 처리 후 목록 갱신
+
+    *   `updateUnreadBadge(count)` - 읽지 않은 알림 개수 배지 업데이트 (개선)
+        *   헤더 배지 (`notification-badge`) 표시/숨김
+        *   드롭다운 헤더의 알림 개수 텍스트 업데이트
+        *   "모두 읽음" 버튼 표시/숨김 (읽지 않은 알림이 없으면 숨김)
+
+    *   `handleNewNotification(notification)` - 새 알림 수신 처리 (개선)
+        *   읽지 않은 알림 개수 자동 업데이트
+        *   브라우저 푸시 알림 표시
+        *   **드롭다운이 열려있는 경우 알림 목록 자동 갱신** (실시간 반영)
+        *   커스텀 콜백 실행
+
+*   **알림 클릭 동작**:
+    1.  읽지 않은 알림인 경우 `markAsRead(notifId)` 호출하여 읽음 처리
+    2.  UI 즉시 업데이트 (배경색 제거, "New" 배지 제거)
+    3.  `relatedUrl`이 있는 경우 해당 페이지로 이동
+
+*   **init() 메서드 개선**:
+    *   초기화 시 `setupEventHandlers()` 자동 호출하여 UI 이벤트 바인딩
+
+##### **3. 전역 스코프 문제 해결** ✅
+
+*   **문제**: `notificationClient is not defined` 에러 발생
+*   **원인**: `notifications.js`에서 `const notificationClient`로 선언하여 일부 환경에서 전역 스코프로 인식되지 않음
+*   **해결**: `notifications.js:366-369`
+    ```javascript
+    // 전역 인스턴스 생성 (window 객체에 명시적으로 할당)
+    window.notificationClient = new NotificationClient();
+
+    // 하위 호환성을 위해 const도 유지
+    const notificationClient = window.notificationClient;
+    ```
+
+#### **생성 및 수정된 주요 파일**
+
+*   **JavaScript**: `src/main/resources/static/js/notifications.js`
+    *   `renderNotifications()` 메서드 추가 (193-251)
+    *   `getNotificationIcon()` 메서드 추가 (253-269)
+    *   `formatNotificationTime()` 메서드 추가 (271-294)
+    *   `setupEventHandlers()` 메서드 추가 (296-321)
+    *   `updateUnreadBadge()` 메서드 개선 (170-191)
+    *   `handleNewNotification()` 메서드 개선 (85-103)
+    *   `init()` 메서드에 `setupEventHandlers()` 호출 추가 (22-28)
+    *   전역 스코프 명시적 할당 (366-369)
+
+*   **View**: `src/main/webapp/WEB-INF/views/includes/admin_footer.jsp`
+    *   `notifications.js` 스크립트 로드 추가 (70)
+    *   알림 클라이언트 초기화 코드 추가 (71-105)
+    *   디버깅 로그 및 에러 체크 로직 추가
+
+#### **주요 트러블슈팅 및 해결 과정**
+
+1.  **`notificationClient is not defined` 에러**:
+    *   **문제**: `admin_footer.jsp`의 초기화 스크립트에서 `notificationClient`를 찾을 수 없음
+    *   **진단**: `const` 선언이 일부 환경에서 전역 스코프로 노출되지 않음
+    *   **해결**: `window.notificationClient`로 명시적 할당하여 전역 변수로 만듦
+
+2.  **일정 삭제 시 알림이 발송되지 않는 문제**:
+    *   **문제**: 일정 삭제 후 알림 아이콘에 배지가 표시되지 않음
+    *   **원인**: 삭제한 일정에 **참석자가 없었음**
+    *   **설명**: `ScheduleService.deleteCalendarEvent()` 178번 라인의 조건문 `if (!attendeeIds.isEmpty() && event != null)`에 의해 참석자가 없으면 알림이 발송되지 않음 (정상 동작)
+    *   **해결**: 참석자가 포함된 일정을 생성하여 테스트해야 함을 사용자에게 안내
+
+3.  **한글 깨짐 문제 (콘솔 로그)**:
+    *   **문제**: 브라우저 콘솔에 한글이 `ìë¦¼` 같은 형태로 깨져 보임
+    *   **원인**: JSP 파일의 문자 인코딩 설정 또는 브라우저 콘솔 인코딩 문제
+    *   **영향**: 기능상 문제 없음, 표시만 깨짐
+    *   **상태**: 기능 동작에는 영향 없어 추후 개선 예정
+
+#### **현재 알림 시스템 완성도**
+
+##### ✅ **100% 완성된 기능**
+
+1.  **백엔드 (2026-01-03 완성)**:
+    *   ✅ `NotificationService` - 알림 생성/조회/읽음 처리
+    *   ✅ `NotificationController` - REST API 엔드포인트
+    *   ✅ `NotificationWebSocketHandler` - 실시간 WebSocket 푸시
+    *   ✅ DB 엔티티 및 Repository
+    *   ✅ 일정 파트 연동 (일정 생성/수정/삭제 시 자동 알림 발송)
+
+2.  **프론트엔드 (2026-01-05 완성)**:
+    *   ✅ WebSocket 클라이언트 자동 연결 및 재연결
+    *   ✅ 페이지 로드 시 자동 초기화
+    *   ✅ 읽지 않은 알림 개수 배지 실시간 업데이트
+    *   ✅ 알림 목록 드롭다운 표시
+    *   ✅ 알림 타입별 아이콘 및 색상 구분
+    *   ✅ 사용자 친화적 시간 표시 ("방금 전", "N분 전" 등)
+    *   ✅ 알림 클릭 시 읽음 처리 및 페이지 이동
+    *   ✅ "모두 읽음" 버튼 기능
+    *   ✅ 브라우저 푸시 알림 (권한 허용 시)
+    *   ✅ 실시간 알림 수신 및 UI 자동 갱신
+
+##### ⚠️ **제약 사항**
+
+*   **사용자 ID 하드코딩**: 현재 `userId=1`로 고정됨 (로그인 기능 구현 후 세션에서 실제 사용자 ID 사용 필요)
+*   **relatedUrl 미구현**: 일부 알림 타입(공지사항, 정산 등)의 관련 페이지 URL이 아직 설정되지 않음 (해당 기능 구현 시 추가 필요)
+
+#### **테스트 가이드**
+
+##### **기본 테스트 (WebSocket 연결 확인)**
+
+1.  서버 실행 후 브라우저에서 `http://localhost:8080` 접속
+2.  F12 → Console 탭 확인
+3.  예상 로그:
+    ```
+    ========== 알림 시스템 초기화 시작 ==========
+    notificationClient 확인됨: NotificationClient {...}
+    사용자 ID: 1
+    Context Path:
+    WebSocket 연결 시도: ws://localhost/ws/notifications?userId=1
+    WebSocket 연결 성공
+    ========== 알림 시스템 초기화 완료 ==========
+    ```
+
+##### **실시간 알림 테스트 (일정 등록)**
+
+1.  일정 등록 페이지에서 새 일정 생성
+2.  **중요**: 참석자에 본인(userId=1) 추가
+3.  저장 후 확인:
+    *   헤더 종 아이콘에 빨간 배지 (1) 표시
+    *   콘솔에 "알림 수신:", "새 알림 도착:" 메시지
+    *   브라우저 푸시 알림 팝업 (권한 허용 시)
+4.  종 아이콘 클릭:
+    *   드롭다운에 "새로운 일정: [제목]" 알림 표시
+    *   🟢 초록색 캘린더 아이콘
+    *   "New" 배지
+5.  알림 클릭:
+    *   배경색 회색 → 흰색 변경
+    *   "New" 배지 사라짐
+    *   읽지 않은 알림 개수 감소
+
+##### **일정 수정/삭제 알림 테스트**
+
+*   일정 수정 시: 🔵 파란색 "일정 수정: [제목]" 알림
+*   일정 삭제 시: 🔴 빨간색 "일정 취소: [제목]" 알림
+
+---
+
+#### **다음 작업 계획 (업데이트된 TODO List)**
+
+##### 🔴 **높은 우선순위**
+
+1.  **로그인/인증 기능 구현** ⭐ 최우선!
+    *   현재 상태: 모든 사용자 ID가 하드코딩된 `1L` 사용 중
+    *   필요 작업:
+        *   Spring Security 설정 활성화 및 구성
+        *   로그인 페이지 및 세션 관리
+        *   `NotificationController`, `ScheduleService` 등에서 실제 로그인 사용자 ID 사용
+    *   영향 범위: 전체 애플리케이션 (일정, 알림, 정산 등)
+
+2.  **정산 및 통계 (Settlement & Statistics) 기능 구현** ⭐ 신규!
+    *   현재 상태: DB 스키마만 존재, 백엔드/프론트엔드 미구현
+    *   구현 범위 (옵션 2 - 핵심 통계 포함):
+        *   매출(Sales) CRUD
+        *   지출(Expenses) CRUD
+        *   정산(Settlements) 생성 및 조회
+        *   지점별 매출/지출 통계
+        *   기간별 매출/지출 통계
+        *   정산 확정 처리
+    *   기술 스택:
+        *   백엔드: Spring Data JPA 또는 MyBatis
+        *   프론트엔드: 기존 AdminLTE 템플릿 활용
+        *   차트: ApexCharts (이미 템플릿에 포함됨)
+    *   예상 소요 시간: 4-5시간
+    *   상세 계획:
+
+        **Phase 1: 기반 구조 생성 (1시간)**
+        *   Entity/DTO 클래스 생성
+            *   `Sale.java`, `SaleItem.java`
+            *   `Expense.java`
+            *   `Settlement.java`
+            *   각 DTO 클래스
+        *   Repository/Mapper 인터페이스 생성
+            *   `SaleRepository.java`, `SaleMapper.java`
+            *   `ExpenseRepository.java`, `ExpenseMapper.java`
+            *   `SettlementRepository.java`, `SettlementMapper.java`
+        *   MyBatis XML 매퍼 파일 생성 (통계 쿼리용)
+
+        **Phase 2: 매출 CRUD 구현 (1.5시간)**
+        *   `SaleService.java` 생성
+            *   `createSale()` - 매출 등록
+            *   `getSaleById()` - 매출 조회
+            *   `updateSale()` - 매출 수정
+            *   `deleteSale()` - 매출 삭제 (논리적 삭제)
+            *   `getSalesByBranch()` - 지점별 매출 목록
+        *   `SaleController.java` 생성
+            *   `POST /api/sales` - 매출 등록
+            *   `GET /api/sales/{id}` - 매출 조회
+            *   `PUT /api/sales/{id}` - 매출 수정
+            *   `DELETE /api/sales/{id}` - 매출 삭제
+            *   `GET /api/sales` - 매출 목록 (필터: 지점, 기간)
+        *   JSP 페이지 생성
+            *   `sales/list.jsp` - 매출 목록
+            *   `sales/form.jsp` - 매출 등록/수정 폼 (모달)
+
+        **Phase 3: 지출 CRUD 구현 (1시간)**
+        *   `ExpenseService.java` 생성 (매출과 유사한 구조)
+        *   `ExpenseController.java` 생성
+        *   JSP 페이지 생성
+            *   `expenses/list.jsp`
+            *   `expenses/form.jsp`
+
+        **Phase 4: 통계 기능 구현 (1-1.5시간)**
+        *   `StatisticsService.java` 생성
+            *   `getSalesByBranch(fromDate, toDate)` - 지점별 매출 통계
+            *   `getExpensesByBranch(fromDate, toDate)` - 지점별 지출 통계
+            *   `getSalesByPeriod(fromDate, toDate, groupBy)` - 기간별 매출 (일/월/년)
+            *   `getExpensesByPeriod(fromDate, toDate, groupBy)` - 기간별 지출
+            *   `getSalesVsExpenses(fromDate, toDate)` - 매출 vs 지출 비교
+        *   `StatisticsController.java` 생성
+            *   `GET /api/statistics/sales/by-branch` - 지점별 매출 통계 API
+            *   `GET /api/statistics/sales/by-period` - 기간별 매출 통계 API
+            *   (지출도 동일한 구조)
+        *   JSP 페이지 생성
+            *   `statistics/dashboard.jsp` - 통계 대시보드 (차트 포함)
+
+        **Phase 5: 정산 기능 구현 (1시간)**
+        *   `SettlementService.java` 생성
+            *   `createSettlement(branchId, fromDate, toDate)` - 정산 생성 (자동 집계)
+            *   `confirmSettlement(settlementId)` - 정산 확정
+            *   `getSettlementById(settlementId)` - 정산 조회
+            *   `getSettlements(branchId, fromDate, toDate)` - 정산 목록
+        *   `SettlementController.java` 생성
+        *   JSP 페이지 생성
+            *   `settlements/list.jsp` - 정산 목록
+            *   `settlements/detail.jsp` - 정산 상세
+
+3.  **부서 정보 연동**
+    *   `departments` 테이블 생성 (DDL)
+    *   `users` 테이블과 부서 연결 (FK 추가)
+    *   일정 파트 부서 일정 기능 활성화
+
+##### 🟢 **간단한 작업**
+
+4.  **이미지 리소스 404 오류 해결**
+    *   AdminLTE 템플릿 이미지 파일 추가 (`user1-128x128.jpg`, `AdminLTELogo.png` 등)
+    *   `src/main/resources/static` 경로에 배치
+
+5.  **캘린더 하단 리스트 고급 필터링**
+    *   오늘/이번 주/이번 달 탭 추가
+    *   일정 유형별 드롭다운 필터
+
+##### 🟡 **중간 우선순위**
+
+6.  **반복 일정 기능**
+    *   매주/매월 반복 패턴 설정 UI 추가
+    *   `repeat_info` 컬럼에 반복 규칙 JSON 저장
+    *   반복 일정 생성 로직 구현
+
+7.  **일정 알림 고급 기능**
+    *   일정 시작 N분 전 알림 설정 UI
+    *   스케줄러를 사용한 예약 알림 발송
+
+8.  **서버 측 권한 체크 로직 구현**
+    *   일정 삭제/수정 시 소유자 확인
+    *   부서 일정 생성 권한 체크 (`ADMIN` 권한)
+    *   전사 일정 생성 권한 체크 (`MASTER` 권한)
+
+---
+
+##### 🎯 **추천 작업 순서 (다음 단계)**
+
+**즉시 착수 가능 (출근 전):**
+1.  정산/통계 기능 구현 Phase 1-3 (기반 구조 + 매출/지출 CRUD)
+2.  기본 통계 쿼리 작성
+
+**추후 진행:**
+3.  로그인/인증 기능 구현 (우선순위 최상위이나 시간 소요가 많음)
+4.  정산/통계 Phase 4-5 (통계 대시보드 + 정산 기능)
+5.  부서 정보 연동
+
+---

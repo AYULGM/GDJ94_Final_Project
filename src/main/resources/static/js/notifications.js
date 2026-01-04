@@ -24,6 +24,7 @@ class NotificationClient {
         this.contextPath = contextPath;
         this.connect();
         this.loadUnreadCount();
+        this.setupEventHandlers();
     }
 
     /**
@@ -81,12 +82,19 @@ class NotificationClient {
      * 새로운 알림 수신 처리
      * @param {object} notification - 알림 객체
      */
-    handleNewNotification(notification) {
+    async handleNewNotification(notification) {
         // 읽지 않은 알림 개수 업데이트
         this.loadUnreadCount();
 
         // 브라우저 알림 표시 (권한이 있는 경우)
         this.showBrowserNotification(notification);
+
+        // 알림 드롭다운이 열려있으면 목록 다시 로드
+        const notificationMenu = document.getElementById('notification-menu');
+        if (notificationMenu && notificationMenu.classList.contains('show')) {
+            const notifications = await this.loadNotifications();
+            this.renderNotifications(notifications);
+        }
 
         // 커스텀 콜백 실행
         if (this.onNewNotificationCallback) {
@@ -169,6 +177,9 @@ class NotificationClient {
      */
     updateUnreadBadge(count) {
         const badge = document.getElementById('notification-badge');
+        const countText = document.getElementById('notification-count-text');
+        const markAllBtn = document.getElementById('mark-all-read-btn');
+
         if (badge) {
             if (count > 0) {
                 badge.textContent = count > 99 ? '99+' : count;
@@ -176,6 +187,148 @@ class NotificationClient {
             } else {
                 badge.style.display = 'none';
             }
+        }
+
+        if (countText) {
+            countText.textContent = count;
+        }
+
+        if (markAllBtn) {
+            markAllBtn.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+    }
+
+    /**
+     * 알림 목록을 UI에 렌더링
+     * @param {Array} notifications - 알림 목록
+     */
+    renderNotifications(notifications) {
+        const listContainer = document.getElementById('notification-list');
+        if (!listContainer) return;
+
+        if (!notifications || notifications.length === 0) {
+            listContainer.innerHTML = '<div class="dropdown-item text-center text-secondary">알림이 없습니다</div>';
+            return;
+        }
+
+        listContainer.innerHTML = '';
+
+        notifications.forEach(notification => {
+            const item = document.createElement('a');
+            item.href = '#';
+            item.className = `dropdown-item ${notification.isRead ? '' : 'bg-light'}`;
+            item.dataset.notifId = notification.notifId;
+            item.dataset.relatedUrl = notification.relatedUrl || '#';
+
+            const icon = this.getNotificationIcon(notification.notifType);
+            const time = this.formatNotificationTime(notification.createdAt);
+
+            item.innerHTML = `
+                <div class="d-flex">
+                    <div class="flex-shrink-0">
+                        <i class="${icon} fs-4 me-3"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${notification.title}</h6>
+                        <p class="mb-1 small text-muted">${notification.message}</p>
+                        <p class="mb-0 small text-secondary">
+                            <i class="bi bi-clock me-1"></i>${time}
+                        </p>
+                    </div>
+                    ${!notification.isRead ? '<div class="flex-shrink-0"><span class="badge bg-primary">New</span></div>' : ''}
+                </div>
+            `;
+
+            // 클릭 이벤트
+            item.addEventListener('click', async (e) => {
+                e.preventDefault();
+
+                // 읽음 처리
+                if (!notification.isRead) {
+                    await this.markAsRead(notification.notifId);
+                    // UI 업데이트
+                    item.classList.remove('bg-light');
+                    const badge = item.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+
+                // 관련 페이지로 이동
+                if (notification.relatedUrl && notification.relatedUrl !== '#') {
+                    window.location.href = notification.relatedUrl;
+                }
+            });
+
+            listContainer.appendChild(item);
+        });
+    }
+
+    /**
+     * 알림 타입에 따른 아이콘 반환
+     * @param {string} notifType - 알림 타입
+     * @returns {string} Bootstrap Icons 클래스
+     */
+    getNotificationIcon(notifType) {
+        const icons = {
+            'EVENT_CREATED': 'bi bi-calendar-plus text-success',
+            'EVENT_UPDATED': 'bi bi-calendar-event text-primary',
+            'EVENT_CANCELLED': 'bi bi-calendar-x text-danger',
+            'ANNOUNCEMENT': 'bi bi-megaphone text-info',
+            'SETTLEMENT': 'bi bi-cash-coin text-warning',
+            'FILE_UPLOAD': 'bi bi-file-earmark-arrow-up text-secondary',
+            'SYSTEM': 'bi bi-gear text-dark'
+        };
+        return icons[notifType] || 'bi bi-bell text-secondary';
+    }
+
+    /**
+     * 알림 시간을 사용자 친화적 형식으로 변환
+     * @param {string} timestamp - ISO 8601 타임스탬프
+     * @returns {string} 포맷된 시간 문자열
+     */
+    formatNotificationTime(timestamp) {
+        const now = new Date();
+        const time = new Date(timestamp);
+        const diffMs = now - time;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return '방금 전';
+        if (diffMins < 60) return `${diffMins}분 전`;
+        if (diffHours < 24) return `${diffHours}시간 전`;
+        if (diffDays < 7) return `${diffDays}일 전`;
+
+        // 일주일 이상 지난 경우 날짜 표시
+        const year = time.getFullYear();
+        const month = String(time.getMonth() + 1).padStart(2, '0');
+        const day = String(time.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    /**
+     * UI 이벤트 핸들러 설정
+     */
+    setupEventHandlers() {
+        // 알림 드롭다운 열릴 때 알림 목록 로드
+        const notificationToggle = document.getElementById('notification-toggle');
+        if (notificationToggle) {
+            notificationToggle.addEventListener('click', async () => {
+                const notifications = await this.loadNotifications();
+                this.renderNotifications(notifications);
+            });
+        }
+
+        // "모두 읽음" 버튼
+        const markAllBtn = document.getElementById('mark-all-read-btn');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await this.markAllAsRead();
+
+                // 알림 목록 다시 로드
+                const notifications = await this.loadNotifications();
+                this.renderNotifications(notifications);
+            });
         }
     }
 
@@ -209,5 +362,8 @@ class NotificationClient {
     }
 }
 
-// 전역 인스턴스 생성
-const notificationClient = new NotificationClient();
+// 전역 인스턴스 생성 (window 객체에 명시적으로 할당)
+window.notificationClient = new NotificationClient();
+
+// 하위 호환성을 위해 const도 유지
+const notificationClient = window.notificationClient;
