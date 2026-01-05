@@ -93,21 +93,29 @@
 				    </div>
 				    <input type="number" name="branchId" class="form-control" placeholder="소속 지점 ID (예: 1)" min="1">
 				</div>
-
+				
+				<div class="mb-3">
+		        <button type="button"
+		                class="btn btn-outline-primary"
+		                onclick="execDaumPostcode()">
+		            <i class="bi bi-search"></i> 주소 검색
+		        </button>
+		        </div>
+        
                 <!-- 우편번호 -->
                 <div class="input-group mb-3">
                     <div class="input-group-text">
                         <span class="bi bi-geo-alt"></span>
                     </div>
-                    <input type="text" name="postNo" class="form-control" placeholder="우편번호(필수 입력)" required>
+                    <input type="text" name="postNo" id="postNo" class="form-control" placeholder="우편번호(필수 입력)" required readonly>
                 </div>
-
+				
                 <!-- 기본주소 -->
                 <div class="input-group mb-3">
                     <div class="input-group-text">
                         <span class="bi bi-house"></span>
                     </div>
-                    <input type="text" name="baseAddress" class="form-control" placeholder="기본 주소(필수 입력)" required>
+                    <input type="text" name="baseAddress" id="baseAddress" class="form-control" placeholder="기본 주소(필수 입력)" required readonly>
                 </div>
 
                 <!-- 상세주소 -->
@@ -115,9 +123,11 @@
                     <div class="input-group-text">
                         <span class="bi bi-building"></span>
                     </div>
-                    <input type="text" name="detailAddress" class="form-control" placeholder="상세 주소">
+                    <input type="text" name="detailAddress" id="detailAddress" class="form-control" placeholder="상세 주소">
                 </div>
-
+                
+                
+                
                 <!-- 버튼 -->
                 <div class="row">
                     <div class="col-12 d-grid">
@@ -136,6 +146,11 @@
 </div>
 
 <!-- AdminLTE JS -->
+<!-- 카카오 주소 API -->
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+<script src="<c:url value='/js/address.js'/>"></script>
+
 <script src="<c:url value='/js/adminlte.js'/>"></script>
 
 </body>

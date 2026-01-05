@@ -52,6 +52,7 @@ public class SecurityConfig {
                  * ✅ 핵심: JSP 렌더링은 내부적으로 FORWARD가 발생함.
                  * Spring Security 6에서 FORWARD까지 막으면 /login ↔ /WEB-INF/views/login.jsp 루프로 이어질 수 있음.
                  */
+            		
                 .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
 
                 // 로그인/에러는 누구나 접근
