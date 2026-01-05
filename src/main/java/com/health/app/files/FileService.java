@@ -42,9 +42,14 @@ public class FileService {
         }
     }
 
-    // 파일 저장
-    @Transactional // 트랜잭션 처리
-    public Long storeFile(MultipartFile file) {
+    /**
+     * 파일을 저장하고 DB에 메타데이터를 등록합니다.
+     * @param file 업로드할 파일
+     * @param createUser 파일을 업로드한 사용자 ID
+     * @return 저장된 파일의 ID
+     */
+    @Transactional
+    public Long storeFile(MultipartFile file, Long createUser) {
         String originalFileName = org.springframework.util.StringUtils.cleanPath(file.getOriginalFilename());
         if (originalFileName.contains("..")) {
             throw new RuntimeException("파일명에 부적절한 경로 시퀀스가 포함되어 있습니다. " + originalFileName);
@@ -58,16 +63,16 @@ public class FileService {
             }
             String storageKey = UUID.randomUUID().toString() + fileExtension;
             Path targetLocation = this.fileStorageLocation.resolve(storageKey);
-            
+
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-            
+
             Attachment attachment = new Attachment();
             attachment.setStorageProvider("LOCAL");
             attachment.setStorageKey(storageKey);
             attachment.setOriginalName(originalFileName);
             attachment.setContentType(file.getContentType());
             attachment.setFileSize(file.getSize());
-            attachment.setCreateUser(1L); // TODO: 실제 로그인 사용자 ID로 변경
+            attachment.setCreateUser(createUser);
             attachment.setCreateDate(LocalDateTime.now());
             attachment.setUseYn(true);
 

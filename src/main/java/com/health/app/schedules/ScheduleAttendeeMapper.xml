@@ -65,4 +65,20 @@
         WHERE event_id = #{eventId}
     </update>
 
+    <!-- AttendeeSearchDto 결과를 매핑할 resultMap (userId, name) -->
+    <resultMap id="attendeeSearchResultMap" type="com.health.app.schedules.search.AttendeeSearchDto">
+        <id property="userId" column="user_id"/>
+        <result property="name" column="user_name"/>
+        <!-- departmentName removed as table doesn't exist -->
+    </resultMap>
+
+    <select id="selectAttendeesByEventId" parameterType="java.lang.Long" resultMap="attendeeSearchResultMap">
+        SELECT
+            sa.user_id,
+            u.name as user_name
+        FROM schedule_attendees sa
+        JOIN users u ON sa.user_id = u.user_id
+        WHERE sa.event_id = #{eventId} AND sa.use_yn = TRUE AND u.use_yn = TRUE
+    </select>
+
 </mapper>

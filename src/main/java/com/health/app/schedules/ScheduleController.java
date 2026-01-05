@@ -1,8 +1,10 @@
 package com.health.app.schedules;
 
+import com.health.app.security.model.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +17,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import com.health.app.schedules.search.AttendeeSearchDto;
 import com.health.app.schedules.search.AttendeeSearchMapper;
+import org.springframework.web.bind.annotation.PutMapping;
+
+
+import com.health.app.schedules.TimeConflictException; // TimeConflictException 임포트
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,12 +66,63 @@ public class ScheduleController {
     }
 
     @PostMapping("/events")
-    public ResponseEntity<CalendarEventDto> createEvent(
-            @RequestPart("event") CalendarEventDto calendarEvent,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-        
-        CalendarEventDto createdEvent = scheduleService.createCalendarEvent(calendarEvent, files);
-        return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
+    public ResponseEntity<?> createEvent(
+            @RequestPart("event") String eventJson,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            Authentication authentication) {
+
+        try {
+            // JSON 문자열을 수동으로 파싱
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+            CalendarEventDto calendarEvent = objectMapper.readValue(eventJson, CalendarEventDto.class);
+
+            // 로그인한 사용자 ID 설정
+            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            calendarEvent.setCreateUser(loginUser.getUserId());
+
+            CalendarEventDto createdEvent = scheduleService.createCalendarEvent(calendarEvent, files);
+            return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
+        } catch (TimeConflictException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("conflicts", e.getConflicts());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            return new ResponseEntity<>(errorResponse, headers, HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "일정 생성 중 오류가 발생했습니다: " + e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PutMapping("/events")
+    public ResponseEntity<?> updateEvent(
+            @RequestPart("event") String eventJson,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "filesToDelete", required = false) List<Long> filesToDelete) {
+
+        try {
+            // JSON 문자열을 수동으로 파싱
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+            CalendarEventDto calendarEvent = objectMapper.readValue(eventJson, CalendarEventDto.class);
+
+            CalendarEventDto updatedEvent = scheduleService.updateCalendarEvent(calendarEvent, files, filesToDelete);
+            return new ResponseEntity<>(updatedEvent, HttpStatus.OK);
+        } catch (TimeConflictException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("conflicts", e.getConflicts());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            return new ResponseEntity<>(errorResponse, headers, HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "일정 수정 중 오류가 발생했습니다: " + e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/users/search")
@@ -73,10 +132,14 @@ public class ScheduleController {
     }
 
     @GetMapping("/manage")
-    public String scheduleManageView(Model model) {
+    public String scheduleManageView(Model model, Authentication authentication) {
         model.addAttribute("pageTitle", "일정 관리");
-        Long tempUserId = 1L; 
-        List<CalendarEventDto> eventList = scheduleService.getEventsByOwner(tempUserId);
+
+        // 로그인한 사용자의 일정만 조회
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUserId();
+
+        List<CalendarEventDto> eventList = scheduleService.getEventsByOwner(userId);
         model.addAttribute("eventList", eventList);
         return "schedules/manage";
     }
@@ -84,12 +147,16 @@ public class ScheduleController {
     /**
      * 특정 이벤트를 삭제하는 API 엔드포인트
      * @param eventId 삭제할 이벤트 ID
+     * @param authentication Spring Security 인증 객체
      * @return HTTP 상태 코드
      */
     @PostMapping("/events/{eventId}/delete")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId, Authentication authentication) {
         // TODO: 삭제 권한 확인 로직 추가
-        scheduleService.deleteCalendarEvent(eventId);
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUserId();
+
+        scheduleService.deleteCalendarEvent(eventId, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -108,10 +175,10 @@ public class ScheduleController {
      * 특정 ID 목록에 해당하는 사용자들의 상세 정보를 반환하는 API 엔드포인트
      * @param ids 조회할 사용자 ID 목록
      * @return AttendeeSearchDto 리스트
+    @GetMapping("/users/details")
+    @ResponseBody
+    public List<AttendeeSearchDto> getUsersDetails(@RequestParam("ids") List<Long> ids) {
+        return scheduleService.getUsersByIds(ids);
+    }
      */
-//    @GetMapping("/users/details")
-//    @ResponseBody
-//    public List<AttendeeSearchDto> getUsersDetails(@RequestParam("ids") List<Long> ids) {
-//        return scheduleService.getUsersByIds(ids);
-//    }
 }

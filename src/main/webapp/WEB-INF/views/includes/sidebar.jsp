@@ -63,7 +63,7 @@
         </li>
 
         <!-- 일정 관리 Treeview -->
-        <li class="nav-item menu-open">
+        <li class="nav-item">
           <a href="#" class="nav-link" data-lte-toggle="treeview">
             <i class="nav-icon bi bi-calendar-event"></i>
             <p>
