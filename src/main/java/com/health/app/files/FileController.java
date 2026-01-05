@@ -106,4 +106,31 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
                 .body(resource);
     }
+    
+    @GetMapping("/preview/{fileId}")
+    @ResponseBody
+    public ResponseEntity<Resource> previewFile(@PathVariable Long fileId, HttpServletRequest request) {
+        // 1) DB에서 파일 메타 조회(콘텐츠 타입, storageKey 등)
+        Attachment attachment = fileService.getAttachment(fileId);
+
+        // 2) 실제 파일 리소스 로드
+        Resource resource = fileService.loadFileAsResource(fileId);
+
+        // 3) Content-Type 결정 (DB contentType 우선, 없으면 servlet mimeType)
+        String contentType = attachment.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            try {
+                contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+            } catch (IOException ignored) {}
+        }
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "application/octet-stream";
+        }
+
+        // 4) 미리보기는 attachment 헤더를 넣지 않는다 (중요)
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
+    }
+
 }
