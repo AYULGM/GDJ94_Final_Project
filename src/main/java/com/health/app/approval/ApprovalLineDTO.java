@@ -20,7 +20,9 @@ public class ApprovalLineDTO {
     private String lineRoleCode;    // 결재 역할(기안/검토/결재 등) - 공통코드
     private Long approverId;        // 결재자 user_id
     private String lineStatusCode;  // 상태코드(대기/승인/반려 등)
+    private String approverName;
 
+    
     // ===== 처리 정보 =====
     private LocalDateTime actedAt;
     private String comment;

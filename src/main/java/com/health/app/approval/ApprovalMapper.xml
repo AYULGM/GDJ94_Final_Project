@@ -138,28 +138,32 @@
 	</insert>
 
 
-    <select id="selectLinesByDocVerId" parameterType="long"
+    <select id="selectLinesByDocVerId"
+        parameterType="long"
         resultType="com.health.app.approval.ApprovalLineDTO">
-	  SELECT
-	      line_id           AS lineId
-	    , doc_ver_id        AS docVerId
-	    , seq               AS seq
-	    , line_role_code    AS lineRoleCode
-	    , user_id           AS approverId
-	    , status_code       AS lineStatusCode
-	    , acted_at          AS actedAt
-	    , comment           AS comment
-	    , signature_file_id AS signatureFileId
-	    , create_user       AS createUser
-	    , create_date       AS createDate
-	    , update_user       AS updateUser
-	    , update_date       AS updateDate
-	    , use_yn            AS useYn
-	  FROM approval_lines
-	  WHERE doc_ver_id = #{docVerId}
-	    AND use_yn = 1
-	  ORDER BY seq ASC
-	</select>
+  SELECT
+      l.line_id        AS lineId,
+      l.doc_ver_id     AS docVerId,
+      l.seq            AS seq,
+      l.line_role_code AS lineRoleCode,
+      l.user_id        AS approverId,
+      u.name           AS approverName,
+      l.status_code    AS lineStatusCode,
+      l.acted_at       AS actedAt,
+      l.comment        AS comment,
+      l.signature_file_id AS signatureFileId,
+      l.create_user    AS createUser,
+      l.create_date    AS createDate,
+      l.update_user    AS updateUser,
+      l.update_date    AS updateDate,
+      l.use_yn         AS useYn
+  FROM approval_lines l
+  JOIN users u ON u.user_id = l.user_id
+  WHERE l.doc_ver_id = #{docVerId}
+    AND l.use_yn = 1
+  ORDER BY l.seq
+</select>
+
 
 <!-- =========================
      ✅ 결재자 트리 조회

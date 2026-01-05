@@ -92,7 +92,7 @@
                 <tr>
                   <th style="width:80px;">순번</th>
                   <th style="width:220px;">역할</th>
-                  <th>결재자(userId)</th>
+                  <th>결재자</th>
                 </tr>
               </thead>
               <tbody id="lineTbody">
@@ -187,9 +187,10 @@
       });
 
       tr.innerHTML =
-        '<td>' + (idx + 1) + '</td>' +
-        '<td>' + roleText(l.lineRoleCode) + ' <span class="text-body-secondary">(' + l.lineRoleCode + ')</span></td>' +
-        '<td>' + l.approverId + '</td>';
+    	  '<td>' + (idx + 1) + '</td>' +
+    	  '<td>' + roleText(l.lineRoleCode) + ' <span class="text-body-secondary">(' + l.lineRoleCode + ')</span></td>' +
+    	  '<td>' + (l.approverName || ('ID:' + l.approverId)) + '</td>';
+
 
       tbody.appendChild(tr);
     });
@@ -221,6 +222,7 @@
         .map(x => ({
           seq: x.seq,
           approverId: x.approverId,
+          approverName: x.approverName || x.name || null,
           lineRoleCode: x.lineRoleCode
         }))
         .sort((a,b) => (a.seq||0) - (b.seq||0));
@@ -283,6 +285,7 @@
 	  };
 
 	  const addUserToLine = (u) => {
+		  
 	    if (!docVerId) { showMsg('docVerId가 없습니다.'); return; }
 
 	    const uid = pickUserId(u);
@@ -296,6 +299,7 @@
 	    lines.push({
 	      seq: lines.length + 1,
 	      approverId: Number(uid),
+	      approverName: name,
 	      lineRoleCode: 'AR003'
 	    });
 
