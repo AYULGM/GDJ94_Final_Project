@@ -204,4 +204,84 @@
   ORDER BY b.branch_id
 </select>
 
+<!-- =========================
+     결재 요청(SUBMIT)
+     ========================= -->
+
+<!-- docVerId로 기안자 조회 -->
+<select id="selectDrafterIdByDocVerId" resultType="long">
+  SELECT d.drafter_user_id
+  FROM approval_documents d
+  JOIN approval_document_versions v ON v.doc_id = d.doc_id
+  WHERE v.doc_ver_id = #{docVerId}
+  LIMIT 1
+</select>
+
+<!-- 결재선 건수 -->
+<select id="countLinesByDocVerId" resultType="int">
+  SELECT COUNT(*)
+  FROM approval_lines
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+</select>
+
+<!-- 현재 문서 상태 -->
+<select id="selectDocStatusByDocVerId" resultType="string">
+  SELECT d.status_code
+  FROM approval_documents d
+  JOIN approval_document_versions v ON v.doc_id = d.doc_id
+  WHERE v.doc_ver_id = #{docVerId}
+  LIMIT 1
+</select>
+
+<!-- 문서 상태 변경 -->
+<update id="updateDocumentStatusByDocVerId">
+  UPDATE approval_documents d
+  JOIN approval_document_versions v ON v.doc_id = d.doc_id
+  SET d.status_code = #{statusCode},
+      d.update_user = #{updateUser},
+      d.update_date = NOW()
+  WHERE v.doc_ver_id = #{docVerId}
+</update>
+
+<!-- 버전 상태 변경 -->
+<update id="updateVersionStatusByDocVerId">
+  UPDATE approval_document_versions
+  SET ver_status_code = #{verStatusCode}
+  WHERE doc_ver_id = #{docVerId}
+</update>
+
+<!-- 결재선 전체 WAIT 초기화 -->
+<update id="updateAllLinesStatusByDocVerId">
+  UPDATE approval_lines
+  SET status_code = #{lineStatusCode},
+      acted_at = NULL,
+      comment = NULL,
+      signature_file_id = NULL,
+      update_user = #{updateUser},
+      update_date = NOW()
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+</update>
+
+<!-- 첫 결재자만 PENDING -->
+<update id="updateFirstLineToPending">
+  UPDATE approval_lines
+  SET status_code = #{lineStatusCode},
+      update_user = #{updateUser},
+      update_date = NOW()
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+    AND seq = (
+      SELECT t.min_seq
+      FROM (
+        SELECT MIN(seq) AS min_seq
+        FROM approval_lines
+        WHERE doc_ver_id = #{docVerId}
+          AND use_yn = 1
+      ) t
+    )
+</update>
+
+
 </mapper>

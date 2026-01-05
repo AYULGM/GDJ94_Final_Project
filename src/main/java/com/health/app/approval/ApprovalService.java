@@ -166,4 +166,48 @@ public class ApprovalService {
         result.put("branches", branches);
         return result;
     }
+    
+ // =========================
+ // 결재 요청(SUBMIT)
+ // =========================
+ @Transactional
+ public void submit(Long loginUserId, Long docVerId) {
+
+     if (docVerId == null) {
+         throw new IllegalArgumentException("docVerId is required");
+     }
+
+     // 1) 기안자 권한 체크
+     Long drafterId = approvalMapper.selectDrafterIdByDocVerId(docVerId);
+     if (drafterId == null) {
+         throw new IllegalStateException("문서를 찾을 수 없습니다. docVerId=" + docVerId);
+     }
+     if (!drafterId.equals(loginUserId)) {
+         throw new IllegalStateException("기안자만 결재 요청할 수 있습니다.");
+     }
+
+     // 2) 결재선 존재 체크
+     int lineCount = approvalMapper.countLinesByDocVerId(docVerId);
+     if (lineCount <= 0) {
+         throw new IllegalStateException("결재선이 없습니다. 결재선을 먼저 설정하세요.");
+     }
+
+     // (선택) 이미 결재중/완료 등 재제출 방지
+     String docStatus = approvalMapper.selectDocStatusByDocVerId(docVerId);
+     if (docStatus == null) {
+         throw new IllegalStateException("문서 상태 조회 실패. docVerId=" + docVerId);
+     }
+     if (!"AS001".equals(docStatus)) {
+         throw new IllegalStateException("임시저장 문서만 결재 요청할 수 있습니다. 현재상태=" + docStatus);
+     }
+
+     // 3) 문서/버전 상태를 결재중으로 변경
+     approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS002", loginUserId);
+     approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002", loginUserId);
+
+     // 4) 결재선 상태 초기화: 전원 WAIT -> 첫 결재자 PENDING
+     approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
+     approvalMapper.updateFirstLineToPending(docVerId, "ALS002", loginUserId);
+ }
+
 }

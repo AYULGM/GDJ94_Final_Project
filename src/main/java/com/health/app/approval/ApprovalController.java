@@ -29,6 +29,16 @@ public class ApprovalController {
 
     @GetMapping("print")
     public void approvalPrint() { }
+    
+    @PostMapping("submit")
+    public String submit(@AuthenticationPrincipal LoginUser loginUser,
+                         @RequestParam Long docVerId) {
+
+        approvalService.submit(loginUser.getUserId(), docVerId);
+
+        // 제출 후: 목록 또는 상세로 이동 (원하는 곳으로 바꿔)
+        return "redirect:/approval/list";
+    }
 
     @PostMapping("saveDraftForm")
     public String saveDraftForm(@AuthenticationPrincipal LoginUser loginUser,

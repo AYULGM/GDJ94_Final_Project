@@ -45,4 +45,28 @@ public interface ApprovalMapper {
 
     /** 지점명(지점ID -> 지점명) */
     List<Map<String, Object>> selectBranches();
+    
+ // ===== submit =====
+    Long selectDrafterIdByDocVerId(@Param("docVerId") Long docVerId);
+
+    int countLinesByDocVerId(@Param("docVerId") Long docVerId);
+
+    String selectDocStatusByDocVerId(@Param("docVerId") Long docVerId);
+
+    int updateDocumentStatusByDocVerId(@Param("docVerId") Long docVerId,
+                                       @Param("statusCode") String statusCode,
+                                       @Param("updateUser") Long updateUser);
+
+    int updateVersionStatusByDocVerId(@Param("docVerId") Long docVerId,
+                                      @Param("verStatusCode") String verStatusCode,
+                                      @Param("updateUser") Long updateUser);
+
+    int updateAllLinesStatusByDocVerId(@Param("docVerId") Long docVerId,
+                                       @Param("lineStatusCode") String lineStatusCode,
+                                       @Param("updateUser") Long updateUser);
+
+    int updateFirstLineToPending(@Param("docVerId") Long docVerId,
+                                 @Param("lineStatusCode") String lineStatusCode,
+                                 @Param("updateUser") Long updateUser);
+
 }
