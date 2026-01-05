@@ -35,7 +35,7 @@
         </li>
 
         <li class="nav-item">
-          <a href="<c:url value='/branches'/>" class="nav-link">
+          <a href="<c:url value='/branch/list'/>" class="nav-link">
             <i class="nav-icon bi bi-building"></i>
             <p>지점 관리</p>
           </a>
