@@ -17,7 +17,7 @@ public class LoginUser implements UserDetails {
     private final String password;
 
     private final String name;
-    private final String roleCode;       // RL001~ 이런 값
+    private final String roleCode;       // RL001~ 이런 값 
     private final String statusCode;     // US001~ 등
     private final String lockStatusCode; // AL001/AL002
     private final Integer failCount;
@@ -56,16 +56,16 @@ public class LoginUser implements UserDetails {
     }
 
     private String mapRoleCodeToRoleName(String roleCode) {
-        if (roleCode == null) return "ROLE_USER";
+        if (roleCode == null) return "ROLE_CREW";
         if (roleCode.startsWith("ROLE_")) return roleCode;
 
         return switch (roleCode) {
-            case "RL001" -> "ROLE_MASTER";
-            case "RL002" -> "ROLE_ADMIN";
-            case "RL003" -> "ROLE_MANAGER";
-            case "RL004" -> "ROLE_USER";
-            case "RL005" -> "ROLE_GUEST";
-            default -> "ROLE_USER";
+            case "RL001" -> "ROLE_GRANDMASTER";
+            case "RL002" -> "ROLE_MASTER";
+            case "RL003" -> "ROLE_ADMIN";
+            case "RL004" -> "ROLE_CAPTAIN";
+            case "RL005" -> "ROLE_CREW";
+            default -> "ROLE_CREW";
         };
     }
 

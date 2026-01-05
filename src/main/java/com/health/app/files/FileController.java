@@ -1,10 +1,12 @@
 package com.health.app.files;
 
+import com.health.app.security.model.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,14 +43,19 @@ public class FileController {
     // 파일 업로드를 처리하는 POST 요청 처리
     @PostMapping("/upload")
     public String handleFileUpload(@RequestParam("file") List<MultipartFile> files,
+                                   Authentication authentication,
                                    RedirectAttributes redirectAttributes) {
+        // 로그인한 사용자 ID 가져오기
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUserId();
+
         List<String> uploadedFiles = new ArrayList<>();
         List<String> failedFiles = new ArrayList<>();
 
         for (MultipartFile file : files) {
             if (file.isEmpty()) continue;
             try {
-                Long fileId = fileService.storeFile(file);
+                Long fileId = fileService.storeFile(file, userId);
                 uploadedFiles.add(file.getOriginalFilename() + " (ID: " + fileId + ")");
             } catch (Exception e) {
                 failedFiles.add(file.getOriginalFilename());

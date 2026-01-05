@@ -49,8 +49,32 @@
           </a>
         </div>
         <div class="card-body login-card-body">
-          <p class="login-box-msg">로그인하여 세션을 시작하세요.</p>
+            <!-- ✅ 여기: 알림 메시지 영역 -->
+
+    		<!-- 비밀번호 변경 성공 -->
+            <c:if test="${not empty successMessage}">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            ${successMessage}
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"></button>
+        </div>
+    		</c:if>
+    		
+    		    <!-- 회원 탈퇴 완료 -->
+		    <c:if test="${param.withdraw != null}">
+		        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+		            <i class="bi bi-info-circle-fill"></i>
+		            회원 탈퇴가 정상적으로 처리되었습니다.
+		            <button class="btn-close" data-bs-dismiss="alert"></button>
+		        </div>
+		    </c:if>
+    
+              <!-- 🔽 로그인 안내 문구 -->
+    		<p class="login-box-msg">로그인 해주세요</p>
           
+          <!-- 🔽 로그인 폼 -->
           <form action="<c:url value='/login'/>" method="post">
             <sec:csrfInput/>
 
@@ -72,7 +96,7 @@
                 <input id="loginId" name="loginId" type="text" class="form-control" placeholder="Username" />
                 <label for="loginId">아이디</label>
               </div>
-              <div class="input-group-text"><span class="bi bi-envelope"></span></div>
+              <div class="input-group-text"><span class="bi bi-person"></span></div>
             </div>
             <div class="input-group mb-1">
               <div class="form-floating">

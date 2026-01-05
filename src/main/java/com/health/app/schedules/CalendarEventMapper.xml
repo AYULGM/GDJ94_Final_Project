@@ -117,4 +117,34 @@
         ORDER BY start_at DESC
     </select>
 
+    <select id="selectConflictingEventsForAttendee" parameterType="map" resultMap="calendarEventResultMap">
+        SELECT
+            ce.event_id, ce.scope, ce.title, ce.description, ce.start_at, ce.end_at, ce.location, ce.status_code,
+            ce.is_all_day, ce.is_repeating, ce.repeat_info, ce.department_code, ce.owner_user_id, ce.branch_id,
+            ce.create_user, ce.create_date, ce.update_user, ce.update_date, ce.use_yn
+        FROM calendar_events ce
+        JOIN schedule_attendees sa ON ce.event_id = sa.event_id
+        WHERE sa.user_id = #{userId}
+          AND sa.use_yn = TRUE
+          AND ce.use_yn = TRUE
+          <if test="excludeEventId != null">
+          AND ce.event_id != #{excludeEventId}
+          </if>
+          AND (
+                (ce.start_at &lt; #{proposedEnd} AND ce.end_at > #{proposedStart})
+              )
+        ORDER BY ce.start_at ASC
+    </select>
+
+    <!-- 종료 시간이 지난 SCHEDULED 일정을 자동으로 COMPLETED로 변경 -->
+    <update id="updatePastEventsToCompleted">
+        UPDATE calendar_events
+        SET
+            status_code = 'COMPLETED',
+            update_date = NOW()
+        WHERE status_code = 'SCHEDULED'
+          AND end_at &lt; NOW()
+          AND use_yn = TRUE
+    </update>
+
 </mapper>

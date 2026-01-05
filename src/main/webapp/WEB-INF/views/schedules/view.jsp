@@ -1,6 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 	<%@ taglib prefix="c" uri="jakarta.tags.core"%>
 
+<!-- FullCalendar CSS는 header 전에 로드 -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/main.min.css' rel='stylesheet' />
+
 <jsp:include page="../includes/admin_header.jsp" />
 
 <!-- Main content for schedule view -->
@@ -49,6 +52,15 @@
                                         <label for="eventTitle">일정 제목</label>
                                         <input type="text" class="form-control" id="eventTitle" required>
                                     </div>
+
+                                    <div class="form-group">
+                                        <label for="eventStatus">상태</label>
+                                        <select class="form-control" id="eventStatus">
+                                            <option value="SCHEDULED">예정</option>
+                                            <option value="COMPLETED">완료</option>
+                                            <option value="CANCELLED">취소</option>
+                                        </select>
+                                    </div>
                                     <div class="form-group">
                                         <label for="eventStart">시작 일시</label>
                                         <input type="datetime-local" class="form-control" id="eventStart" required>
@@ -72,13 +84,23 @@
                                         </div>
                                     </div>
                                     <div class="form-group form-check">
+                                        <input type="checkbox" class="form-check-input" id="eventAllDay">
+                                        <label class="form-check-label" for="eventAllDay">종일</label>
+                                    </div>
+                                    <div class="form-group form-check">
                                         <input type="checkbox" class="form-check-input" id="eventRepeating">
                                         <label class="form-check-label" for="eventRepeating">반복 여부</label>
                                     </div>
                                     <div class="form-group">
-                                        <label for="eventAttachments">파일 첨부</label>
+                                        <label>기존 첨부파일</label>
+                                        <div id="existingAttachments" class="mb-2">
+                                            <!-- 기존 첨부파일 목록이 여기에 표시됩니다 -->
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eventAttachments">파일 추가</label>
                                         <input type="file" class="form-control-file" id="eventAttachments" multiple>
-                                        <small class="form-text text-muted">다중 파일 첨부 가능. 실제 업로드 로직은 추후 추가 예정입니다.</small>
+                                        <small class="form-text text-muted">다중 파일 첨부 가능</small>
                                     </div>
                                     <div class="form-group form-check">
                                         <input type="checkbox" class="form-check-input" id="eventNotification">
@@ -98,14 +120,88 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 일정 상세보기 Modal -->
+                <div class="modal fade" id="eventDetailModal" tabindex="-1" role="dialog" aria-labelledby="eventDetailModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="eventDetailModalLabel">일정 상세보기</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="container-fluid">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>일정 유형</strong></div>
+                                        <div class="col-md-9">
+                                            <span id="detailEventType" class="badge"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>제목</strong></div>
+                                        <div class="col-md-9" id="detailEventTitle"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>상태</strong></div>
+                                        <div class="col-md-9">
+                                            <span id="detailEventStatus" class="badge"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>시작 일시</strong></div>
+                                        <div class="col-md-9" id="detailEventStart"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>종료 일시</strong></div>
+                                        <div class="col-md-9" id="detailEventEnd"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>종일</strong></div>
+                                        <div class="col-md-9" id="detailEventAllDay"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>장소</strong></div>
+                                        <div class="col-md-9" id="detailEventLocation"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>참석자</strong></div>
+                                        <div class="col-md-9" id="detailEventAttendees"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>반복 여부</strong></div>
+                                        <div class="col-md-9" id="detailEventRepeating"></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>참고 파일</strong></div>
+                                        <div class="col-md-9" id="detailEventAttachments">
+                                            <span class="text-muted">첨부된 파일이 없습니다.</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3"><strong>내용</strong></div>
+                                        <div class="col-md-9" id="detailEventDescription"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                                <button type="button" id="editEventFromDetailBtn" class="btn btn-primary">수정</button>
+                                <button type="button" id="deleteEventFromDetailBtn" class="btn btn-danger">삭제</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<jsp:include page="../includes/admin_footer.jsp" />
-
-<!-- Page specific script for FullCalendar -->
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/main.min.css' rel='stylesheet' />
+<!-- Page specific scripts - footer 전에 로드해야 함 -->
+<script>
+// contextPath 변수 정의 (schedules.js에서 사용)
+const contextPath = '${pageContext.request.contextPath}';
+</script>
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js'></script>
 <script src="<c:url value='/js/schedules.js'/>"></script>
+
+<jsp:include page="../includes/admin_footer.jsp" />

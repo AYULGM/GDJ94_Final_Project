@@ -14,6 +14,7 @@ public class UserDTO {
     private Long postNo;
     private String baseAddress;
     private String detailAddress;
+    private Long branchId;
     
     private String departmentCode;
     private String email;

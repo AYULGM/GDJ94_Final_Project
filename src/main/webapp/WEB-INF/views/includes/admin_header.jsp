@@ -75,50 +75,23 @@
 
           <ul class="navbar-nav ms-auto">
               
-              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                <!-- 이미지 경로는 프로젝트에 실제 파일이 있어야 표시됩니다 -->
-                <a href="#" class="dropdown-item">
-                  <div class="d-flex">
-                    <div class="flex-shrink-0">
-                      <img
-                        src="<c:url value='/template/assets/img/user1-128x128.jpg'/>"
-                        alt="User Avatar"
-                        class="img-size-50 rounded-circle me-3"
-                      />
-                    </div>
-                    <div class="flex-grow-1">
-                      <h3 class="dropdown-item-title">
-                        Brad Diesel
-                        <span class="float-end fs-7 text-danger"><i class="bi bi-star-fill"></i></span>
-                      </h3>
-                      <p class="fs-7">Call me whenever you can...</p>
-                      <p class="fs-7 text-secondary">
-                        <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
-                      </p>
-                    </div>
-                  </div>
-                </a>
-                <div class="dropdown-divider"></div>
-
-                <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
-              </div>
-            </li>
-
             <!-- Notifications -->
-            <li class="nav-item dropdown">
-              <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+            <li class="nav-item dropdown" id="notification-dropdown">
+              <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false" id="notification-toggle">
                 <i class="bi bi-bell-fill"></i>
-                <span class="navbar-badge badge text-bg-warning">15</span>
+                <span class="navbar-badge badge text-bg-warning" id="notification-badge" style="display: none;">0</span>
               </a>
-              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                <span class="dropdown-item dropdown-header">15 Notifications</span>
+              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" id="notification-menu" style="max-height: 400px; overflow-y: auto;">
+                <span class="dropdown-item dropdown-header">
+                  <span id="notification-count-text">0</span> 개의 알림
+                  <button class="btn btn-sm btn-link float-end" id="mark-all-read-btn" style="display: none;">모두 읽음</button>
+                </span>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                  <i class="bi bi-envelope me-2"></i> 4 new messages
-                  <span class="float-end text-secondary fs-7">3 mins</span>
-                </a>
+                <div id="notification-list">
+                  <div class="dropdown-item text-center text-secondary">알림이 없습니다</div>
+                </div>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item dropdown-footer"> See All Notifications </a>
+                <a href="#" class="dropdown-item dropdown-footer" id="view-all-notifications">모든 알림 보기</a>
               </div>
             </li>
 
@@ -153,7 +126,7 @@
                 </li> 
 -->
                 <li class="user-body">
-                  <a href="#" class="btn btn-default btn-flat">My page</a>
+                  <a href="/users/mypage" class="btn btn-default btn-flat">My page</a>
                   <a href="<c:url value='/logout'/>" class="btn btn-default btn-flat float-end">Sign out</a>
                 </li>
               </ul>
