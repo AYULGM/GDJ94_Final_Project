@@ -87,7 +87,8 @@
                                        name="postNo"
                                        id="postNo"
                                        class="form-control"
-                                       value="${user.postNo}">
+                                       value="${user.postNo}"
+                                       readonly>
                             </div>
 							
                             <div class="mb-3">
@@ -96,7 +97,8 @@
                                        name="baseAddress"
                                        id="baseAddress"
                                        class="form-control"
-                                       value="${user.baseAddress}">
+                                       value="${user.baseAddress}"
+                                       readonly>
                             </div>
 
                             <div class="mb-3">
