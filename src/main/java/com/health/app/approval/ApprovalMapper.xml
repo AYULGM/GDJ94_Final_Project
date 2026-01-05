@@ -116,4 +116,76 @@
         WHERE user_id = #{userId}
     </select>
 
+
+
+
+    <!-- (1) docVerId 기준 결재선 전체 삭제 -->
+    <delete id="deleteLinesByDocVerId">
+        DELETE FROM approval_lines
+        WHERE doc_ver_id = #{docVerId}
+    </delete>
+
+    <!-- (2) 결재선 1건 삽입 -->
+    <insert id="insertLine"
+            parameterType="com.health.app.approval.ApprovalLineDTO"
+            useGeneratedKeys="true"
+            keyProperty="lineId">
+        INSERT INTO approval_lines
+        (
+            doc_ver_id,
+            seq,
+            line_role_code,
+            approver_id,
+            line_status_code,
+            acted_at,
+            comment,
+            signature_file_id,
+            create_user,
+            create_date,
+            update_user,
+            update_date,
+            use_yn
+        )
+        VALUES
+        (
+            #{docVerId},
+            #{seq},
+            #{lineRoleCode},
+            #{approverId},
+            #{lineStatusCode},
+            #{actedAt},
+            #{comment},
+            #{signatureFileId},
+            #{createUser},
+            NOW(),
+            #{updateUser},
+            NOW(),
+            TRUE
+        )
+    </insert>
+
+    <!-- (3) docVerId 기준 결재선 조회 -->
+    <select id="selectLinesByDocVerId"
+            resultType="com.health.app.approval.ApprovalLineDTO">
+        SELECT
+            line_id            AS lineId,
+            doc_ver_id         AS docVerId,
+            seq                AS seq,
+            line_role_code     AS lineRoleCode,
+            approver_id        AS approverId,
+            line_status_code   AS lineStatusCode,
+            acted_at           AS actedAt,
+            comment            AS comment,
+            signature_file_id  AS signatureFileId,
+            create_user        AS createUser,
+            create_date        AS createDate,
+            update_user        AS updateUser,
+            update_date        AS updateDate,
+            use_yn             AS useYn
+        FROM approval_lines
+        WHERE doc_ver_id = #{docVerId}
+          AND use_yn = TRUE
+        ORDER BY seq ASC
+    </select>
+
 </mapper>

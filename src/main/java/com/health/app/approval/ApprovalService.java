@@ -1,5 +1,7 @@
 package com.health.app.approval;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,5 +53,51 @@ public class ApprovalService {
         approvalMapper.updateCurrentVersion(dto);
 
         return dto;
+    }
+
+  
+    @Transactional
+    public void saveLines(Long loginUserId, Long docVerId, List<ApprovalLineDTO> lines) {
+
+        if (docVerId == null) {
+            throw new IllegalArgumentException("docVerId is required");
+        }
+
+        // 1) 기존 결재선 삭제
+        approvalMapper.deleteLinesByDocVerId(docVerId);
+
+        // 2) 새 결재선 삽입
+        int seqAuto = 1;
+        for (ApprovalLineDTO line : lines) {
+
+            // 서버 강제 세팅 (클라 조작 방지)
+            line.setDocVerId(docVerId);
+
+            // seq가 안 오면 서버에서 자동 부여
+            if (line.getSeq() == null) {
+                line.setSeq(seqAuto++);
+            } else {
+                seqAuto = Math.max(seqAuto, line.getSeq() + 1);
+            }
+
+            // 상태 기본값
+            if (line.getLineStatusCode() == null || line.getLineStatusCode().isBlank()) {
+                line.setLineStatusCode("ALS001"); // 임시 결재선 상태(너희 공통코드로 교체)
+            }
+
+            line.setCreateUser(loginUserId);
+            line.setUpdateUser(loginUserId);
+
+            approvalMapper.insertLine(line);
+        }
+    }
+
+  
+    @Transactional(readOnly = true)
+    public List<ApprovalLineDTO> getLines(Long docVerId) {
+        if (docVerId == null) {
+            throw new IllegalArgumentException("docVerId is required");
+        }
+        return approvalMapper.selectLinesByDocVerId(docVerId);
     }
 }
