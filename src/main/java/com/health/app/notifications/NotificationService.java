@@ -87,7 +87,36 @@ public class NotificationService {
      * @return 알림 목록 (최신순)
      */
     public List<Notification> getNotificationsByUserId(Long userId) {
-        return notificationRepository.findByRecipientUserId(userId);
+        List<Notification> notifications = notificationRepository.findByRecipientUserId(userId);
+
+        // 각 알림에 대해 현재 사용자의 읽음 상태 설정
+        for (Notification notification : notifications) {
+            for (NotificationRecipient recipient : notification.getRecipients()) {
+                if (recipient.getRecipientUserId().equals(userId)) {
+                    notification.setIsRead(recipient.getReadYn());
+                    break;
+                }
+            }
+
+            // relatedUrl 설정 (알림 타입에 따라)
+            if (notification.getRefType() != null && notification.getRefId() != null) {
+                switch (notification.getRefType()) {
+                    case "CALENDAR_EVENT":
+                        notification.setRelatedUrl("/schedules");
+                        break;
+                    case "NOTICE":
+                        notification.setRelatedUrl("/notices/" + notification.getRefId());
+                        break;
+                    case "SETTLEMENT":
+                        notification.setRelatedUrl("/settlements");
+                        break;
+                    default:
+                        notification.setRelatedUrl("#");
+                }
+            }
+        }
+
+        return notifications;
     }
 
     /**

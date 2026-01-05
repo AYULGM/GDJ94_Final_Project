@@ -1,8 +1,10 @@
 package com.health.app.schedules;
 
+import com.health.app.security.model.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -66,13 +68,18 @@ public class ScheduleController {
     @PostMapping("/events")
     public ResponseEntity<?> createEvent(
             @RequestPart("event") String eventJson,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            Authentication authentication) {
 
         try {
             // JSON 문자열을 수동으로 파싱
             com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
             objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
             CalendarEventDto calendarEvent = objectMapper.readValue(eventJson, CalendarEventDto.class);
+
+            // 로그인한 사용자 ID 설정
+            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            calendarEvent.setCreateUser(loginUser.getUserId());
 
             CalendarEventDto createdEvent = scheduleService.createCalendarEvent(calendarEvent, files);
             return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
@@ -125,10 +132,14 @@ public class ScheduleController {
     }
 
     @GetMapping("/manage")
-    public String scheduleManageView(Model model) {
+    public String scheduleManageView(Model model, Authentication authentication) {
         model.addAttribute("pageTitle", "일정 관리");
-        Long tempUserId = 1L; 
-        List<CalendarEventDto> eventList = scheduleService.getEventsByOwner(tempUserId);
+
+        // 로그인한 사용자의 일정만 조회
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUserId();
+
+        List<CalendarEventDto> eventList = scheduleService.getEventsByOwner(userId);
         model.addAttribute("eventList", eventList);
         return "schedules/manage";
     }
@@ -136,12 +147,16 @@ public class ScheduleController {
     /**
      * 특정 이벤트를 삭제하는 API 엔드포인트
      * @param eventId 삭제할 이벤트 ID
+     * @param authentication Spring Security 인증 객체
      * @return HTTP 상태 코드
      */
     @PostMapping("/events/{eventId}/delete")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId, Authentication authentication) {
         // TODO: 삭제 권한 확인 로직 추가
-        scheduleService.deleteCalendarEvent(eventId);
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long userId = loginUser.getUserId();
+
+        scheduleService.deleteCalendarEvent(eventId, userId);
         return ResponseEntity.ok().build();
     }
 

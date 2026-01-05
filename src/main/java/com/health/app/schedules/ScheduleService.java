@@ -69,8 +69,9 @@ public class ScheduleService {
      */
     @Transactional
     public CalendarEventDto createCalendarEvent(CalendarEventDto calendarEvent, List<MultipartFile> files) {
+        // createUser는 Controller에서 설정됨 (Authentication 사용)
         if (calendarEvent.getCreateUser() == null) {
-            calendarEvent.setCreateUser(1L);
+            throw new IllegalArgumentException("일정 생성자 정보가 없습니다. 로그인이 필요합니다.");
         }
         calendarEvent.setCreateDate(LocalDateTime.now());
         calendarEvent.setUseYn(true);
@@ -106,7 +107,7 @@ public class ScheduleService {
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    Long fileId = fileService.storeFile(file);
+                    Long fileId = fileService.storeFile(file, calendarEvent.getCreateUser());
                     fileService.linkFileToEntity(fileId, "CALENDAR_EVENT", eventId, "reference", calendarEvent.getCreateUser());
                 }
             }
@@ -151,9 +152,10 @@ public class ScheduleService {
     /**
      * 특정 이벤트를 논리적으로 삭제합니다. 관련 참석자 및 파일 링크도 함께 삭제 처리합니다.
      * @param eventId 삭제할 이벤트의 ID
+     * @param currentUserId 현재 로그인한 사용자 ID
      */
     @Transactional
-    public void deleteCalendarEvent(Long eventId) {
+    public void deleteCalendarEvent(Long eventId, Long currentUserId) {
         // TODO: 삭제 권한 확인 로직 추가 필요
 
         // 0. 알림 전송을 위해 이벤트 정보 조회 (삭제 전)
@@ -189,7 +191,7 @@ public class ScheduleService {
                 "CALENDAR_EVENT",
                 eventId,
                 attendeeIds,
-                1L // TODO: 실제 로그인 사용자 ID로 변경 필요
+                currentUserId
             );
         }
     }
@@ -266,7 +268,7 @@ public class ScheduleService {
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
                 if (!file.isEmpty()) {
-                    Long fileId = fileService.storeFile(file);
+                    Long fileId = fileService.storeFile(file, calendarEvent.getUpdateUser());
                     fileService.linkFileToEntity(fileId, "CALENDAR_EVENT", calendarEvent.getEventId(), "reference", calendarEvent.getUpdateUser());
                 }
             }

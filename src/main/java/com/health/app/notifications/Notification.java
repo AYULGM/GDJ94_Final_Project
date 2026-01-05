@@ -1,5 +1,6 @@
 package com.health.app.notifications;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -61,8 +62,16 @@ public class Notification {
 
     // 연관 관계: 하나의 알림은 여러 수신자를 가질 수 있음
     @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // JSON 직렬화 시 순환 참조 방지
     @Builder.Default
     private List<NotificationRecipient> recipients = new ArrayList<>();
+
+    // 프론트엔드용 필드 (DB에 저장되지 않음)
+    @Transient
+    private Boolean isRead; // 현재 사용자가 읽었는지 여부
+
+    @Transient
+    private String relatedUrl; // 관련 페이지 URL
 
     @PrePersist
     protected void onCreate() {

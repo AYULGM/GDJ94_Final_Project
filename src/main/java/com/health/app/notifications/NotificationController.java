@@ -1,7 +1,9 @@
 package com.health.app.notifications;
 
+import com.health.app.security.model.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -23,15 +25,28 @@ public class NotificationController {
     }
 
     /**
+     * 현재 로그인한 사용자의 ID를 가져옵니다.
+     * @param authentication Spring Security 인증 객체
+     * @return 사용자 ID
+     */
+    private Long getCurrentUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("인증되지 않은 사용자입니다.");
+        }
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        return loginUser.getUserId();
+    }
+
+    /**
      * 현재 로그인한 사용자의 알림 목록을 조회합니다.
      * GET /api/notifications
      *
+     * @param authentication Spring Security 인증 객체
      * @return 알림 목록
      */
     @GetMapping
-    public ResponseEntity<List<Notification>> getNotifications() {
-        // TODO: 실제 로그인 사용자 ID를 가져와야 함 (현재는 임시로 1L)
-        Long currentUserId = 1L;
+    public ResponseEntity<List<Notification>> getNotifications(Authentication authentication) {
+        Long currentUserId = getCurrentUserId(authentication);
 
         List<Notification> notifications = notificationService.getNotificationsByUserId(currentUserId);
         return ResponseEntity.ok(notifications);
@@ -41,12 +56,12 @@ public class NotificationController {
      * 현재 로그인한 사용자의 읽지 않은 알림 개수를 조회합니다.
      * GET /api/notifications/unread-count
      *
+     * @param authentication Spring Security 인증 객체
      * @return 읽지 않은 알림 개수
      */
     @GetMapping("/unread-count")
-    public ResponseEntity<Map<String, Long>> getUnreadCount() {
-        // TODO: 실제 로그인 사용자 ID를 가져와야 함 (현재는 임시로 1L)
-        Long currentUserId = 1L;
+    public ResponseEntity<Map<String, Long>> getUnreadCount(Authentication authentication) {
+        Long currentUserId = getCurrentUserId(authentication);
 
         Long count = notificationService.getUnreadCount(currentUserId);
 
@@ -61,12 +76,12 @@ public class NotificationController {
      * POST /api/notifications/{notifId}/read
      *
      * @param notifId 알림 ID
+     * @param authentication Spring Security 인증 객체
      * @return 성공 메시지
      */
     @PostMapping("/{notifId}/read")
-    public ResponseEntity<Map<String, String>> markAsRead(@PathVariable Long notifId) {
-        // TODO: 실제 로그인 사용자 ID를 가져와야 함 (현재는 임시로 1L)
-        Long currentUserId = 1L;
+    public ResponseEntity<Map<String, String>> markAsRead(@PathVariable Long notifId, Authentication authentication) {
+        Long currentUserId = getCurrentUserId(authentication);
 
         notificationService.markAsRead(notifId, currentUserId);
 
@@ -80,12 +95,12 @@ public class NotificationController {
      * 모든 알림을 읽음 처리합니다.
      * POST /api/notifications/read-all
      *
+     * @param authentication Spring Security 인증 객체
      * @return 읽음 처리된 알림 개수
      */
     @PostMapping("/read-all")
-    public ResponseEntity<Map<String, Object>> markAllAsRead() {
-        // TODO: 실제 로그인 사용자 ID를 가져와야 함 (현재는 임시로 1L)
-        Long currentUserId = 1L;
+    public ResponseEntity<Map<String, Object>> markAllAsRead(Authentication authentication) {
+        Long currentUserId = getCurrentUserId(authentication);
 
         int count = notificationService.markAllAsRead(currentUserId);
 

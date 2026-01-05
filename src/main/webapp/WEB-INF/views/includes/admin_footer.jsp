@@ -81,12 +81,18 @@
 
         console.log('notificationClient 확인됨:', notificationClient);
 
-        // TODO: 로그인 기능 구현 후 실제 사용자 ID로 변경
-        const currentUserId = 1;
+        // GlobalControllerAdvice에서 전달된 실제 로그인 사용자 ID 사용
+        const currentUserId = ${currentUserId != null ? currentUserId : 'null'};
         const contextPath = '${pageContext.request.contextPath}';
 
         console.log('사용자 ID:', currentUserId);
         console.log('Context Path:', contextPath);
+
+        // 로그인하지 않은 경우 초기화하지 않음
+        if (currentUserId === null) {
+          console.warn('로그인하지 않은 사용자입니다. 알림 시스템을 초기화하지 않습니다.');
+          return;
+        }
 
         // 알림 클라이언트 초기화
         notificationClient.init(currentUserId, contextPath);

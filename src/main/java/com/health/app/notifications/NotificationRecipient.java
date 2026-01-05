@@ -1,5 +1,6 @@
 package com.health.app.notifications;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class NotificationRecipient {
     // 연관 관계: 알림
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notif_id", nullable = false)
+    @JsonBackReference // JSON 직렬화 시 순환 참조 방지 (이 필드는 직렬화하지 않음)
     private Notification notification;
 
     @Column(name = "recipient_user_id", nullable = false)
