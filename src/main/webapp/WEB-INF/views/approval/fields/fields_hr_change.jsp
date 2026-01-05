@@ -3,12 +3,11 @@
 <div class="row g-2">
   <div class="col-md-4">
     <label class="form-label">대상자</label>
-    <input type="text" class="form-control" name="extTxt1" maxlength="50" />
+    <input type="text" class="form-control" name="hr_target_name" maxlength="50" />
   </div>
-
   <div class="col-md-4">
     <label class="form-label">변경 유형</label>
-    <select class="form-select" name="extCode1">
+    <select class="form-select" name="hr_change_type">
       <option value="">선택</option>
       <option value="TRANSFER">전보</option>
       <option value="PROMOTION">승진</option>
@@ -16,14 +15,13 @@
       <option value="ETC">기타</option>
     </select>
   </div>
-
   <div class="col-md-4">
     <label class="form-label">발령일(선택)</label>
-    <input type="date" class="form-control" name="extDt1" />
+    <input type="date" class="form-control" name="hr_effective_date" />
   </div>
 
   <div class="col-12">
     <label class="form-label mt-2">사유/근거</label>
-    <input type="text" class="form-control" name="extTxt2" maxlength="200" />
+    <input type="text" class="form-control" name="hr_reason" maxlength="200" />
   </div>
 </div>

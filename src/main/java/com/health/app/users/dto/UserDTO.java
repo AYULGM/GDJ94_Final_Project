@@ -11,7 +11,7 @@ public class UserDTO {
     private String loginId;
     private String password;
     private String name;
-    private String postNo;
+    private Long postNo;
     private String baseAddress;
     private String detailAddress;
     private Long branchId;

@@ -38,7 +38,9 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
         if (userId != null) {
             // 사용자별 세션 목록에 추가
             userSessions.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(session);
+            System.out.println("WebSocket 연결 수립: userId=" + userId + ", sessionId=" + session.getId());
         } else {
+            System.err.println("WebSocket 연결 실패: userId가 없습니다. sessionId=" + session.getId());
             session.close();
         }
     }
@@ -60,6 +62,7 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         // 모든 사용자 세션 목록에서 해당 세션 제거
         userSessions.values().forEach(sessions -> sessions.remove(session));
+        System.out.println("WebSocket 연결 종료: sessionId=" + session.getId());
     }
 
     /**
