@@ -19,5 +19,8 @@ public class BranchDTO {
     private String operatingHours;
     private String statusCode;
 
+    private Long createUser;
     private LocalDateTime createDate;
+    
+    private Long updateUser;
 }
