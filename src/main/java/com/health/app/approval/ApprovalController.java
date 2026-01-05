@@ -15,9 +15,15 @@ public class ApprovalController {
     public void approvalForm() {
            
     }
-
+    
+    @GetMapping("signature")
+    public void approvalSignature() {
+     
+    }
+    
     @GetMapping("print")
     public void approvalPrint() {
      
     }
+    
 }

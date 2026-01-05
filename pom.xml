@@ -32,16 +32,16 @@
 	</properties>
 	<dependencies>
 			<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-taglibs -->
-<!--		Security(보안)부분은 주석해제하면 접속 처음부터 로그인하라고 해서 잠깐 주석
+		<!--Security(보안)부분은 주석해제하면 접속 처음부터 로그인하라고 해서 잠깐 주석-->
 		<dependency>
 		    <groupId>org.springframework.security</groupId>
 		    <artifactId>spring-security-taglibs</artifactId>
-		</dependency>-->
-<!--		Security(보안)부분은 주석해제하면 접속 처음부터 로그인하라고 해서 잠깐 주석
+		</dependency>
+		<!--Security(보안)부분은 주석해제하면 접속 처음부터 로그인하라고 해서 잠깐 주석-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>-->
+		</dependency>
 			
 			<!-- https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api -->
 		<dependency>

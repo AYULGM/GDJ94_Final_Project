@@ -71,51 +71,10 @@
               </a>
             </li>
             <li class="nav-item d-none d-md-block"><a href="<c:url value='/'/>" class="nav-link">Home</a></li>
-            <li class="nav-item d-none d-md-block"><a href="#" class="nav-link">Contact</a></li>
           </ul>
 
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" data-widget="navbar-search" href="#" role="button">
-                <i class="bi bi-search"></i>
-              </a>
-            </li>
-
-            <!-- Messages -->
-            <li class="nav-item dropdown">
-              <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                <i class="bi bi-chat-text"></i>
-                <span class="navbar-badge badge text-bg-danger">3</span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                <!-- 이미지 경로는 프로젝트에 실제 파일이 있어야 표시됩니다 -->
-                <a href="#" class="dropdown-item">
-                  <div class="d-flex">
-                    <div class="flex-shrink-0">
-                      <img
-                        src="<c:url value='/template/assets/img/user1-128x128.jpg'/>"
-                        alt="User Avatar"
-                        class="img-size-50 rounded-circle me-3"
-                      />
-                    </div>
-                    <div class="flex-grow-1">
-                      <h3 class="dropdown-item-title">
-                        Brad Diesel
-                        <span class="float-end fs-7 text-danger"><i class="bi bi-star-fill"></i></span>
-                      </h3>
-                      <p class="fs-7">Call me whenever you can...</p>
-                      <p class="fs-7 text-secondary">
-                        <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
-                      </p>
-                    </div>
-                  </div>
-                </a>
-                <div class="dropdown-divider"></div>
-
-                <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
-              </div>
-            </li>
-
+              
             <!-- Notifications -->
             <li class="nav-item dropdown" id="notification-dropdown">
               <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false" id="notification-toggle">
@@ -136,44 +95,39 @@
               </div>
             </li>
 
-            <li class="nav-item">
-              <a class="nav-link" href="#" data-lte-toggle="fullscreen">
-                <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
-                <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
-              </a>
-            </li>
 
             <li class="nav-item dropdown user-menu">
               <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
                 <img
-                  src="<c:url value='/template/assets/img/user2-160x160.jpg'/>"
+                  src="<c:url value='/img/doge.jpg'/>"
                   class="user-image rounded-circle shadow"
                   alt="User Image"
                 />
-                <span class="d-none d-md-inline">Alexander Pierce</span>
+                <span class="d-none d-md-inline">Doge</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <li class="user-header text-bg-primary">
                   <img
-                    src="<c:url value='/template/assets/img/user2-160x160.jpg'/>"
+                    src="<c:url value='/img/doge.jpg'/>"
                     class="rounded-circle shadow"
                     alt="User Image"
                   />
                   <p>
-                    Alexander Pierce - Web Developer
-                    <small>Member since Nov. 2023</small>
+                    Doge - Web Developer
+                    <small>안녕하세요</small>
                   </p>
                 </li>
-                <li class="user-body">
+<!--                 <li class="user-body">
                   <div class="row">
                     <div class="col-4 text-center"><a href="#">Followers</a></div>
                     <div class="col-4 text-center"><a href="#">Sales</a></div>
                     <div class="col-4 text-center"><a href="#">Friends</a></div>
                   </div>
-                </li>
-                <li class="user-footer">
-                  <a href="#" class="btn btn-default btn-flat">Profile</a>
-                  <a href="<c:url value='/login'/>" class="btn btn-default btn-flat float-end">Sign out</a>
+                </li> 
+-->
+                <li class="user-body">
+                  <a href="/users/mypage" class="btn btn-default btn-flat">My page</a>
+                  <a href="<c:url value='/logout'/>" class="btn btn-default btn-flat float-end">Sign out</a>
                 </li>
               </ul>
             </li>

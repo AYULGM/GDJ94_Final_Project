@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-	<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+
 <!doctype html>
 <html lang="en">
   <!--begin::Head-->
@@ -30,7 +32,7 @@
     />
     <!--end::Third Party Plugin(Bootstrap Icons)-->
     <!--begin::Required Plugin(AdminLTE)-->
-    <link rel="stylesheet" href="<c:url value='/template/css/adminlte.css'/>" />
+    <link rel="stylesheet" href="<c:url value='/css/adminlte.css'/>" />
     <!--end::Required Plugin(AdminLTE)-->
   </head>
   <!--end::Head-->
@@ -47,14 +49,54 @@
           </a>
         </div>
         <div class="card-body login-card-body">
-          <p class="login-box-msg">로그인하여 세션을 시작하세요.</p>
+            <!-- ✅ 여기: 알림 메시지 영역 -->
+
+    		<!-- 비밀번호 변경 성공 -->
+            <c:if test="${not empty successMessage}">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            ${successMessage}
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"></button>
+        </div>
+    		</c:if>
+    		
+    		    <!-- 회원 탈퇴 완료 -->
+		    <c:if test="${param.withdraw != null}">
+		        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+		            <i class="bi bi-info-circle-fill"></i>
+		            회원 탈퇴가 정상적으로 처리되었습니다.
+		            <button class="btn-close" data-bs-dismiss="alert"></button>
+		        </div>
+		    </c:if>
+    
+              <!-- 🔽 로그인 안내 문구 -->
+    		<p class="login-box-msg">로그인 해주세요</p>
+          
+          <!-- 🔽 로그인 폼 -->
           <form action="<c:url value='/login'/>" method="post">
+            <sec:csrfInput/>
+
+			  <c:if test="${param.error eq 'true'}">
+			    <div class="alert alert-danger py-2">
+			      로그인 실패:
+			      <c:out value="${param.reason}" />
+			    </div>
+			  </c:if>
+			
+			  <c:if test="${param.logout eq 'true'}">
+			    <div class="alert alert-info py-2">
+			      로그아웃 되었습니다.
+			    </div>
+			  </c:if>
+          
             <div class="input-group mb-1">
               <div class="form-floating">
-                <input id="username" name="username" type="text" class="form-control" placeholder="Username" />
-                <label for="username">아이디</label>
+                <input id="loginId" name="loginId" type="text" class="form-control" placeholder="Username" />
+                <label for="loginId">아이디</label>
               </div>
-              <div class="input-group-text"><span class="bi bi-envelope"></span></div>
+              <div class="input-group-text"><span class="bi bi-person"></span></div>
             </div>
             <div class="input-group mb-1">
               <div class="form-floating">
@@ -72,6 +114,8 @@
                 </div>
               </div>
               <!-- /.col -->
+              
+              
               <div class="col-4">
                 <div class="d-grid gap-2">
                   <button type="submit" class="btn btn-primary">로그인</button>
@@ -81,7 +125,9 @@
             </div>
             <!--end::Row-->
           </form>
-
+			<p class="mb-1">
+  				<a href="<c:url value='/users/join'/>">회원가입</a>
+			</p>
           <p class="mb-1"><a href="#">비밀번호를 잊으셨나요?</a></p>
         </div>
         <!-- /.login-card-body -->
@@ -95,7 +141,7 @@
     ></script>
     <!--end::Required Plugin(Bootstrap 5)-->
     <!--begin::Required Plugin(AdminLTE)-->
-    <script src="<c:url value='/template/js/adminlte.js'/>"></script>
+    <script src="<c:url value='/js/adminlte.js'/>"></script>
     <!--end::Required Plugin(AdminLTE)-->
   </body>
   <!--end::Body-->

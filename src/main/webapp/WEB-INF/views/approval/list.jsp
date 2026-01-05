@@ -1,11 +1,12 @@
-<%@ page contentType="text/html; charset=UTF-8" %>
-	<%@ taglib prefix="c" uri="jakarta.tags.core"%>
-
 <html>
 <head>
     <title>전자결재 목록</title>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+
 </head>
 <body>
+<jsp:include page="../includes/admin_header.jsp" />
 
 <h2>전자결재 목록</h2>
 
@@ -39,5 +40,6 @@
     </tbody>
 </table>
 
+<jsp:include page="../includes/admin_footer.jsp" />
 </body>
 </html>
