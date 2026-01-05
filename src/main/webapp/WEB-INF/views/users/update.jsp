@@ -71,41 +71,27 @@
                                        value="${user.branchId}">
                             </div>
 
-							<!-- 주소 -->
-							
-							<div class="mb-3">
-					        <button type="button"
-					                class="btn btn-outline-primary"
-					                onclick="execDaumPostcode()">
-					            <i class="bi bi-search"></i> 주소 검색
-					        </button>
-					        </div>
-					        
+                            <!-- 주소 -->
                             <div class="mb-3">
                                 <label class="form-label">우편번호</label>
                                 <input type="text"
                                        name="postNo"
-                                       id="postNo"
                                        class="form-control"
-                                       value="${user.postNo}"
-                                       readonly>
+                                       value="${user.postNo}">
                             </div>
-							
+
                             <div class="mb-3">
                                 <label class="form-label">기본 주소</label>
                                 <input type="text"
                                        name="baseAddress"
-                                       id="baseAddress"
                                        class="form-control"
-                                       value="${user.baseAddress}"
-                                       readonly>
+                                       value="${user.baseAddress}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">상세 주소</label>
                                 <input type="text"
                                        name="detailAddress"
-                                       id="detailAddress"
                                        class="form-control"
                                        value="${user.detailAddress}">
                             </div>
@@ -127,10 +113,5 @@
     </section>
 
 </div>
-<!-- 카카오 주소 API -->
-<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
-<script src="<c:url value='/js/address.js'/>"></script>
-
-</body>
 <jsp:include page="../includes/admin_footer.jsp" />

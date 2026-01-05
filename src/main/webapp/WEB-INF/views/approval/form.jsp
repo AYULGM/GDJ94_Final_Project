@@ -11,12 +11,13 @@
   </div>
 
   <!-- 저장 폼 -->
-  <form action="/approval/saveDraftForm" method="post" id="approvalForm">
+  <form action="<c:url value='/approval/save'/>" method="post" id="approvalForm">
 
     <!-- 문서 유형 -->
     <div class="mb-3">
       <label class="form-label">문서 유형</label>
-      <select class="form-select" name="typeCode" id="approvalTypeCode" required>
+
+      <select class="form-select" name="approvalTypeCode" id="approvalTypeCode" required>
         <option value="">선택</option>
         <option value="AT001">기안서</option>
         <option value="AT002">업무보고서</option>
@@ -31,9 +32,10 @@
         <option value="AT011">사직서</option>
         <option value="AT012">인사 발령/변경 품의서</option>
       </select>
+
     </div>
-	<!-- form_code (DB NOT NULL) -->
-			<input type="hidden" name="formCode" id="formCode" value="" />
+
+   
     <!-- 문서유형별 추가 입력 -->
     <div class="card mb-3">
       <div class="card-header">문서유형별 추가 입력</div>
@@ -44,78 +46,79 @@
           <jsp:include page="fields/fields_default.jsp"/>
         </div>
 
+        <!-- 휴가 신청서 (AT009) -->
         <div class="doc-extra" data-type="AT009" style="display:none;">
           <jsp:include page="fields/fields_leave.jsp"/>
         </div>
 
+        <!-- 출장 신청서 (AT007) -->
         <div class="doc-extra" data-type="AT007" style="display:none;">
           <jsp:include page="fields/fields_trip.jsp"/>
         </div>
 
+        <!-- 근태 신청서 (AT008) -->
         <div class="doc-extra" data-type="AT008" style="display:none;">
           <jsp:include page="fields/fields_attendance.jsp"/>
         </div>
 
+        <!-- 구매요청서(PR) (AT005) -->
         <div class="doc-extra" data-type="AT005" style="display:none;">
           <jsp:include page="fields/fields_pr.jsp"/>
         </div>
 
+        <!-- 발주서(PO) (AT006) -->
         <div class="doc-extra" data-type="AT006" style="display:none;">
           <jsp:include page="fields/fields_po.jsp"/>
         </div>
 
+        <!-- 지출결의서 (AT004) -->
         <div class="doc-extra" data-type="AT004" style="display:none;">
           <jsp:include page="fields/fields_expense.jsp"/>
         </div>
 
+        <!-- 휴직 신청서 (AT010) -->
         <div class="doc-extra" data-type="AT010" style="display:none;">
           <jsp:include page="fields/fields_leave_of_absence.jsp"/>
         </div>
 
+        <!-- 사직서 (AT011) -->
         <div class="doc-extra" data-type="AT011" style="display:none;">
           <jsp:include page="fields/fields_resignation.jsp"/>
         </div>
 
+        <!-- 인사 발령/변경 품의서 (AT012) -->
         <div class="doc-extra" data-type="AT012" style="display:none;">
           <jsp:include page="fields/fields_hr_change.jsp"/>
         </div>
-		
 
       </div>
     </div>
-
-    <!-- 제목 -->
+    
+ 	<!-- 제목 -->
     <div class="mb-3">
       <label class="form-label">제목</label>
       <input type="text" class="form-control" name="title" id="title" maxlength="200" required />
     </div>
 
-    <!-- 본문 -->
-    <div class="mb-3">
+    <!-- 본문(공통) -->
+    <div class="mb-3" id="contentBlock">
       <label class="form-label">내용</label>
-      <textarea class="form-control" name="body" id="body" rows="10" required></textarea>
+      <textarea class="form-control" name="content" id="content" rows="10" required></textarea>
+      <div class="form-text">문서 유형별 추가 입력은 아래에서 작성합니다.</div>
     </div>
 
     <!-- 버튼 -->
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-outline-primary" onclick="submitTemp()">임시저장</button>
-      <button type="submit" class="btn btn-primary">다음</button>
+      <button type="submit" class="btn btn-primary">저장</button>
       <a class="btn btn-outline-secondary" href="<c:url value='/approval/list'/>">취소</a>
     </div>
 
     <!-- 임시저장 구분 -->
     <input type="hidden" name="tempYn" id="tempYn" value="N" />
-
   </form>
 </div>
 
+
 <script src="/approval/js/formChange.js"></script>
-
-<script>
-  function submitTemp() {
-    document.getElementById("tempYn").value = "Y";
-    document.getElementById("approvalForm").submit();
-  }
-</script>
-
 <jsp:include page="../includes/admin_footer.jsp" />
