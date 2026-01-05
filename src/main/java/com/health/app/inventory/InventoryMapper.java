@@ -1,9 +1,5 @@
-package com.health.app.inventory.mapper;
+package com.health.app.inventory;
 
-import com.health.app.inventory.dto.InventoryDetailDto;
-import com.health.app.inventory.dto.InventoryHistoryViewDto;
-import com.health.app.inventory.dto.InventoryViewDto;
-import com.health.app.inventory.dto.OptionDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

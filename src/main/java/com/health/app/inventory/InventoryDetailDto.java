@@ -1,4 +1,4 @@
-package com.health.app.inventory.dto;
+package com.health.app.inventory;
 
 import lombok.Data;
 
