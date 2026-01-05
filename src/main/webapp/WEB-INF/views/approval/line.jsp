@@ -6,13 +6,22 @@
   <meta charset="UTF-8" />
   <title>결재선 설정</title>
 
-  <style>
-    .tree-group-title { font-weight:700; margin-top:10px; }
-    .tree-sub-title { font-weight:600; margin-top:8px; color:#374151; }
-    .tree-item { cursor:pointer; padding:6px 8px; border-radius:8px; }
-    .tree-item:hover { background:#f5f5f5; }
-    .tree-muted { color:#6b7280; font-size:12px; }
-  </style>
+ <style>
+  .tree-group-title { font-weight:700; margin-top:10px; }
+  .tree-sub-title { font-weight:600; margin-top:8px; color:#374151; }
+  .tree-item { cursor:pointer; padding:6px 8px; border-radius:8px; }
+  .tree-item:hover { background:#f5f5f5; }
+  .tree-muted { color:#6b7280; font-size:12px; }
+
+  /* dropdown(접기/펼치기) */
+  .tree-details { border:1px solid #e5e7eb; border-radius:10px; margin:8px 0; background:#fff; }
+  .tree-summary { list-style:none; cursor:pointer; padding:10px 12px; font-weight:600; display:flex; align-items:center; justify-content:space-between; }
+  .tree-summary::-webkit-details-marker { display:none; }
+  .tree-summary:hover { background:#f9fafb; }
+  .tree-children { padding:8px 10px 10px 10px; }
+  .tree-pill { font-size:12px; color:#6b7280; }
+</style>
+
 </head>
 <body>
 <jsp:include page="../includes/admin_header.jsp" />
@@ -52,19 +61,11 @@
         </div>
 
         <div class="card-body">
-          <div class="d-flex gap-2 mb-2">
-            <input type="text" class="form-control" id="inpTreeKeyword" placeholder="이름 검색" />
-            <button type="button" class="btn btn-outline-secondary" id="btnReloadTree">새로고침</button>
-          </div>
 
           <div id="approverTree" class="border rounded p-2" style="height:420px; overflow:auto;">
             <div class="text-body-secondary">불러오는 중...</div>
           </div>
 
-          <div class="alert alert-info mt-3 mb-0 small">
-            트리에서 사용자를 클릭하면 우측 결재선 목록에 추가됩니다.
-            (기본 역할: 결재 AR003)
-          </div>
         </div>
       </div>
     </div>
@@ -170,7 +171,7 @@
 
     if (lines.length === 0) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="3" class="text-center text-body-secondary py-4">등록된 결재선이 없습니다.</td>`;
+      tr.innerHTML = '<td colspan="3" class="text-center text-body-secondary py-4">등록된 결재선이 없습니다.</td>';
       tbody.appendChild(tr);
       return;
     }
@@ -185,11 +186,11 @@
         render();
       });
 
-      tr.innerHTML = `
-        <td>${idx + 1}</td>
-        <td>${roleText(l.lineRoleCode)} <span class="text-body-secondary">(${l.lineRoleCode})</span></td>
-        <td>${l.approverId}</td>
-      `;
+      tr.innerHTML =
+        '<td>' + (idx + 1) + '</td>' +
+        '<td>' + roleText(l.lineRoleCode) + ' <span class="text-body-secondary">(' + l.lineRoleCode + ')</span></td>' +
+        '<td>' + l.approverId + '</td>';
+
       tbody.appendChild(tr);
     });
   }
@@ -203,7 +204,8 @@
     }
 
     try {
-      const res = await fetch(`/approval/linesForm?docVerId=${encodeURIComponent(docVerId)}`, {
+      const url = '/approval/linesForm?docVerId=' + encodeURIComponent(docVerId);
+      const res = await fetch(url, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
@@ -238,131 +240,159 @@
     treeEl.innerHTML = '<div class="text-body-secondary">불러오는 중...</div>';
 
     try {
-      const res = await fetch('/api/approval/approvers/tree', {
+      const res = await fetch('/approval/approvers/tree', {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
 
       if (!res.ok) {
-        treeEl.innerHTML = `<div class="text-danger">트리 조회 실패: ${res.status}</div>`;
+        treeEl.innerHTML = '<div class="text-danger">트리 조회 실패: ' + res.status + '</div>';
         return;
       }
 
       const data = await res.json();
+      console.log('TREE DATA =', data);
+
       approverTreeCache = data;
       renderApproverTree();
-
     } catch (e) {
-      treeEl.innerHTML = `<div class="text-danger">트리 오류: ${e}</div>`;
+      treeEl.innerHTML = '<div class="text-danger">트리 오류: ' + e + '</div>';
     }
   }
 
   function renderApproverTree() {
-    const data = approverTreeCache;
-    const treeEl = document.getElementById('approverTree');
-    const keyword = (document.getElementById('inpTreeKeyword')?.value || '').trim().toLowerCase();
+	  const data = approverTreeCache;
+	  const treeEl = document.getElementById('approverTree');
+	  const keyword = (document.getElementById('inpTreeKeyword')?.value || '').trim().toLowerCase();
 
-    if (!data) {
-      treeEl.innerHTML = '<div class="text-body-secondary">데이터가 없습니다.</div>';
-      return;
-    }
+	  if (!data) {
+	    treeEl.innerHTML = '<div class="text-body-secondary">데이터가 없습니다.</div>';
+	    return;
+	  }
 
-    treeEl.innerHTML = '';
+	  // ===== 서버 필드명 호환 레이어 =====
+	  const pickName = (u) => (u?.name ?? u?.userName ?? u?.username ?? u?.user_name ?? '');
+	  const pickUserId = (u) => (u?.userId ?? u?.id ?? u?.user_id ?? u?.user_no ?? null);
+	  const pickRoleCode = (u) => (u?.roleCode ?? u?.role_code ?? u?.role ?? '');
+	  const pickBranchId = (u) => (u?.branchId ?? u?.branch_id ?? null);
+	  const pickDeptCode = (u) => (u?.deptCode ?? u?.departmentCode ?? u?.department_code ?? u?.department_code ?? u?.department ?? '');
 
-    const matches = (name) => {
-      if (!keyword) return true;
-      return String(name || '').toLowerCase().includes(keyword);
-    };
+	  const matches = (name) => {
+	    if (!keyword) return true;
+	    return String(name || '').toLowerCase().includes(keyword);
+	  };
 
-    const addUserToLine = (u) => {
-      if (!docVerId) { showMsg('docVerId가 없습니다.'); return; }
+	  const addUserToLine = (u) => {
+	    if (!docVerId) { showMsg('docVerId가 없습니다.'); return; }
 
-      if (lines.some(x => String(x.approverId) === String(u.userId))) {
-        showMsg('이미 추가된 결재자입니다.');
-        return;
-      }
+	    const uid = pickUserId(u);
+	    if (!uid) { showMsg('userId를 찾을 수 없습니다.'); return; }
 
-      // 기본 역할: 결재(AR003)
-      lines.push({
-        seq: lines.length + 1,
-        approverId: Number(u.userId),
-        lineRoleCode: 'AR003'
-      });
+	    if (lines.some(x => String(x.approverId) === String(uid))) {
+	      showMsg('이미 추가된 결재자입니다.');
+	      return;
+	    }
 
-      selectedIndex = lines.length - 1;
-      render();
-      showMsg('결재자를 추가했습니다.');
-    };
+	    lines.push({
+	      seq: lines.length + 1,
+	      approverId: Number(uid),
+	      lineRoleCode: 'AR003'
+	    });
 
-    // 1) 본사
-    const hoTitle = document.createElement('div');
-    hoTitle.className = 'tree-group-title';
-    hoTitle.textContent = '본사';
-    treeEl.appendChild(hoTitle);
+	    selectedIndex = lines.length - 1;
+	    render();
+	    showMsg('결재자를 추가했습니다.');
+	  };
 
-    const ho = data.headOfficeByDept || {};
-    Object.keys(ho).forEach(deptCode => {
-      const sub = document.createElement('div');
-      sub.className = 'tree-sub-title';
-      sub.textContent = deptName(deptCode);
-      treeEl.appendChild(sub);
+	  // 렌더 유틸: details(드롭다운) 하나 만들기
+	  const makeDetails = (title, badgeText, defaultOpen) => {
+	    const details = document.createElement('details');
+	    details.className = 'tree-details';
+	    if (defaultOpen) details.open = true;
 
-      (ho[deptCode] || [])
-        .filter(u => matches(u.name))
-        .forEach(u => {
-          const item = document.createElement('div');
-          item.className = 'tree-item d-flex justify-content-between align-items-center';
-          item.innerHTML = `
-            <div>
-              <div>${u.name}</div>
-              <div class="tree-muted">${roleName(u.roleCode)} · ${deptCode}</div>
-            </div>
-            <span class="badge text-bg-light">추가</span>
-          `;
-          item.addEventListener('click', () => addUserToLine(u));
-          treeEl.appendChild(item);
-        });
-    });
+	    const summary = document.createElement('summary');
+	    summary.className = 'tree-summary';
+	    summary.innerHTML =
+	      '<span>' + title + '</span>' +
+	      '<span class="tree-pill">' + (badgeText || '') + '</span>';
 
-    treeEl.appendChild(document.createElement('hr'));
+	    const children = document.createElement('div');
+	    children.className = 'tree-children';
 
-    // 2) 지점
-    const brTitle = document.createElement('div');
-    brTitle.className = 'tree-group-title';
-    brTitle.textContent = '지점';
-    treeEl.appendChild(brTitle);
+	    details.appendChild(summary);
+	    details.appendChild(children);
+	    return { details, children };
+	  };
 
-    const branches = data.branches || {};
-    Object.keys(branches).forEach(branchId => {
-      const node = branches[branchId];
+	  const addUserItem = (container, u, metaText) => {
+	    const nm = pickName(u);
+	    if (!matches(nm)) return false;
 
-      const sub = document.createElement('div');
-      sub.className = 'tree-sub-title';
-      sub.textContent = node.branchName || ('지점 ' + branchId);
-      treeEl.appendChild(sub);
+	    const rc = pickRoleCode(u);
 
-      (node.users || [])
-        .filter(u => matches(u.name))
-        .forEach(u => {
-          const item = document.createElement('div');
-          item.className = 'tree-item d-flex justify-content-between align-items-center';
-          item.innerHTML = `
-            <div>
-              <div>${u.name}</div>
-              <div class="tree-muted">${roleName(u.roleCode)} · branchId=${u.branchId}</div>
-            </div>
-            <span class="badge text-bg-light">추가</span>
-          `;
-          item.addEventListener('click', () => addUserToLine(u));
-          treeEl.appendChild(item);
-        });
-    });
+	    const item = document.createElement('div');
+	    item.className = 'tree-item d-flex justify-content-between align-items-center';
+	    item.innerHTML =
+	      '<div>' +
+	        '<div>' + (nm || '(이름없음)') + '</div>' +
+	        '<div class="tree-muted">' + roleName(rc) + (metaText ? (' · ' + metaText) : '') + '</div>' +
+	      '</div>' +
+	      '<span class="badge text-bg-light">추가</span>';
 
-    // 아무것도 표시 안되면 안내
-    if (!treeEl.childElementCount) {
-      treeEl.innerHTML = '<div class="text-body-secondary">표시할 데이터가 없습니다.</div>';
-    }
-  }
+	    item.addEventListener('click', () => addUserToLine(u));
+	    container.appendChild(item);
+	    return true;
+	  };
+
+	  treeEl.innerHTML = '';
+	  let totalUserCount = 0;
+
+	  // =========================
+	  // 2) 지점 (지점별 dropdown)
+	  // =========================
+	  const brTitle = document.createElement('div');
+	  brTitle.className = 'tree-group-title';
+	  brTitle.textContent = '지점';
+	  treeEl.appendChild(brTitle);
+
+	  const branches = data.branches || {};
+	  const branchIds = Object.keys(branches);
+
+	  if (branchIds.length === 0) {
+	    const empty = document.createElement('div');
+	    empty.className = 'text-body-secondary';
+	    empty.textContent = '지점 데이터가 없습니다.';
+	    treeEl.appendChild(empty);
+	  } else {
+	    branchIds.forEach(branchId => {
+	      const node = branches[branchId] || {};
+	      const users = node.users || [];
+
+	      const title = node.branchName || ('지점 ' + branchId);
+	      const { details, children } = makeDetails(title, `총 ${users.length}명`, false);
+
+	      let localCount = 0;
+	      users.forEach(u => {
+	        const bid = pickBranchId(u) ?? branchId;
+	        const ok = addUserItem(children, u, 'branchId=' + bid);
+	        if (ok) { localCount++; totalUserCount++; }
+	      });
+
+	      if (localCount === 0) {
+	        if (keyword) return; // 검색 중이면 숨김
+	        const msg = document.createElement('div');
+	        msg.className = 'text-body-secondary';
+	        msg.textContent = '사용자가 없습니다.';
+	        children.appendChild(msg);
+	      }
+
+	      if (keyword && localCount > 0) details.open = true;
+
+	      treeEl.appendChild(details);
+	    });
+	  }
+	}
+
 
   // ===== 위/아래 =====
   document.getElementById('btnMoveUp')?.addEventListener('click', () => {
@@ -423,9 +453,8 @@
       const text = await res.text(); // "OK"
       showMsg('저장 완료: ' + text);
 
-      // 저장 후 다시 조회 (DB 기준 확정)
+      // 저장 후 다시 조회
       await loadLines();
-
     } catch (e) {
       showMsg('저장 중 오류: ' + e);
     }
@@ -434,7 +463,6 @@
   // ===== 트리 검색/새로고침 =====
   document.getElementById('btnReloadTree')?.addEventListener('click', loadApproverTree);
   document.getElementById('inpTreeKeyword')?.addEventListener('input', () => {
-    // 캐시 기반 즉시 필터
     renderApproverTree();
   });
 

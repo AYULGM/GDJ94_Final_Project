@@ -12,7 +12,7 @@ import com.health.app.security.model.LoginUser;
 import lombok.RequiredArgsConstructor;
 
 @Controller
-@RequestMapping("/approval/*")
+@RequestMapping("/approval")
 @RequiredArgsConstructor
 public class ApprovalController {
 
@@ -77,4 +77,10 @@ public class ApprovalController {
     public List<ApprovalLineDTO> linesForm(@RequestParam Long docVerId) {
         return approvalService.getLines(docVerId);
     }
+    @GetMapping("approvers/tree")
+    @ResponseBody
+    public java.util.Map<String, Object> approverTree() {
+        return approvalService.getApproverTree();
+    }
+
 }

@@ -134,7 +134,7 @@
               </a>
             </li>
 			<li class="nav-item">
-              <a href="/approval/line" class="nav-link">
+              <a href="/approval/line?docVerId=3" class="nav-link">
                 <p>결재 라인</p>
               </a>
             </li>

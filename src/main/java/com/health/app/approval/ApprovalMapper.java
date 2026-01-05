@@ -1,6 +1,7 @@
 package com.health.app.approval;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -31,4 +32,17 @@ public interface ApprovalMapper {
 
     /** docVerId 기준 결재선 조회 */
     List<ApprovalLineDTO> selectLinesByDocVerId(@Param("docVerId") Long docVerId);
+
+    // =========================
+    // ✅ 결재자 트리 조회 추가
+    // =========================
+
+    /** 본사 사용자(부서별 그룹핑용) */
+    List<Map<String, Object>> selectHeadOfficeApprovers();
+
+    /** 지점 사용자(지점별 그룹핑용) */
+    List<Map<String, Object>> selectBranchApprovers();
+
+    /** 지점명(지점ID -> 지점명) */
+    List<Map<String, Object>> selectBranches();
 }
