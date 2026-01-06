@@ -23,7 +23,7 @@
                         <table class="table table-bordered table-hover">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px">번호</th>
+                                    <th style="width: 100px">지점번호</th>
                                     <th>지점명</th>
                                     <th>담당자</th>
                                     <th>연락처</th>
@@ -35,7 +35,7 @@
                             <tbody>
                                 <c:forEach var="b" items="${branchList}" varStatus="status">
                                     <tr>
-                                        <td>${status.count}</td>
+                                        <td>${b.branchId}</td>
                                         <td>
                                             <a href="/branch/detail?branchId=${b.branchId}">
                                                 ${b.branchName}

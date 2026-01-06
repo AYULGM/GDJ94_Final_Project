@@ -47,7 +47,7 @@
               AND cs.code = u.status_code
 
         WHERE u.use_yn = TRUE
-        ORDER BY u.create_date DESC
+        ORDER BY u.user_id DESC
         ]]>
     </select>
 
