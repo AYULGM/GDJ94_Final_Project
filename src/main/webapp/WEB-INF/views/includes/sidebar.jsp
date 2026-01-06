@@ -61,6 +61,35 @@
             <p>재고 관리</p>
           </a>
         </li>
+        <!-- ========================= -->
+        <!--  구매/입고 (통합) -->
+        <!-- ========================= -->
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-lte-toggle="treeview">
+            <i class="nav-icon bi bi-truck"></i>
+            <p>
+              구매/입고
+              <i class="nav-arrow bi bi-chevron-right"></i>
+            </p>
+          </a>
+
+          <ul class="nav nav-treeview">
+            <!--  문서유형은 AT005 하나만 -->
+            <li class="nav-item">
+              <a href="<c:url value='/approval/form'/>?typeCode=AT005" class="nav-link">
+                <p>구매요청서/발주서 작성</p>
+              </a>
+            </li>
+
+            <!--  시스템 목록 화면이 있으면 연결, 없으면 일단 빼도 됨 -->
+            <li class="nav-item">
+              <a href="<c:url value='/inbound'/>" class="nav-link">
+                <p>구매요청서/발주서 목록</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
 
         <!-- 일정 관리 Treeview -->
         <li class="nav-item">
