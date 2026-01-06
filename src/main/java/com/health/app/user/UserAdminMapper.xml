@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.user.UserAdminMapper">
+
+    <select id="selectUserAdminList"
+            resultType="com.health.app.user.UserAdminDTO">
+        <![CDATA[
+        SELECT
+            u.user_id            AS userId,
+            u.login_id           AS loginId,
+            u.name               AS name,
+            u.email              AS email,
+            u.phone              AS phone,
+
+            u.role_code          AS roleCode,
+            cr.code_desc         AS roleName,
+
+            u.department_code    AS departmentCode,
+            cd.code_desc         AS departmentName,
+
+            b.branch_name        AS branchName,
+
+            u.status_code   AS userStatusCode,
+            cs.code_desc         AS userStatusName,
+
+            u.fail_count         AS failCount,
+            u.lock_status_code   AS lockStatusCode,
+
+            u.create_date        AS createDate
+        FROM users u
+        LEFT JOIN branch b
+               ON b.branch_id = u.branch_id
+
+        LEFT JOIN common_code cr
+               ON cr.code_group = 'ROLE'
+              AND cr.code = u.role_code
+
+        LEFT JOIN common_code cd
+               ON cd.code_group = 'DEPARTMENT_CODE'
+              AND cd.code = u.department_code
+
+        LEFT JOIN common_code cs
+               ON cs.code_group = 'USER_STATUS'
+              AND cs.code = u.status_code
+
+        WHERE u.use_yn = TRUE
+        ORDER BY u.user_id DESC
+        ]]>
+    </select>
+
+</mapper>

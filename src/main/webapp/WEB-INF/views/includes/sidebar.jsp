@@ -42,7 +42,7 @@
         </li>
 
         <li class="nav-item">
-          <a href="<c:url value='/users'/>" class="nav-link">
+          <a href="<c:url value='/userManagement/list'/>" class="nav-link">
             <i class="nav-icon bi bi-people"></i>
             <p>사용자 관리</p>
           </a>

@@ -1,6 +1,5 @@
-package com.health.app.users.mapper;
+package com.health.app.users;
 
-import com.health.app.users.dto.UserDTO;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
