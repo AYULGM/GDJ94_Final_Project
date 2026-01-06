@@ -17,9 +17,10 @@
                     <div class="col-md-3">
                         <select class="form-select" name="branchId">
                             <option value="">전체 지점</option>
-                            <c:forEach var="b" items="${branchOptions}">
-                                <option value="${b.id}" <c:if test="${branchId != null && branchId == b.id}">selected</c:if>>
-                                        ${b.name}
+                            <c:forEach var="branch" items="${branches}">
+                                <option value="${branch.branchId}"
+                                        <c:if test="${not empty branchId and branchId == branch.branchId}">selected</c:if>>
+                                        ${branch.branchName}
                                 </option>
                             </c:forEach>
                         </select>
@@ -55,18 +56,27 @@
                     </thead>
                     <tbody>
                     <c:choose>
-                        <c:when test="${empty inventoryList}">
+                        <!--  inventoryList -> list 로 변경 -->
+                        <c:when test="${empty list}">
                             <tr>
                                 <td colspan="5" class="text-center text-muted">조회 결과가 없습니다.</td>
                             </tr>
                         </c:when>
                         <c:otherwise>
-                            <c:forEach var="row" items="${inventoryList}">
+                            <c:forEach var="row" items="${list}">
                                 <tr>
                                     <td>${row.branchName}</td>
-                                    <td>${row.productName}</td>
+
+                                    <!--  상품명 클릭 시 상세로 이동 -->
+                                    <td>
+                                        <a href="<c:url value='/inventory/detail'/>?branchId=${row.branchId}&productId=${row.productId}">
+                                                ${row.productName}
+                                        </a>
+                                    </td>
+
                                     <td class="text-end">${row.quantity}</td>
                                     <td class="text-end">${row.thresholdValue}</td>
+
                                     <td class="text-center">
                                         <c:choose>
                                             <c:when test="${row.lowStock == 1}">
