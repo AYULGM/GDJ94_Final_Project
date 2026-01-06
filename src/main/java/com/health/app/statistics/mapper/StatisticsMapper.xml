@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.statistics.mapper.StatisticsMapper">
+
+    <!-- =========================================================
+         ST-001: 지점별 매출 통계
+       ========================================================= -->
+    <select id="selectSalesByBranch" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.SalesStatisticsDto">
+        WITH branch_sales AS (
+            SELECT
+                s.branch_id,
+                b.branch_name AS branchName,
+                SUM(s.total_amount) AS totalAmount,
+                COUNT(*) AS saleCount,
+                AVG(s.total_amount) AS avgAmount
+            FROM sales s
+            JOIN branch b ON b.branch_id = s.branch_id
+            WHERE s.use_yn = 1
+              AND b.use_yn = 1
+              AND s.status_code = 'COMPLETED'
+              AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND s.branch_id = #{branchId}
+            </if>
+            GROUP BY s.branch_id, b.branch_name
+        ),
+        avg_sales AS (
+            SELECT AVG(totalAmount) AS overallAvg
+            FROM branch_sales
+        )
+        SELECT
+            bs.branch_id AS branchId,
+            bs.branchName,
+            bs.totalAmount,
+            bs.saleCount,
+            bs.avgAmount,
+            (bs.totalAmount - av.overallAvg) AS diffAmount,
+            ROUND(((bs.totalAmount - av.overallAvg) / av.overallAvg * 100), 2) AS diffPercent
+        FROM branch_sales bs
+        CROSS JOIN avg_sales av
+        ORDER BY bs.totalAmount DESC
+    </select>
+
+    <!-- =========================================================
+         ST-002: 항목별 매출 통계
+       ========================================================= -->
+    <select id="selectSalesByCategory" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.SalesStatisticsDto">
+        SELECT
+            s.category_code AS categoryCode,
+            s.category_code AS categoryName,
+            SUM(s.total_amount) AS totalAmount,
+            COUNT(*) AS saleCount,
+            AVG(s.total_amount) AS avgAmount
+        FROM sales s
+        WHERE s.use_yn = 1
+          AND s.status_code = 'COMPLETED'
+          AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
+        <if test="branchId != null and branchId != 0">
+          AND s.branch_id = #{branchId}
+        </if>
+        <if test="categoryCode != null and categoryCode != ''">
+          AND s.category_code = #{categoryCode}
+        </if>
+        GROUP BY s.category_code
+        ORDER BY totalAmount DESC
+    </select>
+
+    <!-- =========================================================
+         ST-003: 기간별 매출 통계
+       ========================================================= -->
+    <select id="selectSalesByPeriod" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.SalesStatisticsDto">
+        SELECT
+            <choose>
+                <when test="groupBy == 'daily'">
+                    DATE_FORMAT(s.sold_at, '%Y-%m-%d') AS period,
+                    DATE_FORMAT(s.sold_at, '%Y년 %m월 %d일') AS periodLabel
+                </when>
+                <when test="groupBy == 'quarterly'">
+                    CONCAT(YEAR(s.sold_at), '-Q', QUARTER(s.sold_at)) AS period,
+                    CONCAT(YEAR(s.sold_at), '년 ', QUARTER(s.sold_at), '분기') AS periodLabel
+                </when>
+                <when test="groupBy == 'yearly'">
+                    YEAR(s.sold_at) AS period,
+                    CONCAT(YEAR(s.sold_at), '년') AS periodLabel
+                </when>
+                <otherwise>
+                    DATE_FORMAT(s.sold_at, '%Y-%m') AS period,
+                    DATE_FORMAT(s.sold_at, '%Y년 %m월') AS periodLabel
+                </otherwise>
+            </choose>,
+            SUM(s.total_amount) AS totalAmount,
+            COUNT(*) AS saleCount,
+            AVG(s.total_amount) AS avgAmount
+        FROM sales s
+        WHERE s.use_yn = 1
+          AND s.status_code = 'COMPLETED'
+          AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
+        <if test="branchId != null and branchId != 0">
+          AND s.branch_id = #{branchId}
+        </if>
+        GROUP BY period, periodLabel
+        ORDER BY period ASC
+    </select>
+
+    <!-- =========================================================
+         ST-004: 지점별 지출 통계
+       ========================================================= -->
+    <select id="selectExpensesByBranch" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.ExpenseStatisticsDto">
+        WITH branch_expenses AS (
+            SELECT
+                e.branch_id,
+                b.branch_name AS branchName,
+                SUM(e.amount) AS totalAmount,
+                COUNT(*) AS expenseCount,
+                AVG(e.amount) AS avgAmount
+            FROM expenses e
+            JOIN branch b ON b.branch_id = e.branch_id
+            WHERE e.use_yn = 1
+              AND b.use_yn = 1
+              AND e.settlement_flag = TRUE
+              AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND e.branch_id = #{branchId}
+            </if>
+            GROUP BY e.branch_id, b.branch_name
+        ),
+        avg_expenses AS (
+            SELECT AVG(totalAmount) AS overallAvg
+            FROM branch_expenses
+        )
+        SELECT
+            be.branch_id AS branchId,
+            be.branchName,
+            be.totalAmount,
+            be.expenseCount,
+            be.avgAmount,
+            (be.totalAmount - av.overallAvg) AS diffAmount,
+            ROUND(((be.totalAmount - av.overallAvg) / av.overallAvg * 100), 2) AS diffPercent
+        FROM branch_expenses be
+        CROSS JOIN avg_expenses av
+        ORDER BY be.totalAmount DESC
+    </select>
+
+    <!-- =========================================================
+         ST-005: 항목별 지출 통계
+       ========================================================= -->
+    <select id="selectExpensesByCategory" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.ExpenseStatisticsDto">
+        SELECT
+            e.category_code AS categoryCode,
+            e.category_code AS categoryName,
+            SUM(e.amount) AS totalAmount,
+            COUNT(*) AS expenseCount,
+            AVG(e.amount) AS avgAmount
+        FROM expenses e
+        WHERE e.use_yn = 1
+          AND e.settlement_flag = TRUE
+          AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+        <if test="branchId != null and branchId != 0">
+          AND e.branch_id = #{branchId}
+        </if>
+        <if test="categoryCode != null and categoryCode != ''">
+          AND e.category_code = #{categoryCode}
+        </if>
+        GROUP BY e.category_code
+        ORDER BY totalAmount DESC
+    </select>
+
+    <!-- =========================================================
+         ST-006: 기간별 지출 통계
+       ========================================================= -->
+    <select id="selectExpensesByPeriod" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.ExpenseStatisticsDto">
+        SELECT
+            <choose>
+                <when test="groupBy == 'daily'">
+                    DATE_FORMAT(e.expense_at, '%Y-%m-%d') AS period,
+                    DATE_FORMAT(e.expense_at, '%Y년 %m월 %d일') AS periodLabel
+                </when>
+                <when test="groupBy == 'quarterly'">
+                    CONCAT(YEAR(e.expense_at), '-Q', QUARTER(e.expense_at)) AS period,
+                    CONCAT(YEAR(e.expense_at), '년 ', QUARTER(e.expense_at), '분기') AS periodLabel
+                </when>
+                <when test="groupBy == 'yearly'">
+                    YEAR(e.expense_at) AS period,
+                    CONCAT(YEAR(e.expense_at), '년') AS periodLabel
+                </when>
+                <otherwise>
+                    DATE_FORMAT(e.expense_at, '%Y-%m') AS period,
+                    DATE_FORMAT(e.expense_at, '%Y년 %m월') AS periodLabel
+                </otherwise>
+            </choose>,
+            SUM(e.amount) AS totalAmount,
+            COUNT(*) AS expenseCount,
+            AVG(e.amount) AS avgAmount
+        FROM expenses e
+        WHERE e.use_yn = 1
+          AND e.settlement_flag = TRUE
+          AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+        <if test="branchId != null and branchId != 0">
+          AND e.branch_id = #{branchId}
+        </if>
+        GROUP BY period, periodLabel
+        ORDER BY period ASC
+    </select>
+
+    <!-- =========================================================
+         ST-007: 정산 대상 매출 조회 (미정산 매출)
+       ========================================================= -->
+    <select id="selectUnsettledSales" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.UnsettledSaleDto">
+        SELECT
+            s.sale_id AS saleId,
+            s.sale_no AS saleNo,
+            s.branch_id AS branchId,
+            b.branch_name AS branchName,
+            s.sold_at AS soldAt,
+            s.category_code AS categoryCode,
+            s.total_amount AS totalAmount,
+            s.status_code AS statusCode,
+            CASE WHEN ssm.settlement_id IS NOT NULL THEN TRUE ELSE FALSE END AS settled,
+            ssm.settlement_id AS settlementId
+        FROM sales s
+        JOIN branch b ON b.branch_id = s.branch_id
+        LEFT JOIN settlement_sale_map ssm ON ssm.sale_id = s.sale_id AND ssm.use_yn = 1
+        WHERE s.use_yn = 1
+          AND b.use_yn = 1
+          AND s.status_code = 'COMPLETED'
+          AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
+        <if test="branchId != null and branchId != 0">
+          AND s.branch_id = #{branchId}
+        </if>
+        ORDER BY s.sold_at DESC, s.sale_id DESC
+    </select>
+
+    <!-- =========================================================
+         ST-008: 매출 대비 지출 비교 (손익 분석)
+       ========================================================= -->
+    <select id="selectProfitComparison" parameterType="com.health.app.statistics.dto.StatisticsSearchDto"
+            resultType="com.health.app.statistics.dto.ProfitComparisonDto">
+        WITH period_sales AS (
+            SELECT
+                <choose>
+                    <when test="groupBy == 'daily'">
+                        DATE_FORMAT(s.sold_at, '%Y-%m-%d') AS period,
+                        DATE_FORMAT(s.sold_at, '%Y년 %m월 %d일') AS periodLabel
+                    </when>
+                    <when test="groupBy == 'quarterly'">
+                        CONCAT(YEAR(s.sold_at), '-Q', QUARTER(s.sold_at)) AS period,
+                        CONCAT(YEAR(s.sold_at), '년 ', QUARTER(s.sold_at), '분기') AS periodLabel
+                    </when>
+                    <when test="groupBy == 'yearly'">
+                        YEAR(s.sold_at) AS period,
+                        CONCAT(YEAR(s.sold_at), '년') AS periodLabel
+                    </when>
+                    <otherwise>
+                        DATE_FORMAT(s.sold_at, '%Y-%m') AS period,
+                        DATE_FORMAT(s.sold_at, '%Y년 %m월') AS periodLabel
+                    </otherwise>
+                </choose>,
+                s.branch_id,
+                SUM(s.total_amount) AS salesAmount,
+                COUNT(*) AS salesCount
+            FROM sales s
+            WHERE s.use_yn = 1
+              AND s.status_code = 'COMPLETED'
+              AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND s.branch_id = #{branchId}
+            </if>
+            GROUP BY period, periodLabel, s.branch_id
+        ),
+        period_expenses AS (
+            SELECT
+                <choose>
+                    <when test="groupBy == 'daily'">
+                        DATE_FORMAT(e.expense_at, '%Y-%m-%d') AS period
+                    </when>
+                    <when test="groupBy == 'quarterly'">
+                        CONCAT(YEAR(e.expense_at), '-Q', QUARTER(e.expense_at)) AS period
+                    </when>
+                    <when test="groupBy == 'yearly'">
+                        YEAR(e.expense_at) AS period
+                    </when>
+                    <otherwise>
+                        DATE_FORMAT(e.expense_at, '%Y-%m') AS period
+                    </otherwise>
+                </choose>,
+                e.branch_id,
+                SUM(e.amount) AS expenseAmount,
+                COUNT(*) AS expenseCount
+            FROM expenses e
+            WHERE e.use_yn = 1
+              AND e.settlement_flag = TRUE
+              AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND e.branch_id = #{branchId}
+            </if>
+            GROUP BY period, e.branch_id
+        )
+        SELECT
+            COALESCE(ps.branch_id, pe.branch_id) AS branchId,
+            b.branch_name AS branchName,
+            COALESCE(ps.period, pe.period) AS period,
+            COALESCE(ps.periodLabel, pe.period) AS periodLabel,
+            COALESCE(ps.salesAmount, 0) AS salesAmount,
+            COALESCE(ps.salesCount, 0) AS salesCount,
+            COALESCE(pe.expenseAmount, 0) AS expenseAmount,
+            COALESCE(pe.expenseCount, 0) AS expenseCount,
+            (COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) AS profitAmount,
+            CASE
+                WHEN (COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) &gt; 0 THEN 'PROFIT'
+                WHEN (COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) &lt; 0 THEN 'LOSS'
+                ELSE 'BREAK_EVEN'
+            END AS profitStatus,
+            CASE
+                WHEN COALESCE(ps.salesAmount, 0) &gt; 0
+                THEN ROUND(((COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) / ps.salesAmount * 100), 2)
+                ELSE 0
+            END AS profitRate
+        FROM period_sales ps
+        FULL OUTER JOIN period_expenses pe
+            ON ps.period = pe.period AND ps.branch_id = pe.branch_id
+        LEFT JOIN branch b ON b.branch_id = COALESCE(ps.branch_id, pe.branch_id)
+        ORDER BY period ASC
+    </select>
+
+</mapper>

@@ -1,0 +1,163 @@
+package com.health.app.settlements;
+
+import com.health.app.settlements.dto.*;
+import com.health.app.settlements.service.SettlementService;
+import com.health.app.security.model.LoginUser;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 정산 Controller
+ */
+@Controller
+@RequestMapping("/settlements")
+@RequiredArgsConstructor
+public class SettlementController {
+
+    private final SettlementService settlementService;
+
+    /**
+     * 정산 목록 페이지
+     */
+    @GetMapping
+    public String settlementListPage(Model model) {
+        model.addAttribute("pageTitle", "정산 관리");
+        return "settlements/list";
+    }
+
+    /**
+     * 정산 상세 페이지
+     */
+    @GetMapping("/{settlementId}")
+    public String settlementDetailPage(@PathVariable Long settlementId, Model model) {
+        model.addAttribute("pageTitle", "정산 상세");
+        model.addAttribute("settlementId", settlementId);
+        return "settlements/detail";
+    }
+
+    /**
+     * 정산 확정 페이지
+     */
+    @GetMapping("/{settlementId}/confirm")
+    public String settlementConfirmPage(@PathVariable Long settlementId, Model model) {
+        model.addAttribute("pageTitle", "정산 확정");
+        model.addAttribute("settlementId", settlementId);
+        return "settlements/confirm";
+    }
+
+    /**
+     * 정산 목록 조회 API
+     */
+    @GetMapping("/api/list")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getSettlementList(SettlementSearchDto searchDto) {
+        Map<String, Object> result = settlementService.getSettlementList(searchDto);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 정산 상세 조회 API
+     */
+    @GetMapping("/api/{settlementId}")
+    @ResponseBody
+    public ResponseEntity<SettlementDetailDto> getSettlementDetail(@PathVariable Long settlementId) {
+        SettlementDetailDto settlement = settlementService.getSettlementDetail(settlementId);
+        return ResponseEntity.ok(settlement);
+    }
+
+    /**
+     * 정산 생성 API
+     */
+    @PostMapping("/api")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> createSettlement(
+            @RequestBody CreateSettlementRequestDto requestDto,
+            Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long settlementId = settlementService.createSettlement(requestDto, loginUser.getUserId());
+
+        Map<String, Object> response = Map.of(
+                "success", true,
+                "message", "정산이 생성되었습니다.",
+                "settlementId", settlementId
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 정산 확정 API
+     */
+    @PutMapping("/api/{settlementId}/confirm")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> confirmSettlement(
+            @PathVariable Long settlementId,
+            @RequestBody(required = false) Map<String, String> body,
+            Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        String reason = body != null ? body.get("reason") : null;
+
+        settlementService.confirmSettlement(settlementId, reason, loginUser.getUserId());
+
+        Map<String, Object> response = Map.of(
+                "success", true,
+                "message", "정산이 확정되었습니다."
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 정산 취소 API
+     */
+    @PutMapping("/api/{settlementId}/cancel")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> cancelSettlement(
+            @PathVariable Long settlementId,
+            @RequestBody(required = false) Map<String, String> body,
+            Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        String reason = body != null ? body.get("reason") : null;
+
+        settlementService.cancelSettlement(settlementId, reason, loginUser.getUserId());
+
+        Map<String, Object> response = Map.of(
+                "success", true,
+                "message", "정산이 취소되었습니다."
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 정산 삭제 API
+     */
+    @DeleteMapping("/api/{settlementId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> deleteSettlement(
+            @PathVariable Long settlementId,
+            Authentication authentication) {
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        settlementService.deleteSettlement(settlementId, loginUser.getUserId());
+
+        Map<String, Object> response = Map.of(
+                "success", true,
+                "message", "정산이 삭제되었습니다."
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 정산 이력 조회 API
+     */
+    @GetMapping("/api/{settlementId}/histories")
+    @ResponseBody
+    public ResponseEntity<List<SettlementHistoryDto>> getSettlementHistories(@PathVariable Long settlementId) {
+        List<SettlementHistoryDto> histories = settlementService.getSettlementHistories(settlementId);
+        return ResponseEntity.ok(histories);
+    }
+}
