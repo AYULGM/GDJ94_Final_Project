@@ -91,4 +91,23 @@ public class UserAdminController {
         return "redirect:/userManagement/detail?userId=" + dto.getUserId();
     }
 
+    // 상태 변경 처리
+    @PostMapping("/status")
+    public String changeStatus(Long userId, String statusCode) {
+
+        Authentication auth =
+            SecurityContextHolder.getContext().getAuthentication();
+
+        LoginUser loginUser =
+            (LoginUser) auth.getPrincipal();
+
+        userAdminService.changeUserStatus(
+            userId,
+            statusCode,
+            loginUser.getUserId()
+        );
+
+        return "redirect:/userManagement/detail?userId=" + userId;
+    }
+
 }

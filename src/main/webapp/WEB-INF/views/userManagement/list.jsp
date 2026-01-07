@@ -58,20 +58,28 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <c:choose>
-                                        <c:when test="${u.userStatusCode eq 'US001'}">
-                                            <span class="badge bg-success">재직</span>
-                                        </c:when>
-                                        <c:when test="${u.userStatusCode eq 'US002'}">
-                                            <span class="badge bg-warning">휴면</span>
-                                        </c:when>
-                                        <c:when test="${u.userStatusCode eq 'US003'}">
-                                            <span class="badge bg-secondary">퇴사</span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="badge bg-light">기타</span>
-                                        </c:otherwise>
-                                    </c:choose>
+									<c:choose>
+									    <c:when test="${u.userStatusCode eq 'US001'}">
+									        <span class="badge bg-success">정상</span>
+									    </c:when>
+									
+									    <c:when test="${u.userStatusCode eq 'US002'}">
+									        <span class="badge bg-secondary">비활성</span>
+									    </c:when>
+									
+									    <c:when test="${u.userStatusCode eq 'US003'}">
+									        <span class="badge bg-danger">정지</span>
+									    </c:when>
+									
+									    <c:when test="${u.userStatusCode eq 'US004'}">
+									        <span class="badge bg-warning text-dark">휴면</span>
+									    </c:when>
+									
+									    <c:otherwise>
+									        <span class="badge bg-light text-dark">알 수 없음</span>
+									    </c:otherwise>
+									</c:choose>
+
                                 </td>
                                 <td>${u.failCount}</td>
                                 <td>

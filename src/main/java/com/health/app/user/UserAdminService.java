@@ -99,7 +99,34 @@ public class UserAdminService {
         }
     }
 
+    // 상태 변경 로직
+    @Transactional
+    public void changeUserStatus(Long userId,
+                                 String newStatusCode,
+                                 Long loginUserId) {
 
+        // 1. 기존 상태 조회
+        UserAdminDTO before =
+            userAdminMapper.selectUserAdminDetail(userId);
+
+        // 동일 상태면 처리 안 함
+        if (Objects.equals(before.getUserStatusCode(), newStatusCode)) {
+            return;
+        }
+
+        // 2. users 테이블 UPDATE
+        userAdminMapper.updateUserStatus(userId, newStatusCode, loginUserId);
+
+        // 3. user_history 기록
+        userAdminMapper.insertUserHistory(
+            userId,
+            "status_code",
+            before.getUserStatusCode(),
+            newStatusCode,
+            "관리자에 의한 상태 변경",
+            loginUserId
+        );
+    }
 
     
 }

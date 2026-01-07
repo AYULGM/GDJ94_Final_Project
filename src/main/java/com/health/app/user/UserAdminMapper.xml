@@ -191,4 +191,13 @@
 	)
 	</insert>
 
+	<update id="updateUserStatus">
+	UPDATE users
+	SET
+	    status_code = #{statusCode},
+	    update_user = #{updateUser},
+	    update_date = NOW()
+	WHERE user_id = #{userId}
+	</update>
+
 </mapper>

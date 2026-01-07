@@ -24,4 +24,8 @@ public interface UserAdminMapper {
 	          String beforeValue, String afterValue,
 	          String reason, Long createUser);
 
+	void updateUserStatus(Long userId,
+            String statusCode,
+            Long updateUser);
+
 }
