@@ -7,7 +7,7 @@
     <section class="content">
         <div class="container-fluid">
 
-            <!-- 사용자 상세 정보 -->
+            <!-- ================= 사용자 상세 ================= -->
             <div class="card card-outline card-info">
                 <div class="card-header">
                     <h3 class="card-title">사용자 상세</h3>
@@ -87,7 +87,7 @@
                 </div>
             </div>
 
-            <!-- 사용자 상태 변경 -->
+            <!-- ================= 사용자 상태 변경 ================= -->
             <div class="card card-outline card-warning mt-3">
                 <div class="card-header">
                     <h3 class="card-title">사용자 상태 변경</h3>
@@ -149,6 +149,97 @@
 			        </small>
 			    </div>
 			</div>
+
+            <!-- ================= 변경 이력 ================= -->
+            <div class="card card-outline card-secondary mt-3">
+                <div class="card-header">
+                    <h3 class="card-title">변경 이력</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab"
+                               href="#tab-basic">기본정보</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab"
+                               href="#tab-branch">지점</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab"
+                               href="#tab-role">권한</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-3">
+
+                        <!-- 기본정보 / 상태 -->
+                        <div class="tab-pane fade show active" id="tab-basic">
+                            <table class="table table-sm table-bordered">
+                                <tr>
+                                    <th>항목</th>
+                                    <th>이전</th>
+                                    <th>변경</th>
+                                    <th>사유</th>
+                                    <th>일시</th>
+                                </tr>
+                                <c:forEach var="h" items="${historyList}">
+                                    <tr>
+                                        <td>${h.changeType}</td>
+                                        <td>${h.beforeValue}</td>
+                                        <td>${h.afterValue}</td>
+                                        <td>${h.reason}</td>
+                                        <td>${h.createDate}</td>
+                                    </tr>
+                                </c:forEach>
+                            </table>
+                        </div>
+
+                        <!-- 지점 -->
+                        <div class="tab-pane fade" id="tab-branch">
+                            <table class="table table-sm table-bordered">
+                                <tr>
+                                    <th>이전 지점</th>
+                                    <th>변경 지점</th>
+                                    <th>사유</th>
+                                    <th>일시</th>
+                                </tr>
+                                <c:forEach var="b" items="${branchLogList}">
+                                    <tr>
+                                        <td>${b.beforeBranchId}</td>
+                                        <td>${b.afterBranchId}</td>
+                                        <td>${b.reason}</td>
+                                        <td>${b.createDate}</td>
+                                    </tr>
+                                </c:forEach>
+                            </table>
+                        </div>
+
+                        <!-- 권한 -->
+                        <div class="tab-pane fade" id="tab-role">
+                            <table class="table table-sm table-bordered">
+                                <tr>
+                                    <th>이전 권한</th>
+                                    <th>변경 권한</th>
+                                    <th>사유</th>
+                                    <th>일시</th>
+                                </tr>
+                                <c:forEach var="r" items="${roleLogList}">
+                                    <tr>
+                                        <td>${r.beforeRoleCode}</td>
+                                        <td>${r.afterRoleCode}</td>
+                                        <td>${r.reason}</td>
+                                        <td>${r.createDate}</td>
+                                    </tr>
+                                </c:forEach>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
 
         </div>
     </section>

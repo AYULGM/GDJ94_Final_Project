@@ -153,4 +153,19 @@ public class UserAdminService {
         );
     }
 
+    // 이력조회 메서드
+    public List<UserHistoryDTO> getUserHistory(Long userId) {
+        return userAdminMapper.selectUserHistory(userId);
+    }
+    
+	 // 이력조회 메서드
+    public List<UserBranchLogDTO> getUserBranchLogs(Long userId) {
+        return userAdminMapper.selectUserBranchLogs(userId);
+    }
+    
+	 // 이력조회 메서드
+    public List<RoleChangeLogDTO> getRoleChangeLogs(Long userId) {
+        return userAdminMapper.selectRoleChangeLogs(userId);
+    }
+
 }

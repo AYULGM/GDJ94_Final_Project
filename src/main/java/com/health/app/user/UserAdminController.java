@@ -33,15 +33,23 @@ public class UserAdminController {
         return "userManagement/list";
     }
     
-    // 사용자 상세화면
+    // 사용자 상세화면 (이력 데이터 조회 추가)
     @GetMapping("/detail")
-    public String userDetail(Long userId, Model model) {
+    public String detail(Long userId, Model model) {
 
         UserAdminDTO user = userAdminService.getUserAdminDetail(userId);
+
         model.addAttribute("user", user);
+        model.addAttribute("historyList",
+            userAdminService.getUserHistory(userId));
+        model.addAttribute("branchLogList",
+            userAdminService.getUserBranchLogs(userId));
+        model.addAttribute("roleLogList",
+            userAdminService.getRoleChangeLogs(userId));
 
         return "userManagement/detail";
     }
+
 
     // 사용자 등록
     @GetMapping("/add")

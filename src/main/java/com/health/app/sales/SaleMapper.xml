@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.sales.SaleMapper">
+
+    <!-- =========================================================
+         1) 매출 목록 조회 (검색 조건 포함)
+       ========================================================= -->
+    <select id="selectSaleList" parameterType="com.health.app.sales.SaleSearchDto"
+            resultType="com.health.app.sales.SaleDetailDto">
+        SELECT
+            s.sale_id           AS saleId,
+            s.sale_no           AS saleNo,
+            s.branch_id         AS branchId,
+            b.branch_name       AS branchName,
+            s.sold_at           AS soldAt,
+            s.status_code       AS statusCode,
+            s.category_code     AS categoryCode,
+            s.total_amount      AS totalAmount,
+            s.memo              AS memo,
+            s.create_user       AS createUser,
+            cu.name             AS createUserName,
+            s.create_date       AS createDate,
+            s.update_user       AS updateUser,
+            uu.name             AS updateUserName,
+            s.update_date       AS updateDate
+        FROM sales s
+        JOIN branch b ON b.branch_id = s.branch_id
+        LEFT JOIN users cu ON cu.user_id = s.create_user
+        LEFT JOIN users uu ON uu.user_id = s.update_user
+        <where>
+            AND s.use_yn = 1
+            AND b.use_yn = 1
+
+            <if test="branchId != null and branchId != 0">
+                AND s.branch_id = #{branchId}
+            </if>
+
+            <if test="statusCode != null and statusCode != ''">
+                AND s.status_code = #{statusCode}
+            </if>
+
+            <if test="categoryCode != null and categoryCode != ''">
+                AND s.category_code = #{categoryCode}
+            </if>
+
+            <if test="startDate != null">
+                AND DATE(s.sold_at) &gt;= #{startDate}
+            </if>
+
+            <if test="endDate != null">
+                AND DATE(s.sold_at) &lt;= #{endDate}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    s.sale_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR s.memo LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY s.sale_id DESC
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <!-- =========================================================
+         2) 매출 목록 총 개수
+       ========================================================= -->
+    <select id="selectSaleCount" parameterType="com.health.app.sales.SaleSearchDto"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM sales s
+        JOIN branch b ON b.branch_id = s.branch_id
+        <where>
+            AND s.use_yn = 1
+            AND b.use_yn = 1
+
+            <if test="branchId != null and branchId != 0">
+                AND s.branch_id = #{branchId}
+            </if>
+
+            <if test="statusCode != null and statusCode != ''">
+                AND s.status_code = #{statusCode}
+            </if>
+
+            <if test="categoryCode != null and categoryCode != ''">
+                AND s.category_code = #{categoryCode}
+            </if>
+
+            <if test="startDate != null">
+                AND DATE(s.sold_at) &gt;= #{startDate}
+            </if>
+
+            <if test="endDate != null">
+                AND DATE(s.sold_at) &lt;= #{endDate}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    s.sale_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR s.memo LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- =========================================================
+         3) 매출 상세 조회
+       ========================================================= -->
+    <select id="selectSaleDetail" parameterType="long"
+            resultType="com.health.app.sales.SaleDetailDto">
+        SELECT
+            s.sale_id           AS saleId,
+            s.sale_no           AS saleNo,
+            s.branch_id         AS branchId,
+            b.branch_name       AS branchName,
+            s.sold_at           AS soldAt,
+            s.status_code       AS statusCode,
+            s.category_code     AS categoryCode,
+            s.total_amount      AS totalAmount,
+            s.memo              AS memo,
+            s.create_user       AS createUser,
+            cu.name             AS createUserName,
+            s.create_date       AS createDate,
+            s.update_user       AS updateUser,
+            uu.name             AS updateUserName,
+            s.update_date       AS updateDate
+        FROM sales s
+        JOIN branch b ON b.branch_id = s.branch_id
+        LEFT JOIN users cu ON cu.user_id = s.create_user
+        LEFT JOIN users uu ON uu.user_id = s.update_user
+        WHERE s.sale_id = #{saleId}
+          AND s.use_yn = 1
+    </select>
+
+    <!-- =========================================================
+         4) 매출 등록
+       ========================================================= -->
+    <insert id="insertSale" parameterType="com.health.app.sales.SaleDto"
+            useGeneratedKeys="true" keyProperty="saleId">
+        INSERT INTO sales (
+            sale_no,
+            branch_id,
+            sold_at,
+            status_code,
+            category_code,
+            total_amount,
+            memo,
+            create_user,
+            use_yn
+        ) VALUES (
+            #{saleNo},
+            #{branchId},
+            #{soldAt},
+            #{statusCode},
+            #{categoryCode},
+            #{totalAmount},
+            #{memo},
+            #{createUser},
+            TRUE
+        )
+    </insert>
+
+    <!-- =========================================================
+         5) 매출 수정
+       ========================================================= -->
+    <update id="updateSale" parameterType="com.health.app.sales.SaleDto">
+        UPDATE sales
+        SET
+            branch_id = #{branchId},
+            sold_at = #{soldAt},
+            status_code = #{statusCode},
+            category_code = #{categoryCode},
+            total_amount = #{totalAmount},
+            memo = #{memo},
+            update_user = #{updateUser}
+        WHERE sale_id = #{saleId}
+          AND use_yn = 1
+    </update>
+
+    <!-- =========================================================
+         6) 매출 삭제 (논리 삭제)
+       ========================================================= -->
+    <update id="deleteSale">
+        UPDATE sales
+        SET
+            use_yn = FALSE,
+            update_user = #{updateUser}
+        WHERE sale_id = #{saleId}
+    </update>
+
+    <!-- =========================================================
+         7) 지점 옵션 조회 (드롭다운용)
+       ========================================================= -->
+    <select id="selectBranchOptions" resultType="com.health.app.inventory.OptionDto">
+        SELECT
+            branch_id   AS value,
+            branch_name AS label
+        FROM branch
+        WHERE use_yn = 1
+        ORDER BY branch_name
+    </select>
+
+</mapper>

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.settlements.SettlementMapper">
+
+    <!-- =========================================================
+         1) 정산 목록 조회
+       ========================================================= -->
+    <select id="selectSettlementList" parameterType="com.health.app.settlements.SettlementSearchDto"
+            resultType="com.health.app.settlements.SettlementDetailDto">
+        SELECT
+            st.settlement_id    AS settlementId,
+            st.settlement_no    AS settlementNo,
+            st.branch_id        AS branchId,
+            b.branch_name       AS branchName,
+            st.from_date        AS fromDate,
+            st.to_date          AS toDate,
+            st.sales_amount     AS salesAmount,
+            st.expense_amount   AS expenseAmount,
+            st.profit_amount    AS profitAmount,
+            st.status_code      AS statusCode,
+            st.settled_at       AS settledAt,
+            st.settled_by       AS settledBy,
+            sb.name             AS settledByName,
+            st.create_user      AS createUser,
+            cu.name             AS createUserName,
+            st.create_date      AS createDate,
+            st.update_user      AS updateUser,
+            uu.name             AS updateUserName,
+            st.update_date      AS updateDate
+        FROM settlements st
+        LEFT JOIN branch b ON b.branch_id = st.branch_id
+        LEFT JOIN users sb ON sb.user_id = st.settled_by
+        LEFT JOIN users cu ON cu.user_id = st.create_user
+        LEFT JOIN users uu ON uu.user_id = st.update_user
+        <where>
+            AND st.use_yn = 1
+
+            <if test="branchId != null and branchId != 0">
+                AND st.branch_id = #{branchId}
+            </if>
+
+            <if test="statusCode != null and statusCode != ''">
+                AND st.status_code = #{statusCode}
+            </if>
+
+            <if test="startDate != null">
+                AND st.from_date &gt;= #{startDate}
+            </if>
+
+            <if test="endDate != null">
+                AND st.to_date &lt;= #{endDate}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                AND st.settlement_no LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY st.settlement_id DESC
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <!-- =========================================================
+         2) 정산 목록 총 개수
+       ========================================================= -->
+    <select id="selectSettlementCount" parameterType="com.health.app.settlements.SettlementSearchDto"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM settlements st
+        <where>
+            AND st.use_yn = 1
+
+            <if test="branchId != null and branchId != 0">
+                AND st.branch_id = #{branchId}
+            </if>
+
+            <if test="statusCode != null and statusCode != ''">
+                AND st.status_code = #{statusCode}
+            </if>
+
+            <if test="startDate != null">
+                AND st.from_date &gt;= #{startDate}
+            </if>
+
+            <if test="endDate != null">
+                AND st.to_date &lt;= #{endDate}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                AND st.settlement_no LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- =========================================================
+         3) 정산 상세 조회
+       ========================================================= -->
+    <select id="selectSettlementDetail" parameterType="long"
+            resultType="com.health.app.settlements.SettlementDetailDto">
+        SELECT
+            st.settlement_id    AS settlementId,
+            st.settlement_no    AS settlementNo,
+            st.branch_id        AS branchId,
+            b.branch_name       AS branchName,
+            st.from_date        AS fromDate,
+            st.to_date          AS toDate,
+            st.sales_amount     AS salesAmount,
+            st.expense_amount   AS expenseAmount,
+            st.profit_amount    AS profitAmount,
+            st.status_code      AS statusCode,
+            st.settled_at       AS settledAt,
+            st.settled_by       AS settledBy,
+            sb.name             AS settledByName,
+            (SELECT COUNT(*) FROM settlement_sale_map WHERE settlement_id = st.settlement_id AND use_yn = 1) AS salesCount,
+            (SELECT COUNT(*) FROM settlement_expense_map WHERE settlement_id = st.settlement_id AND use_yn = 1) AS expenseCount,
+            st.create_user      AS createUser,
+            cu.name             AS createUserName,
+            st.create_date      AS createDate,
+            st.update_user      AS updateUser,
+            uu.name             AS updateUserName,
+            st.update_date      AS updateDate
+        FROM settlements st
+        LEFT JOIN branch b ON b.branch_id = st.branch_id
+        LEFT JOIN users sb ON sb.user_id = st.settled_by
+        LEFT JOIN users cu ON cu.user_id = st.create_user
+        LEFT JOIN users uu ON uu.user_id = st.update_user
+        WHERE st.settlement_id = #{settlementId}
+          AND st.use_yn = 1
+    </select>
+
+    <!-- =========================================================
+         4) 정산 등록
+       ========================================================= -->
+    <insert id="insertSettlement" parameterType="com.health.app.settlements.SettlementDto"
+            useGeneratedKeys="true" keyProperty="settlementId">
+        INSERT INTO settlements (
+            settlement_no,
+            branch_id,
+            from_date,
+            to_date,
+            sales_amount,
+            expense_amount,
+            profit_amount,
+            status_code,
+            create_user,
+            use_yn
+        ) VALUES (
+            #{settlementNo},
+            #{branchId},
+            #{fromDate},
+            #{toDate},
+            #{salesAmount},
+            #{expenseAmount},
+            #{profitAmount},
+            #{statusCode},
+            #{createUser},
+            TRUE
+        )
+    </insert>
+
+    <!-- =========================================================
+         5) 정산 수정
+       ========================================================= -->
+    <update id="updateSettlement" parameterType="com.health.app.settlements.SettlementDto">
+        UPDATE settlements
+        SET
+            status_code = #{statusCode},
+            settled_at = #{settledAt},
+            settled_by = #{settledBy},
+            update_user = #{updateUser}
+        WHERE settlement_id = #{settlementId}
+          AND use_yn = 1
+    </update>
+
+    <!-- =========================================================
+         6) 정산 삭제 (논리 삭제)
+       ========================================================= -->
+    <update id="deleteSettlement">
+        UPDATE settlements
+        SET
+            use_yn = FALSE,
+            update_user = #{updateUser}
+        WHERE settlement_id = #{settlementId}
+    </update>
+
+    <!-- =========================================================
+         7) 기간별 매출 합계 조회
+       ========================================================= -->
+    <select id="selectSalesTotalAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(s.total_amount), 0)
+        FROM sales s
+        WHERE s.use_yn = 1
+          AND s.status_code = 'COMPLETED'
+          AND DATE(s.sold_at) BETWEEN #{fromDate} AND #{toDate}
+        <if test="branchId != null">
+          AND s.branch_id = #{branchId}
+        </if>
+    </select>
+
+    <!-- =========================================================
+         8) 기간별 지출 합계 조회
+       ========================================================= -->
+    <select id="selectExpensesTotalAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(e.amount), 0)
+        FROM expenses e
+        WHERE e.use_yn = 1
+          AND e.settlement_flag = TRUE
+          AND DATE(e.expense_at) BETWEEN #{fromDate} AND #{toDate}
+        <if test="branchId != null">
+          AND e.branch_id = #{branchId}
+        </if>
+    </select>
+
+    <!-- =========================================================
+         9) 기간별 매출 건수 조회
+       ========================================================= -->
+    <select id="selectSalesCount" resultType="long">
+        SELECT COUNT(*)
+        FROM sales s
+        WHERE s.use_yn = 1
+          AND s.status_code = 'COMPLETED'
+          AND DATE(s.sold_at) BETWEEN #{fromDate} AND #{toDate}
+        <if test="branchId != null">
+          AND s.branch_id = #{branchId}
+        </if>
+    </select>
+
+    <!-- =========================================================
+         10) 기간별 지출 건수 조회
+       ========================================================= -->
+    <select id="selectExpensesCount" resultType="long">
+        SELECT COUNT(*)
+        FROM expenses e
+        WHERE e.use_yn = 1
+          AND e.settlement_flag = TRUE
+          AND DATE(e.expense_at) BETWEEN #{fromDate} AND #{toDate}
+        <if test="branchId != null">
+          AND e.branch_id = #{branchId}
+        </if>
+    </select>
+
+    <!-- =========================================================
+         11) 정산-매출 매핑 등록 (일괄)
+       ========================================================= -->
+    <insert id="insertSettlementSaleMaps">
+        INSERT INTO settlement_sale_map (
+            settlement_id,
+            sale_id,
+            settle_status,
+            create_user,
+            use_yn
+        )
+        SELECT
+            #{settlementId},
+            s.sale_id,
+            'SETTLED',
+            #{createUser},
+            TRUE
+        FROM sales s
+        WHERE s.use_yn = 1
+          AND s.status_code = 'COMPLETED'
+          AND DATE(s.sold_at) BETWEEN #{fromDate} AND #{toDate}
+        <if test="branchId != null">
+          AND s.branch_id = #{branchId}
+        </if>
+    </insert>
+
+    <!-- =========================================================
+         12) 정산-지출 매핑 등록 (일괄)
+       ========================================================= -->
+    <insert id="insertSettlementExpenseMaps">
+        INSERT INTO settlement_expense_map (
+            settlement_id,
+            expense_id,
+            settle_status,
+            create_user,
+            use_yn
+        )
+        SELECT
+            #{settlementId},
+            e.expense_id,
+            'SETTLED',
+            #{createUser},
+            TRUE
+        FROM expenses e
+        WHERE e.use_yn = 1
+          AND e.settlement_flag = TRUE
+          AND DATE(e.expense_at) BETWEEN #{fromDate} AND #{toDate}
+        <if test="branchId != null">
+          AND e.branch_id = #{branchId}
+        </if>
+    </insert>
+
+    <!-- =========================================================
+         13) 정산 이력 로그 등록
+       ========================================================= -->
+    <insert id="insertSettlementHistory" parameterType="com.health.app.settlements.SettlementHistoryDto"
+            useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO settlement_log (
+            settlement_id,
+            action_type,
+            before_status,
+            after_status,
+            reason,
+            actor_user_id,
+            acted_at,
+            create_user,
+            use_yn
+        ) VALUES (
+            #{settlementId},
+            #{actionType},
+            #{beforeStatus},
+            #{afterStatus},
+            #{reason},
+            #{actorUserId},
+            #{actedAt},
+            #{createUser},
+            TRUE
+        )
+    </insert>
+
+    <!-- =========================================================
+         14) 정산 이력 로그 조회
+       ========================================================= -->
+    <select id="selectSettlementHistories" resultType="com.health.app.settlements.SettlementHistoryDto">
+        SELECT
+            sl.log_id           AS logId,
+            sl.settlement_id    AS settlementId,
+            sl.action_type      AS actionType,
+            sl.before_status    AS beforeStatus,
+            sl.after_status     AS afterStatus,
+            sl.reason           AS reason,
+            sl.actor_user_id    AS actorUserId,
+            u.name              AS actorUserName,
+            sl.acted_at         AS actedAt,
+            sl.create_user      AS createUser,
+            sl.create_date      AS createDate
+        FROM settlement_log sl
+        LEFT JOIN users u ON u.user_id = sl.actor_user_id
+        WHERE sl.settlement_id = #{settlementId}
+          AND sl.use_yn = 1
+        ORDER BY sl.acted_at DESC, sl.log_id DESC
+    </select>
+
+</mapper>

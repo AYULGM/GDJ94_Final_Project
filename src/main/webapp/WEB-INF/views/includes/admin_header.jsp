@@ -1,3 +1,4 @@
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <!doctype html>
 <html lang="ko">
@@ -103,7 +104,9 @@
                   class="user-image rounded-circle shadow"
                   alt="User Image"
                 />
-                <span class="d-none d-md-inline">Doge</span>
+                <span class="d-none d-md-inline">
+				    <sec:authentication property="principal.name"/>
+				</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <li class="user-header text-bg-primary">
@@ -113,8 +116,8 @@
                     alt="User Image"
                   />
                   <p>
-                    Doge - Web Developer
-                    <small>안녕하세요</small>
+                     <sec:authentication property="principal.name"/>
+					 <small>안녕하세요</small>
                   </p>
                 </li>
 <!--                 <li class="user-body">
