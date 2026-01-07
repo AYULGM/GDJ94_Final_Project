@@ -48,6 +48,66 @@ public class StatisticsController {
     }
 
     /**
+     * 매출 통계 - 지점별
+     */
+    @GetMapping("/sales/by-branch")
+    public String salesByBranchPage(Model model) {
+        model.addAttribute("pageTitle", "매출 통계 - 지점별");
+        model.addAttribute("activeTab", "branch");
+        return "statistics/sales";
+    }
+
+    /**
+     * 매출 통계 - 항목별
+     */
+    @GetMapping("/sales/by-category")
+    public String salesByCategoryPage(Model model) {
+        model.addAttribute("pageTitle", "매출 통계 - 항목별");
+        model.addAttribute("activeTab", "category");
+        return "statistics/sales";
+    }
+
+    /**
+     * 매출 통계 - 기간별
+     */
+    @GetMapping("/sales/by-period")
+    public String salesByPeriodPage(Model model) {
+        model.addAttribute("pageTitle", "매출 통계 - 기간별");
+        model.addAttribute("activeTab", "period");
+        return "statistics/sales";
+    }
+
+    /**
+     * 지출 통계 - 지점별
+     */
+    @GetMapping("/expenses/by-branch")
+    public String expensesByBranchPage(Model model) {
+        model.addAttribute("pageTitle", "지출 통계 - 지점별");
+        model.addAttribute("activeTab", "branch");
+        return "statistics/expenses";
+    }
+
+    /**
+     * 지출 통계 - 항목별
+     */
+    @GetMapping("/expenses/by-category")
+    public String expensesByCategoryPage(Model model) {
+        model.addAttribute("pageTitle", "지출 통계 - 항목별");
+        model.addAttribute("activeTab", "category");
+        return "statistics/expenses";
+    }
+
+    /**
+     * 지출 통계 - 기간별
+     */
+    @GetMapping("/expenses/by-period")
+    public String expensesByPeriodPage(Model model) {
+        model.addAttribute("pageTitle", "지출 통계 - 기간별");
+        model.addAttribute("activeTab", "period");
+        return "statistics/expenses";
+    }
+
+    /**
      * 손익 비교 페이지
      */
     @GetMapping("/comparison")

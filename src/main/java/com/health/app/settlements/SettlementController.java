@@ -43,13 +43,21 @@ public class SettlementController {
     }
 
     /**
-     * 정산 확정 페이지
+     * 정산 확정 페이지 (정산 대상 조회 및 정산 생성)
      */
-    @GetMapping("/{settlementId}/confirm")
-    public String settlementConfirmPage(@PathVariable Long settlementId, Model model) {
+    @GetMapping("/confirm")
+    public String settlementConfirmListPage(Model model) {
         model.addAttribute("pageTitle", "정산 확정");
-        model.addAttribute("settlementId", settlementId);
         return "settlements/confirm";
+    }
+
+    /**
+     * 정산 이력 로그 페이지
+     */
+    @GetMapping("/history")
+    public String settlementHistoryPage(Model model) {
+        model.addAttribute("pageTitle", "정산 이력 로그");
+        return "settlements/history";
     }
 
     /**
