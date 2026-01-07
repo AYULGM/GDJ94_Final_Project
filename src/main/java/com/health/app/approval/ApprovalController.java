@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import com.health.app.approval.dto.ApprovalProductDto;
+import com.health.app.approval.ApprovalProductDTO;
 import com.health.app.security.model.LoginUser;
 
 import lombok.RequiredArgsConstructor;
