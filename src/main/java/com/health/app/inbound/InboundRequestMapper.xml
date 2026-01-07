@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.inbound.InboundRequestMapper">
+
+    <!-- 상품 옵션 -->
+    <select id="selectProductOptions" resultType="com.health.app.inbound.InboundOptionDto">
+        SELECT
+        p.product_id AS id,
+        p.product_name AS name
+        FROM product p
+        WHERE p.use_yn = 1
+        ORDER BY p.product_name ASC
+    </select>
+
+    <!-- 헤더 insert -->
+    <insert id="insertInboundHeader"
+            parameterType="com.health.app.inbound.InboundRequestHeaderDto"
+            useGeneratedKeys="true"
+            keyProperty="inboundRequestId">
+        INSERT INTO inbound_request_header (
+        inbound_request_no,
+        vendor_name,
+        status_code,
+        requested_at,
+        requested_by,
+        approved_at,
+        approved_by,
+        rejected_at,
+        rejected_by,
+        reject_reason,
+        title,
+        memo,
+        approval_doc_id,
+        approval_doc_ver_id,
+        ref_type,
+        ref_id,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        ) VALUES (
+        #{inboundRequestNo},
+        #{vendorName},
+        #{statusCode},
+        NOW(),
+        #{requestedBy},
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        #{title},
+        #{memo},
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        #{createUser},
+        NOW(),
+        #{updateUser},
+        NOW(),
+        #{useYn}
+        )
+    </insert>
+
+    <!-- 상세 insert -->
+    <insert id="insertInboundDetail"
+            parameterType="com.health.app.inbound.InboundRequestItemDto"
+            useGeneratedKeys="true"
+            keyProperty="inboundRequestItemId">
+        INSERT INTO inbound_request_detail (
+        inbound_request_id,
+        product_id,
+        quantity,
+        unit_price,
+        line_memo,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        ) VALUES (
+        #{inboundRequestId},
+        #{productId},
+        #{quantity},
+        #{unitPrice},
+        #{lineMemo},
+        #{createUser},
+        NOW(),
+        #{updateUser},
+        NOW(),
+        #{useYn}
+        )
+    </insert>
+
+    <!-- 결재 문서 link 저장 -->
+    <update id="updateApprovalLink">
+        UPDATE inbound_request_header
+        SET
+        approval_doc_id = #{approvalDocId},
+        approval_doc_ver_id = #{approvalDocVerId},
+        ref_type = #{refType},
+        ref_id = #{refId},
+        update_user = #{userId},
+        update_date = NOW()
+        WHERE inbound_request_id = #{inboundRequestId}
+    </update>
+
+    <!-- 목록 -->
+    <select id="selectInboundList" resultType="com.health.app.inbound.InboundRequestListDto">
+        SELECT
+        h.inbound_request_id AS inboundRequestId,
+        h.inbound_request_no AS inboundRequestNo,
+        h.vendor_name AS vendorName,
+        h.status_code AS statusCode,
+        h.requested_at AS requestedAt,
+        h.requested_by AS requestedBy,
+        h.title AS title,
+        h.approval_doc_ver_id AS approvalDocVerId
+        FROM inbound_request_header h
+        WHERE h.use_yn = 1
+        <if test="statusCode != null and statusCode != ''">
+            AND h.status_code = #{statusCode}
+        </if>
+        ORDER BY h.inbound_request_id DESC
+    </select>
+
+    <!-- 헤더 상세 -->
+    <select id="selectInboundHeader" resultType="com.health.app.inbound.InboundRequestDetailDto">
+        SELECT
+        h.inbound_request_id AS inboundRequestId,
+        h.inbound_request_no AS inboundRequestNo,
+        h.vendor_name AS vendorName,
+        h.status_code AS statusCode,
+        h.requested_at AS requestedAt,
+        h.requested_by AS requestedBy,
+        h.approved_at AS approvedAt,
+        h.approved_by AS approvedBy,
+        h.rejected_at AS rejectedAt,
+        h.rejected_by AS rejectedBy,
+        h.reject_reason AS rejectReason,
+        h.title AS title,
+        h.memo AS memo,
+        h.approval_doc_id AS approvalDocId,
+        h.approval_doc_ver_id AS approvalDocVerId,
+        h.ref_type AS refType,
+        h.ref_id AS refId
+        FROM inbound_request_header h
+        WHERE h.inbound_request_id = #{inboundRequestId}
+        AND h.use_yn = 1
+    </select>
+
+    <!-- 상세 품목 -->
+    <select id="selectInboundItems" resultType="com.health.app.inbound.InboundRequestItemDto">
+        SELECT
+        d.inbound_request_item_id AS inboundRequestItemId,
+        d.inbound_request_id AS inboundRequestId,
+        d.product_id AS productId,
+        d.quantity AS quantity,
+        d.unit_price AS unitPrice,
+        d.line_memo AS lineMemo,
+        d.create_user AS createUser,
+        d.create_date AS createDate,
+        d.update_user AS updateUser,
+        d.update_date AS updateDate,
+        d.use_yn AS useYn,
+        p.product_name AS productName
+        FROM inbound_request_detail d
+        JOIN product p ON p.product_id = d.product_id
+        WHERE d.inbound_request_id = #{inboundRequestId}
+        AND d.use_yn = 1
+        ORDER BY d.inbound_request_item_id ASC
+    </select>
+
+    <!-- 승인완료 → inventory 증가 -->
+    <update id="upsertInventoryIncrease">
+        INSERT INTO inventory (
+        branch_id,
+        product_id,
+        quantity,
+        low_stock_threshold,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        )
+        VALUES (
+        #{branchId},
+        #{productId},
+        #{qty},
+        0,
+        #{userId},
+        NOW(),
+        #{userId},
+        NOW(),
+        1
+        )
+        ON DUPLICATE KEY UPDATE
+        quantity = quantity + VALUES(quantity),
+        update_user = #{userId},
+        update_date = NOW()
+    </update>
+
+    <!-- 승인완료 → inventory_history IN 로그 -->
+    <insert id="insertInventoryHistoryIn">
+        INSERT INTO inventory_history (
+        branch_id,
+        product_id,
+        move_type,
+        quantity,
+        reason,
+        create_user,
+        create_date,
+        ref_type,
+        ref_id
+        ) VALUES (
+        #{branchId},
+        #{productId},
+        'IN',
+        #{qty},
+        #{reason},
+        #{userId},
+        NOW(),
+        #{refType},
+        #{refId}
+        )
+    </insert>
+
+    <!-- inbound_request 승인 상태 업데이트 -->
+    <update id="updateStatusApproved">
+        UPDATE inbound_request_header
+        SET
+        status_code = 'IR_APPROVED',
+        approved_at = NOW(),
+        approved_by = #{userId},
+        update_user = #{userId},
+        update_date = NOW()
+        WHERE inbound_request_id = #{inboundRequestId}
+    </update>
+
+</mapper>

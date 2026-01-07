@@ -1,7 +1,5 @@
-package com.health.app.users.service;
+package com.health.app.users;
 
-import com.health.app.users.dto.UserDTO;
-import com.health.app.users.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

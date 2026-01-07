@@ -1,7 +1,5 @@
 package com.health.app.users;
 
-import com.health.app.users.dto.UserDTO;
-import com.health.app.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.core.Authentication;
@@ -160,11 +158,11 @@ public class UserController {
      * 사용자 목록
      * GET /users
      */
-    @GetMapping
-    public String userList(Model model) {
-        model.addAttribute("pageTitle", "사용자 관리");
-        return "users/list";
-    }
+//    @GetMapping
+//    public String userList(Model model) {
+//        model.addAttribute("pageTitle", "사용자 관리");
+//        return "users/list";
+//    }
 
     /**
      * 회원가입 화면

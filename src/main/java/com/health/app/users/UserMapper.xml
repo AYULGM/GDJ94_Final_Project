@@ -3,7 +3,7 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.health.app.users.mapper.UserMapper">
+<mapper namespace="com.health.app.users.UserMapper">
 
     <select id="countByLoginId" resultType="int">
         SELECT COUNT(*)
@@ -11,7 +11,7 @@
         WHERE login_id = #{loginId}
     </select>
 
-    <insert id="insertUser" parameterType="com.health.app.users.dto.UserDTO">
+    <insert id="insertUser" parameterType="com.health.app.users.UserDTO">
         INSERT INTO users (
             login_id,
             password,
@@ -53,7 +53,7 @@
     
     <select id="selectByLoginId"
         parameterType="java.lang.String"
-        resultType="com.health.app.users.dto.UserDTO">
+        resultType="com.health.app.users.UserDTO">
     SELECT
         user_id,
         login_id,
@@ -73,7 +73,7 @@
       AND use_yn = TRUE
 </select>
 
-<update id="updateUser" parameterType="com.health.app.users.dto.UserDTO">
+<update id="updateUser" parameterType="com.health.app.users.UserDTO">
     UPDATE users
     SET
         name = #{name},
@@ -95,7 +95,7 @@
 
     <select id="selectForPasswordCheck"
         parameterType="java.lang.String"
-        resultType="com.health.app.users.dto.UserDTO">
+        resultType="com.health.app.users.UserDTO">
     SELECT login_id, password
     FROM users
     WHERE login_id = #{loginId}

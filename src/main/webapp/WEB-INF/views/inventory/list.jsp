@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <jsp:include page="../includes/admin_header.jsp" />
 
@@ -12,70 +12,92 @@
 
             <div class="card-body">
 
-                <!-- 검색/필터 -->
+                <!-- 검색/필터 폼 -->
                 <form method="get" action="<c:url value='/inventory'/>" class="row g-2 mb-3">
+
+                    <!-- 지점 선택 -->
                     <div class="col-md-3">
-                        <select class="form-select" name="branchId">
-                            <option value="">전체 지점</option>
-                            <c:forEach var="b" items="${branchOptions}">
-                                <option value="${b.id}" <c:if test="${branchId != null && branchId == b.id}">selected</c:if>>
-                                        ${b.name}
+                        <label class="form-label">지점</label>
+                        <select name="branchId" class="form-select">
+                            <option value="">전체</option>
+
+                            <!-- ✅ 여기 수정됨: branch.branchId/branch.branchName -> branch.id/branch.name -->
+                            <c:forEach var="branch" items="${branches}">
+                                <option value="${branch.id}"
+                                        <c:if test="${not empty branchId and branchId == branch.id}">selected</c:if>>
+                                        ${branch.name}
                                 </option>
                             </c:forEach>
+
                         </select>
                     </div>
 
+                    <!-- 상품명 키워드 -->
                     <div class="col-md-4">
-                        <input class="form-control" type="text" name="keyword" value="${keyword}" placeholder="상품명/지점명 검색" />
+                        <label class="form-label">상품명</label>
+                        <input type="text" name="keyword" class="form-control" value="${keyword}" placeholder="상품명 검색" />
                     </div>
 
-                    <div class="col-md-3 d-flex align-items-center">
+                    <!-- 부족재고만 -->
+                    <div class="col-md-3 d-flex align-items-end">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="onlyLowStock" name="onlyLowStock" value="true"
-                                   <c:if test="${onlyLowStock}">checked</c:if>>
-                            <label class="form-check-label" for="onlyLowStock">부족 재고만</label>
+                            <input class="form-check-input" type="checkbox" id="lowOnly" name="lowOnly" value="true"
+                                   <c:if test="${lowOnly == true}">checked</c:if>>
+                            <label class="form-check-label" for="lowOnly">
+                                부족재고만 보기
+                            </label>
                         </div>
                     </div>
 
-                    <div class="col-md-2">
+                    <!-- 조회 버튼 -->
+                    <div class="col-md-2 d-flex align-items-end">
                         <button class="btn btn-primary w-100" type="submit">조회</button>
                     </div>
+
                 </form>
 
-                <!-- 목록 테이블 -->
+                <!-- 결과 테이블 -->
                 <table class="table table-bordered table-hover">
                     <thead>
                     <tr>
-                        <th style="width: 90px;">지점</th>
+                        <th>지점</th>
                         <th>상품</th>
-                        <th style="width: 120px;" class="text-end">현재 수량</th>
-                        <th style="width: 140px;" class="text-end">기준 수량</th>
-                        <th style="width: 110px;" class="text-center">부족 여부</th>
+                        <th class="text-end" style="width:120px;">현재수량</th>
+                        <th class="text-end" style="width:120px;">기준수량</th>
+                        <th style="width:120px;">부족여부</th>
+                        <th style="width:120px;">상세</th>
                     </tr>
                     </thead>
+
                     <tbody>
                     <c:choose>
-                        <c:when test="${empty inventoryList}">
+                        <c:when test="${empty list}">
                             <tr>
-                                <td colspan="5" class="text-center text-muted">조회 결과가 없습니다.</td>
+                                <td colspan="6" class="text-center text-muted">조회 결과가 없습니다.</td>
                             </tr>
                         </c:when>
                         <c:otherwise>
-                            <c:forEach var="row" items="${inventoryList}">
+                            <c:forEach var="row" items="${list}">
                                 <tr>
                                     <td>${row.branchName}</td>
                                     <td>${row.productName}</td>
                                     <td class="text-end">${row.quantity}</td>
-                                    <td class="text-end">${row.thresholdValue}</td>
-                                    <td class="text-center">
+                                    <td class="text-end">${row.lowStockThreshold}</td>
+                                    <td>
                                         <c:choose>
-                                            <c:when test="${row.lowStock == 1}">
+                                            <c:when test="${row.isLowStock}">
                                                 <span class="badge bg-danger">부족</span>
                                             </c:when>
                                             <c:otherwise>
                                                 <span class="badge bg-success">정상</span>
                                             </c:otherwise>
                                         </c:choose>
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           href="<c:url value='/inventory/${row.inventoryId}'/>">
+                                            보기
+                                        </a>
                                     </td>
                                 </tr>
                             </c:forEach>

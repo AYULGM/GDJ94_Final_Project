@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.branch.BranchMapper">
+
+    <select id="selectBranchList" resultType="com.health.app.branch.BranchDTO">
+        SELECT
+            branch_id       AS branchId,
+            branch_name     AS branchName,
+            manager_name    AS managerName,
+            manager_phone   AS managerPhone,
+            operating_hours AS operatingHours,
+            status_code     AS statusCode
+        FROM branch
+        WHERE use_yn = TRUE
+        ORDER BY branch_id DESC
+    </select>
+
+  	<select id="selectBranchDetail"
+            parameterType="long"
+            resultType="com.health.app.branch.BranchDTO">
+        SELECT
+            branch_id,
+            branch_name,
+            post_no,
+            base_address,
+            detail_address,
+            manager_name,
+            manager_phone,
+            operating_hours,
+            status_code,
+            create_date
+        FROM branch
+        WHERE branch_id = #{branchId}
+          AND use_yn = TRUE
+    </select>
+    
+    <insert id="insertBranch"
+        parameterType="com.health.app.branch.BranchDTO">
+    INSERT INTO branch (
+        branch_name,
+        post_no,
+        base_address,
+        detail_address,
+        manager_name,
+        manager_phone,
+        operating_hours,
+        status_code,
+        create_user
+    ) VALUES (
+        #{branchName},
+        #{postNo},
+        #{baseAddress},
+        #{detailAddress},
+        #{managerName},
+        #{managerPhone},
+        #{operatingHours},
+        #{statusCode},
+        #{createUser}
+    )
+</insert>
+
+    <update id="updateBranch">
+        UPDATE branch
+        SET
+            branch_name = #{branchName},
+            post_no = #{postNo},
+            base_address = #{baseAddress},
+            detail_address = #{detailAddress},
+            manager_name = #{managerName},
+            manager_phone = #{managerPhone},
+            operating_hours = #{operatingHours},
+            update_user = #{updateUser}
+        WHERE branch_id = #{branchId}
+    </update>
+
+    <insert id="insertBranchUpdateLog">
+        INSERT INTO branch_update_log (
+            branch_id, change_field, before_value, after_value,
+            reason, create_user
+        )
+        VALUES (
+            #{branchId}, #{changeField}, #{beforeValue}, #{afterValue},
+            #{reason}, #{createUser}
+        )
+    </insert>
+    
+    <update id="updateBranchStatus">
+	    UPDATE branch
+	    SET status_code = #{statusCode},
+	        update_user = #{updateUser}
+	    WHERE branch_id = #{branchId}
+	</update>
+	
+	<insert id="insertBranchStatusLog">
+	    INSERT INTO branch_status_log
+	    (branch_id, before_status_code, after_status_code, reason, create_user)
+	    VALUES
+	    (#{branchId}, #{beforeStatus}, #{afterStatus}, #{reason}, #{createUser})
+	</insert>
+    
+</mapper>

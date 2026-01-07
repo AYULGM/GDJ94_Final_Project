@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.purchase.PurchaseMapper">
+
+    <!-- =========================
+         옵션: 지점/상품
+       ========================= -->
+    <select id="selectBranchOptions" resultType="com.health.app.purchase.PurchaseOptionDto">
+        SELECT branch_id AS id, branch_name AS name
+        FROM branch
+        WHERE use_yn = 1
+        ORDER BY branch_name ASC
+    </select>
+
+    <select id="selectProductOptions" resultType="com.health.app.purchase.PurchaseOptionDto">
+        SELECT product_id AS id, product_name AS name
+        FROM product
+        WHERE use_yn = 1
+        ORDER BY product_name ASC
+    </select>
+
+    <!-- =========================
+         발주 헤더 INSERT
+       ========================= -->
+    <insert id="insertPurchaseHeader"
+            parameterType="com.health.app.purchase.PurchaseRequestDto"
+            useGeneratedKeys="true"
+            keyProperty="purchaseId">
+        INSERT INTO purchase_header
+        (
+        purchase_no,
+        branch_id,
+        status_code,
+        requested_at,
+        requested_by,
+        memo,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        )
+        VALUES
+        (
+        #{purchaseNo},
+        #{branchId},
+        #{statusCode},
+        NOW(),
+        #{requestedBy},
+        #{memo},
+        #{requestedBy},
+        NOW(),
+        #{requestedBy},
+        NOW(),
+        1
+        )
+    </insert>
+
+    <!-- =========================
+         발주 상세 INSERT
+       ========================= -->
+    <insert id="insertPurchaseDetail" parameterType="map">
+        INSERT INTO purchase_detail
+        (
+        purchase_id,
+        product_id,
+        quantity,
+        unit_price,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        )
+        VALUES
+        (
+        #{purchaseId},
+        #{item.productId},
+        #{item.quantity},
+        #{item.unitPrice},
+        #{userId},
+        NOW(),
+        #{userId},
+        NOW(),
+        1
+        )
+    </insert>
+
+    <!-- =========================
+         발주 목록 조회
+       ========================= -->
+    <select id="selectPurchaseList"
+            parameterType="map"
+            resultType="com.health.app.purchase.PurchaseListDto">
+
+        SELECT
+        ph.purchase_id   AS purchaseId,
+        ph.purchase_no   AS purchaseNo,
+        ph.branch_id     AS branchId,
+        b.branch_name    AS branchName,
+        ph.status_code   AS statusCode,
+        ph.requested_at  AS requestedAt,
+        ph.memo          AS memo,
+
+        SUM(pd.quantity)                     AS totalQuantity,
+        SUM(pd.quantity * pd.unit_price)     AS totalAmount
+
+        FROM purchase_header ph
+        JOIN branch b ON b.branch_id = ph.branch_id
+        LEFT JOIN purchase_detail pd ON pd.purchase_id = ph.purchase_id AND pd.use_yn = 1
+        LEFT JOIN product p ON p.product_id = pd.product_id
+
+        <where>
+            AND ph.use_yn = 1
+            AND b.use_yn = 1
+
+            <if test="branchId != null and branchId != 0">
+                AND ph.branch_id = #{branchId}
+            </if>
+
+            <if test="statusCode != null and statusCode != ''">
+                AND ph.status_code = #{statusCode}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                AND (
+                ph.purchase_no LIKE CONCAT('%', #{keyword}, '%')
+                OR b.branch_name LIKE CONCAT('%', #{keyword}, '%')
+                OR p.product_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+
+        GROUP BY
+        ph.purchase_id, ph.purchase_no, ph.branch_id, b.branch_name, ph.status_code, ph.requested_at, ph.memo
+
+        ORDER BY ph.purchase_id DESC
+    </select>
+
+    <!-- =========================
+         발주 헤더 단건
+       ========================= -->
+    <select id="selectPurchaseHeader"
+            parameterType="map"
+            resultType="com.health.app.purchase.PurchaseDetailDto">
+        SELECT
+        ph.purchase_id   AS purchaseId,
+        ph.purchase_no   AS purchaseNo,
+        ph.branch_id     AS branchId,
+        b.branch_name    AS branchName,
+        ph.status_code   AS statusCode,
+
+        ph.requested_at  AS requestedAt,
+        ph.requested_by  AS requestedBy,
+        ph.approved_at   AS approvedAt,
+        ph.approved_by   AS approvedBy,
+        ph.rejected_at   AS rejectedAt,
+        ph.rejected_by   AS rejectedBy,
+        ph.reject_reason AS rejectReason,
+
+        ph.memo          AS memo
+        FROM purchase_header ph
+        JOIN branch b ON b.branch_id = ph.branch_id
+        WHERE ph.use_yn = 1
+        AND b.use_yn = 1
+        AND ph.purchase_id = #{purchaseId}
+    </select>
+
+    <!-- =========================
+         발주 상세 품목
+       ========================= -->
+    <select id="selectPurchaseItems"
+            parameterType="map"
+            resultType="com.health.app.purchase.PurchaseDetailItemDto">
+        SELECT
+        pd.purchase_item_id AS purchaseItemId,
+        pd.purchase_id      AS purchaseId,
+        pd.product_id       AS productId,
+        p.product_name      AS productName,
+        pd.quantity         AS quantity,
+        pd.unit_price       AS unitPrice,
+        (pd.quantity * pd.unit_price) AS amount
+        FROM purchase_detail pd
+        JOIN product p ON p.product_id = pd.product_id
+        WHERE pd.use_yn = 1
+        AND p.use_yn = 1
+        AND pd.purchase_id = #{purchaseId}
+        ORDER BY pd.purchase_item_id ASC
+    </select>
+
+    <!-- =========================
+         승인/반려
+       ========================= -->
+    <update id="approvePurchase" parameterType="map">
+        UPDATE purchase_header
+        SET
+        status_code = 'APPROVED',
+        approved_at = NOW(),
+        approved_by = #{userId},
+        update_user = #{userId},
+        update_date = NOW()
+        WHERE use_yn = 1
+        AND purchase_id = #{purchaseId}
+        AND status_code = 'REQUESTED'
+    </update>
+
+    <update id="rejectPurchase" parameterType="map">
+        UPDATE purchase_header
+        SET
+        status_code = 'REJECTED',
+        rejected_at = NOW(),
+        rejected_by = #{userId},
+        reject_reason = #{rejectReason},
+        update_user = #{userId},
+        update_date = NOW()
+        WHERE use_yn = 1
+        AND purchase_id = #{purchaseId}
+        AND status_code = 'REQUESTED'
+    </update>
+
+    <!-- =========================
+         재고 반영: inventory upsert + history
+       ========================= -->
+    <select id="countInventory" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM inventory
+        WHERE use_yn = 1
+        AND branch_id = #{branchId}
+        AND product_id = #{productId}
+    </select>
+
+    <update id="increaseInventory" parameterType="map">
+        UPDATE inventory
+        SET
+        quantity = quantity + #{qty},
+        update_user = #{userId},
+        update_date = NOW()
+        WHERE use_yn = 1
+        AND branch_id = #{branchId}
+        AND product_id = #{productId}
+    </update>
+
+    <insert id="insertInventory" parameterType="map">
+        INSERT INTO inventory
+        (
+        branch_id,
+        product_id,
+        quantity,
+        low_stock_threshold,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        )
+        VALUES
+        (
+        #{branchId},
+        #{productId},
+        #{qty},
+        0,
+        #{userId},
+        NOW(),
+        #{userId},
+        NOW(),
+        1
+        )
+    </insert>
+
+    <insert id="insertInventoryHistory" parameterType="map">
+        INSERT INTO inventory_history
+        (
+        branch_id,
+        product_id,
+        move_type_code,
+        quantity,
+        reason,
+        ref_type,
+        ref_id,
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
+        )
+        VALUES
+        (
+        #{branchId},
+        #{productId},
+        #{moveTypeCode},
+        #{quantity},
+        #{reason},
+        #{refType},
+        #{refId},
+        #{userId},
+        NOW(),
+        #{userId},
+        NOW(),
+        1
+        )
+    </insert>
+
+</mapper>

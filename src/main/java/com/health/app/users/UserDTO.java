@@ -1,4 +1,4 @@
-package com.health.app.users.dto;
+package com.health.app.users;
 
 import lombok.Getter;
 import lombok.Setter;
