@@ -1,0 +1,98 @@
+
+<%-- 
+  _fields_vacation.jspf
+  - BG 이미지: 1448x2048 기준 (현재 업로드된 휴가복귀보고서)
+  - 아래 doc.* 는 ApprovalPrintDTO(또는 model attribute) 필드명에 맞게 조정하세요.
+--%>
+
+<%-- ====== 폰트/줄바꿈 공통 스타일 (base CSS에 있으면 생략 가능) ====== --%>
+<style>
+  .field { position:absolute; font-size:14px; line-height:1.4; color:#111; }
+  .field-sm { font-size:13px; }
+  .field-lg { font-size:16px; font-weight:600; }
+  .pre { white-space:pre-wrap; }
+  .center { text-align:center; }
+  .right { text-align:right; }
+  .mark { position:absolute; font-size:18px; font-weight:700; line-height:1; }
+</style>
+
+<%-- ====== 인적사항 ====== --%>
+<div class="field" style="left:330px; top:345px; width:420px;">
+  <c:out value="${doc.employeeName}" />
+</div>
+
+<div class="field" style="left:900px; top:345px; width:420px;">
+  <c:out value="${doc.departmentName}" />
+</div>
+
+<div class="field" style="left:330px; top:395px; width:420px;">
+  <c:out value="${doc.positionName}" />
+</div>
+
+<div class="field" style="left:900px; top:395px; width:420px;">
+  <fmt:formatDate value="${doc.joinDate}" pattern="yyyy-MM-dd"/>
+</div>
+
+<div class="field" style="left:330px; top:445px; width:990px;">
+  <c:out value="${doc.mainDuty}" />
+</div>
+
+<%-- ====== 휴가종류 체크 (이미지의 □ 옆에 ● 표시) ======
+     leaveType 예: ANNUAL / SICK / OFFICIAL / ETC
+--%>
+<c:if test="${doc.leaveType == 'ANNUAL'}">
+  <div class="mark" style="left:470px; top:523px;">●</div>
+</c:if>
+<c:if test="${doc.leaveType == 'SICK'}">
+  <div class="mark" style="left:700px; top:523px;">●</div>
+</c:if>
+<c:if test="${doc.leaveType == 'OFFICIAL'}">
+  <div class="mark" style="left:930px; top:523px;">●</div>
+</c:if>
+<c:if test="${doc.leaveType == 'ETC'}">
+  <div class="mark" style="left:1140px; top:523px;">●</div>
+</c:if>
+
+<%-- 기타( ) 텍스트 입력 칸 (ETC일 때만 표시 권장) --%>
+<c:if test="${doc.leaveType == 'ETC'}">
+  <div class="field field-sm" style="left:1235px; top:520px; width:90px;">
+    <c:out value="${doc.leaveTypeEtc}" />
+  </div>
+</c:if>
+
+<%-- ====== 휴가 사유 (대형 박스) ====== --%>
+<div class="field pre" style="left:330px; top:585px; width:990px; height:240px;">
+  <c:out value="${doc.leaveReason}" />
+</div>
+
+<%-- ====== 휴가 기간 ======
+     이미지에 "20 년 월 일 부터 / 까지"가 인쇄되어 있으므로,
+     날짜만 그 위치에 찍습니다.
+--%>
+<div class="field" style="left:520px; top:870px; width:320px;">
+  <fmt:formatDate value="${doc.leaveStartDate}" pattern="yyyy-MM-dd"/>
+</div>
+
+<div class="field" style="left:520px; top:915px; width:320px;">
+  <fmt:formatDate value="${doc.leaveEndDate}" pattern="yyyy-MM-dd"/>
+</div>
+
+<%-- (○일간) 칸: 일수 표시 --%>
+<div class="field center" style="left:1040px; top:895px; width:220px;">
+  <c:out value="${doc.leaveDays}" />일
+</div>
+
+<%-- ====== 휴가기간 내 담당업무/진행사항 ====== --%>
+<div class="field pre" style="left:330px; top:980px; width:990px; height:360px;">
+  <c:out value="${doc.handoverNote}" />
+</div>
+
+<%-- ====== 하단 작성일 (가운데 날짜) ====== --%>
+<div class="field center" style="left:520px; top:1565px; width:420px;">
+  <fmt:formatDate value="${doc.writtenDate}" pattern="yyyy-MM-dd"/>
+</div>
+
+<%-- ====== 하단 서명 성명(인) ====== --%>
+<div class="field" style="left:1085px; top:1705px; width:230px;">
+  <c:out value="${doc.employeeName}" />
+</div>

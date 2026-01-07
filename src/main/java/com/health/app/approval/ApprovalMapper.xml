@@ -269,7 +269,7 @@
 	  UPDATE approval_lines
 	  SET status_code = #{lineStatusCode},
 	      update_user = #{updateUser},
-	      update_date = NOW()
+	      update_date = NOW()	
 	  WHERE doc_ver_id = #{docVerId}
 	    AND use_yn = 1
 	    AND seq = (
@@ -283,19 +283,119 @@
 	    )
 	</update>
 	
-	<select id="selectProductsByBranch"
+		<select id="selectVacationPrint"
         parameterType="long"
-        resultType="com.health.app.approval.BranchProductStockDTO">
-    	SELECT
-	        p.product_id   AS productId,
-	        p.product_name AS productName,
-	        i.quantity     AS stockQty
-	    FROM inventory i
-	    JOIN product p ON p.product_id = i.product_id
-	    WHERE i.use_yn = 1
-	      AND p.use_yn = 1
-	      AND i.branch_id = #{branchId}
-	    ORDER BY p.product_name ASC
-	</select>
+        resultType="com.health.app.approval.VacationPrintDTO">
+
+  SELECT
+      d.doc_id          AS docId,
+      v.doc_ver_id      AS docVerId,
+      d.doc_no          AS docNo,
+      d.type_code       AS typeCode,
+      d.form_code       AS formCode,
+      d.status_code     AS statusCode,
+
+      d.drafter_user_id AS drafterUserId,
+
+      u.name            AS drafterName,
+      u.department_code AS drafterDeptName,
+      u.role_code       AS drafterPosition,
+
+      b.branch_name     AS drafterBranchName,
+
+      v.create_date     AS draftDate,
+
+      u.name            AS employeeName,
+      u.department_code AS departmentName,
+      u.role_code       AS positionName,
+
+      e.ext_txt4        AS mainDuty,         
+      e.ext_code1       AS leaveType,        
+      e.ext_txt1        AS leaveTypeEtc,    
+      e.ext_txt2        AS leaveReason,      
+
+      e.ext_dt1         AS leaveStartDate,   
+      e.ext_dt2         AS leaveEndDate,     
+      e.ext_no1         AS leaveDays,       
+
+      e.ext_txt3        AS handoverNote,     
+      e.ext_dt3         AS writtenDate      
+
+  FROM approval_document_versions v
+  JOIN approval_documents d
+    ON d.doc_id = v.doc_id
+  LEFT JOIN users u
+    ON u.user_id = d.drafter_user_id
+  LEFT JOIN branch b
+    ON b.branch_id = d.drafter_branch_id
+  LEFT JOIN approval_document_ext e
+    ON e.doc_ver_id = v.doc_ver_id
+   AND e.use_yn = 1
+
+  WHERE v.doc_ver_id = #{docVerId}
+    AND v.use_yn = 1
+    AND d.use_yn = 1
+</select>
+		<select id="selectPrintLines"
+        parameterType="long"
+        resultType="com.health.app.approval.ApprovalPrintLineDTO">
+
+  SELECT
+      l.seq            AS lineNo,
+      l.line_role_code AS role,
+      l.user_id        AS userId,
+
+      u.name           AS userName,
+      u.department_code AS deptName,
+      u.role_code      AS positionName,
+
+      l.status_code    AS decisionCode,
+      l.comment        AS comment,
+
+      /* 서명은 파일키로 저장돼 있으니 일단 키를 문자열로 담음 (경로 조립은 JSP/서비스에서) */
+      CAST(l.signature_file_id AS CHAR) AS signImagePath,
+      l.acted_at       AS decidedDate
+
+  FROM approval_lines l
+  LEFT JOIN users u
+    ON u.user_id = l.user_id
+  WHERE l.doc_ver_id = #{docVerId}
+    AND l.use_yn = 1
+  ORDER BY l.seq ASC
+</select>
 		
+	<select id="selectCurrentPendingLineId" resultType="long">
+  SELECT line_id
+  FROM approval_lines
+  WHERE doc_ver_id = #{docVerId}
+    AND line_status_code = 'ALS002'
+    AND use_yn = 1
+  ORDER BY seq
+  LIMIT 1
+</select>
+
+<update id="updateLineStatusByLineId">
+  UPDATE approval_lines
+  SET line_status_code = #{statusCode},
+      comment = #{comment},
+      update_date = NOW()
+  WHERE line_id = #{lineId}
+</update>
+
+<update id="updateNextLineToPending">
+  UPDATE approval_lines
+  SET line_status_code = #{pendingCode},
+      update_date = NOW()
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+    AND line_status_code = 'ALS001'
+    AND seq = (
+      SELECT MIN(seq)
+      FROM approval_lines
+      WHERE doc_ver_id = #{docVerId}
+        AND use_yn = 1
+        AND line_status_code = 'ALS001'
+    )
+</update>
+	
 </mapper>

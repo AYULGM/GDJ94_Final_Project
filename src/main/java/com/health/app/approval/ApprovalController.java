@@ -74,7 +74,6 @@ public class ApprovalController {
     @PostMapping("submit")
     public String submit(@AuthenticationPrincipal LoginUser loginUser,
                          @RequestParam Long docVerId) {
-
         approvalService.submit(loginUser.getUserId(), docVerId);
         return "redirect:/approval/list";
     }
@@ -136,4 +135,44 @@ public class ApprovalController {
     public List<ApprovalProductDTO> products(@RequestParam(required = false) Long branchId) {
         return approvalService.getProductsByBranch(branchId);
     }
+    @GetMapping("view")
+    public String view(@RequestParam Long docVerId, Model model) {
+
+        ApprovalPrintDTO doc = approvalService.getPrintData(docVerId);
+        model.addAttribute("doc", doc);
+
+        // _print_base.jspf가 요구하는 값 (안 넣으면 fieldsJspf null include 터질 수 있음)
+        model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
+        model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_vacation.jspf");
+
+        return "approval/print/vacation_print";
+    }
+    @GetMapping("handle")
+    public String handle(@RequestParam Long docVerId, Model model) {
+
+        ApprovalPrintDTO doc = approvalService.getPrintData(docVerId);
+        model.addAttribute("doc", doc);
+
+        // 결재처리 화면 JSP
+        return "approval/handle";
+    }
+
+    /**
+     * 결재 처리(승인/반려)
+     * form action="/approval/handle" method="post"
+     */
+    @PostMapping("handle")
+    public String handleAction(@RequestParam Long docVerId,
+                               @RequestParam String action, // APPROVE or REJECT
+                               @RequestParam(required = false) String comment) {
+
+        approvalService.processDecision(docVerId, action, comment);
+
+        // 처리 후 결재함으로
+        return "redirect:/approval/inbox";
+    }
+
+    
+    
+    
 }

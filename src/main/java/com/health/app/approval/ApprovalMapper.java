@@ -64,5 +64,19 @@ public interface ApprovalMapper {
                        @Param("nextSeq") Long nextSeq);
     
     List<ApprovalProductDTO> selectProductsByBranch(@Param("branchId") Long branchId);
+	ApprovalPrintDTO selectPrintHeader(Long docVerId);
+
+	VacationPrintDTO selectVacationPrint(@Param("docVerId") Long docVerId);
+
+	List<ApprovalPrintLineDTO> selectPrintLines(@Param("docVerId") Long docVerId);
+	
+	Long selectCurrentPendingLineId(@Param("docVerId") Long docVerId);
+
+	int updateLineStatusByLineId(@Param("lineId") Long lineId,
+	                             @Param("statusCode") String statusCode,
+	                             @Param("comment") String comment);
+
+	int updateNextLineToPending(@Param("docVerId") Long docVerId,
+	                            @Param("pendingCode") String pendingCode);
 
 }

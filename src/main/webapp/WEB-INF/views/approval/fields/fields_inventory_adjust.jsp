@@ -27,8 +27,12 @@
     <select class="form-select" name="extNo2" id="productId" required>
       <option value="">상품 선택</option>
       <c:forEach var="p" items="${products}">
-        <option value="${p.productId}" data-baseqty="${p.stockQty}">
+        <option value="${p.productId}"
+                data-price="${p.price}">
           <c:out value="${p.productName}"/>
+          <c:if test="${not empty p.productDesc}">
+            - <c:out value="${p.productDesc}"/>
+          </c:if>
         </option>
       </c:forEach>
     </select>
@@ -52,10 +56,12 @@
 
   <div class="col-md-4">
     <label class="form-label mt-2">조정 수량(절대값)</label>
-    <input type="number" class="form-control" name="extNo3" id="adjustQty" min="0" step="1" required />
+    <input type="number" class="form-control" name="extNo3" id="adjustQty" min="1" step="1" required />
     <div class="form-text">extNo3 = 조정수량</div>
   </div>
 
+  <!-- ✅ 기준수량/조정후수량 제거 (inventory.quantity 미매핑 정책) -->
+  <!--
   <div class="col-md-4">
     <label class="form-label mt-2">기준 수량</label>
     <input type="number" class="form-control" name="extNo4" id="baseQty" readonly />
@@ -67,6 +73,7 @@
     <input type="number" class="form-control" name="extNo5" id="afterQty" readonly />
     <div class="form-text">extNo5 = 조정후수량</div>
   </div>
+  -->
 
   <div class="col-12 mt-2">
     <label class="form-label">조정 사유</label>
@@ -96,20 +103,20 @@
               <input type="checkbox" id="invCheckAll" />
             </th>
             <th>조정 물품</th>
-            <th style="width:120px;" class="text-end">조정 전</th>
-            <th style="width:120px;" class="text-end">조정 후</th>
+            <th style="width:120px;" class="text-center">유형</th>
+            <th style="width:120px;" class="text-end">수량</th>
             <th style="width:180px;">조정 직원</th>
             <th>비고</th>
           </tr>
         </thead>
 
-        <!-- ✅ 입력행(기존 1행 유지) -->
+        <!-- ✅ 입력행 -->
         <tbody id="invInputTbody">
           <tr id="invInputRow">
             <td class="text-center">-</td>
             <td><input type="text" class="form-control form-control-sm inv-item" /></td>
-            <td><input type="number" class="form-control form-control-sm inv-before text-end" readonly /></td>
-            <td><input type="number" class="form-control form-control-sm inv-after text-end" readonly /></td>
+            <td class="text-center"><input type="text" class="form-control form-control-sm inv-type text-center" readonly /></td>
+            <td><input type="number" class="form-control form-control-sm inv-qty text-end" readonly /></td>
             <td><input type="text" class="form-control form-control-sm inv-operator" maxlength="50" /></td>
             <td><input type="text" class="form-control form-control-sm inv-remark" maxlength="100" /></td>
           </tr>
@@ -123,21 +130,20 @@
     </div>
   </div>
 </div>
+
 <script>
 (function() {
   const branchSel  = document.getElementById("branchId");
   const productSel = document.getElementById("productId");
-  const baseQtyEl  = document.getElementById("baseQty");
-  const afterQtyEl = document.getElementById("afterQty");
   const qtyEl      = document.getElementById("adjustQty");
   const jsonEl     = document.getElementById("invItemsJson");
 
-  const inputRow   = document.getElementById("invInputRow");
-  const invItem    = inputRow.querySelector(".inv-item");
-  const invBefore  = inputRow.querySelector(".inv-before");
-  const invAfter   = inputRow.querySelector(".inv-after");
-  const invOperator= inputRow.querySelector(".inv-operator");
-  const invRemark  = inputRow.querySelector(".inv-remark");
+  const inputRow    = document.getElementById("invInputRow");
+  const invItem     = inputRow.querySelector(".inv-item");
+  const invType     = inputRow.querySelector(".inv-type");
+  const invQty      = inputRow.querySelector(".inv-qty");
+  const invOperator = inputRow.querySelector(".inv-operator");
+  const invRemark   = inputRow.querySelector(".inv-remark");
 
   const listTbody  = document.getElementById("invListTbody");
 
@@ -158,26 +164,25 @@
     return Math.max(0, Math.trunc(n));
   }
 
-  function selectedBaseQty() {
-    const opt = productSel.options[productSel.selectedIndex];
-    return toInt(opt?.dataset?.baseqty);
-  }
-  function selectedProductName() {
+  function selectedProductText() {
     const opt = productSel.options[productSel.selectedIndex];
     return (opt?.text || "").trim();
   }
+  function selectedPrice() {
+    const opt = productSel.options[productSel.selectedIndex];
+    const p = Number(opt?.dataset?.price);
+    return Number.isFinite(p) ? p : null;
+  }
 
-  // ✅ 상단 입력만 초기화(지점/작성일/사유/상세사유는 유지)
+  // ✅ 상단 입력만 초기화(지점/작성일/사유는 유지)
   function resetInputOnly() {
     productSel.value = "";
-    baseQtyEl.value = "";
     qtyEl.value = "";
-    afterQtyEl.value = "";
     setAdjustType("INCREASE");
 
     invItem.value = "";
-    invBefore.value = "";
-    invAfter.value = "";
+    invType.value = "";
+    invQty.value = "";
     invOperator.value = "";
     invRemark.value = "";
 
@@ -191,7 +196,7 @@
     resetInputOnly();
   }
 
-  // ✅ product select 옵션 재구성
+  // ✅ product select 옵션 재구성 (DTO: productId, productName, productDesc, price)
   function rebuildProductOptions(products) {
     productSel.innerHTML = `<option value="">상품 선택</option>`;
     const frag = document.createDocumentFragment();
@@ -199,8 +204,12 @@
     (products || []).forEach(p => {
       const opt = document.createElement("option");
       opt.value = p.productId;
-      opt.dataset.baseqty = p.stockQty; // ✅ 기준수량
-      opt.textContent = p.productName;
+      if (p.price != null) opt.dataset.price = p.price;
+
+      const label = (p.productName || "")
+        + (p.productDesc ? ` - ${p.productDesc}` : "");
+      opt.textContent = label;
+
       frag.appendChild(opt);
     });
 
@@ -215,6 +224,8 @@
     if (!branchId) return;
 
     try {
+      // 컨트롤러가 이 경로를 제공해야 함
+      // 만약 /approval/products?branchId= 형태라면 아래 URL만 바꾸면 됨
       const res = await fetch(`/approval/api/branches/${branchId}/products`, {
         headers: { "Accept": "application/json" }
       });
@@ -224,7 +235,7 @@
         return;
       }
 
-      const list = await res.json(); // [{productId, productName, stockQty}, ...]
+      const list = await res.json(); // [{productId, productName, productDesc, price}, ...]
       rebuildProductOptions(list);
 
     } catch (e) {
@@ -233,22 +244,19 @@
     }
   }
 
-  // 상단 입력값을 기준으로 미리보기(조정 전/후 + inputRow 반영)
-  function recalc() {
-    const base = toInt(baseQtyEl.value);
-    const adj  = toInt(qtyEl.value);
+  // 입력행 미리보기 갱신(유형/수량 + 물품명 자동세팅)
+  function recalcPreview() {
     const type = getAdjustType();
+    const adj  = toInt(qtyEl.value);
 
-    let after = (type === "DECREASE") ? (base - adj) : (base + adj);
-    if (after < 0) after = 0;
+    tr.innerHTML = `
+    	  <td>\${type == "DECREASE" ? "감소" : "증가"}</td>
+    	`;
 
-    afterQtyEl.value = after;
-
-    invBefore.value = base;
-    invAfter.value  = after;
+    invQty.value  = adj ? String(adj) : "";
 
     if (productSel.value && !invItem.value.trim()) {
-      invItem.value = selectedProductName();
+      invItem.value = selectedProductText();
     }
   }
 
@@ -256,14 +264,15 @@
   function rebuildJson() {
     const rows = Array.from(listTbody.querySelectorAll("tr.inv-row"));
     const items = rows.map(tr => ({
-      // ✅ 서버 검증 편하게 branchId도 함께 저장(선택)
       branchId: toInt(branchSel.value),
-      productId: toInt(tr.dataset.productId),
+      productId: Number(tr.dataset.productId),
       productName: (tr.querySelector(".col-name")?.textContent || "").trim(),
-      beforeQty: toInt(tr.dataset.beforeQty),
-      afterQty: toInt(tr.dataset.afterQty),
+      adjustType: tr.dataset.adjustType || "INCREASE",
+      adjustQty: Number(tr.dataset.adjustQty),
+      signedQty: Number(tr.dataset.signedQty), // 증가:+, 감소:-
       operator: (tr.querySelector(".col-operator")?.textContent || "").trim(),
-      remark: (tr.querySelector(".col-remark")?.textContent || "").trim()
+      remark: (tr.querySelector(".col-remark")?.textContent || "").trim(),
+      price: tr.dataset.price ? Number(tr.dataset.price) : null
     })).filter(x => x.productId);
 
     jsonEl.value = items.length ? JSON.stringify(items) : "";
@@ -282,37 +291,34 @@
       return;
     }
 
-    const base = toInt(baseQtyEl.value);
-    const adj  = toInt(qtyEl.value);
+    const adj = toInt(qtyEl.value);
     if (adj <= 0) {
       alert("조정 수량을 입력하세요.");
       return;
     }
 
-    const type = getAdjustType();
-    if (type === "DECREASE" && adj > base) {
-      alert("감소 수량이 기준 수량을 초과합니다.");
-      return;
-    }
+    const type = getAdjustType(); // INCREASE / DECREASE
+    const signedQty = (type === "DECREASE") ? -adj : adj;
 
-    const after = (type === "DECREASE") ? (base - adj) : (base + adj);
-
-    const name = (invItem.value || "").trim() || selectedProductName();
+    const name = (invItem.value || "").trim() || selectedProductText();
     const operator = (invOperator.value || "").trim();
     const remark   = (invRemark.value || "").trim();
+    const price    = selectedPrice();
 
     // ✅ 누적행 추가
     const tr = document.createElement("tr");
     tr.className = "inv-row";
     tr.dataset.productId = String(productId);
-    tr.dataset.beforeQty = String(base);
-    tr.dataset.afterQty  = String(after);
+    tr.dataset.adjustType = type;
+    tr.dataset.adjustQty  = String(adj);
+    tr.dataset.signedQty  = String(signedQty);
+    if (price != null) tr.dataset.price = String(price);
 
     tr.innerHTML = `
       <td class="text-center"><input type="checkbox" class="inv-chk" /></td>
       <td class="col-name"></td>
-      <td class="text-end">${base}</td>
-      <td class="text-end">${after}</td>
+      <td class="text-center">${type == "DECREASE" ? "감소" : "증가"}</td>
+      <td class="text-end">${adj}</td>
       <td class="col-operator"></td>
       <td class="col-remark"></td>
     `;
@@ -324,7 +330,7 @@
     listTbody.appendChild(tr);
     rebuildJson();
 
-    // ✅ 입력값 초기화(지점/작성일/조정사유/상세사유는 그대로)
+    // ✅ 입력값 초기화(지점/작성일/사유는 그대로)
     resetInputOnly();
     productSel.focus();
   }
@@ -350,26 +356,24 @@
     loadProductsByBranch(branchSel.value);
   });
 
-  // 상품 변경 시 기준수량/물품명 세팅
+  // 상품 변경 시 물품명 자동세팅 + 미리보기 갱신
   productSel.addEventListener("change", () => {
     if (!productSel.value) {
-      baseQtyEl.value = "";
-      afterQtyEl.value = "";
       invItem.value = "";
-      recalc();
+      recalcPreview();
       return;
     }
-    baseQtyEl.value = selectedBaseQty();
-    invItem.value = selectedProductName();
-    recalc();
+    invItem.value = selectedProductText();
+    recalcPreview();
   });
 
-  document.querySelectorAll("input[name='extCode1']").forEach(r => r.addEventListener("change", recalc));
-  qtyEl.addEventListener("input", recalc);
-  [invItem, invOperator, invRemark].forEach(el => el.addEventListener("input", recalc));
+  document.querySelectorAll("input[name='extCode1']")
+    .forEach(r => r.addEventListener("change", recalcPreview));
+
+  qtyEl.addEventListener("input", recalcPreview);
+  [invItem, invOperator, invRemark].forEach(el => el.addEventListener("input", recalcPreview));
 
   // 초기
-  // ✅ 수정 화면에서 branch가 이미 선택되어 있으면 상품을 branch 기준으로 재로딩
   if (branchSel.value) {
     loadProductsByBranch(branchSel.value);
   } else {

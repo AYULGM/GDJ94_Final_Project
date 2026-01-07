@@ -45,6 +45,9 @@ public class SecurityConfig {
 
         http
             // (개발 중) 일단 끄고, 로그인 화면 뜨면 다시 켜도 됨
+	        .headers(headers -> headers
+	                .frameOptions(frame -> frame.sameOrigin())
+	            )
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth

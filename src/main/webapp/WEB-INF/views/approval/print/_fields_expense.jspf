@@ -1,0 +1,11 @@
+<div class="field" style="top:200px; left:100px;">
+  ${doc.expenseDate}
+</div>
+
+<div class="field" style="top:240px; left:100px;">
+  ${doc.amount}
+</div>
+
+<div class="field" style="top:280px; left:100px;">
+  ${doc.reason}
+</div>

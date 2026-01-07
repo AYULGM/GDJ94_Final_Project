@@ -1,0 +1,28 @@
+
+
+<%-- 
+  _print_base.jspf
+  - model attribute:
+    - bgImageUrl : 배경 이미지 경로 (예: /assets/forms/leave.png)
+    - fieldsJspf : 본문 필드 JSPF (예: /WEB-INF/views/approval/print/_fields_vacation.jspf)
+--%>
+
+<link rel="stylesheet" href="/approval/css/print_overlay.css" />
+
+<div class="print-wrap">
+  <div class="print-page">
+
+    <img class="print-bg"
+         src="<c:out value='${bgImageUrl}'/>"
+         alt="print background" />
+
+    <div class="overlay">
+      <%-- 공통 필드(문서번호/결재란/서명 등) 필요 시 여기서 include --%>
+      <%-- <jsp:include page="/WEB-INF/views/approval/print/_fields_common.jspf"/> --%>
+
+      <%-- 문서별 필드 --%>
+      <jsp:include page="${fieldsJspf}"/>
+    </div>
+
+  </div>
+</div>

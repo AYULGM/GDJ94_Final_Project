@@ -220,4 +220,67 @@ public class ApprovalService {
     public List<Map<String, Object>> getBranches() {
         return approvalMapper.selectBranches();
     }
+
+    @Transactional(readOnly = true)
+    public ApprovalPrintDTO getPrintData(Long docVerId) {
+
+        if (docVerId == null) {
+            throw new IllegalArgumentException("docVerId is required");
+        }
+
+        // DF009(휴가복귀보고서) 우선: VacationPrintDTO로 한 번에 조회
+        VacationPrintDTO doc = approvalMapper.selectVacationPrint(docVerId);
+        if (doc == null) {
+            throw new IllegalStateException("문서를 찾을 수 없습니다. docVerId=" + docVerId);
+        }
+
+        // 결재선(있으면)
+        doc.setLines(approvalMapper.selectPrintLines(docVerId));
+
+        return doc; // 업캐스팅되어 ApprovalPrintDTO로 반환됨 (JSP EL은 하위 필드 접근 가능)
+    }
+
+    @Transactional
+    public void processDecision(Long docVerId, String action, String comment) {
+
+        if (docVerId == null) throw new IllegalArgumentException("docVerId is required");
+        if (action == null || action.isBlank()) throw new IllegalArgumentException("action is required");
+
+        // ⚠️ 여긴 반드시 "로그인 결재자" 기준으로 해야 안전함.
+        // 지금 컨트롤러에서 loginUserId를 안 넘기고 있으니,
+        // 최소 구현으로는 "현재 PENDING(ALS002) 라인 1건"을 잡는 방식으로 시작.
+        Long lineId = approvalMapper.selectCurrentPendingLineId(docVerId);
+        if (lineId == null) {
+            throw new IllegalStateException("처리할 결재 라인이 없습니다. docVerId=" + docVerId);
+        }
+
+        if ("APPROVE".equalsIgnoreCase(action)) {
+
+            // 현재 라인 승인 처리
+            approvalMapper.updateLineStatusByLineId(lineId, "ALS003", comment); // ALS003: 승인(가정)
+
+            // 다음 라인 대기(ALS001) 중 가장 빠른 seq를 진행(ALS002)로 전환
+            int moved = approvalMapper.updateNextLineToPending(docVerId, "ALS002");
+
+            if (moved == 0) {
+                // 더 이상 다음 라인이 없다면 최종 승인 처리
+                approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS003", 0L);   // AS003: 승인완료(가정)
+                approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003", 0L);  // AVS003: 완료(가정)
+            }
+
+        } else if ("REJECT".equalsIgnoreCase(action)) {
+
+            approvalMapper.updateLineStatusByLineId(lineId, "ALS004", comment); // ALS004: 반려(가정)
+            approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS004", 0L);   // AS004: 반려(가정)
+            approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS004", 0L);  // AVS004: 반려(가정)
+
+        } else {
+            throw new IllegalArgumentException("invalid action: " + action);
+        }
+    }
+
+    
+
 }
+
+

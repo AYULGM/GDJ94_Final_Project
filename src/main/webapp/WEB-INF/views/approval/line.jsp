@@ -37,7 +37,7 @@
     </div>
     <div class="d-flex gap-2">
       <a href="/approval/form" class="btn btn-outline-secondary">문서로 돌아가기</a>
-      <button type="button" class="btn btn-primary" id="btnSaveLines">저장</button>
+      <button type="button" class="btn btn-primary" id="btnSaveLines">임시저장</button>
 	  <button type="button" class="btn btn-success" id="btnSubmit">결재요청</button>
 
     </div>
@@ -112,8 +112,37 @@
 
   </div>
 </div>
-
 <script>
+document.getElementById('btnSubmit')?.addEventListener('click', async () => {
+  if (!docVerId) { showMsg('docVerId가 없습니다.'); return; }
+
+  if (lines.length === 0) {
+    showMsg('결재선을 1명 이상 추가하세요.');
+    return;
+  }
+
+  if (!confirm('결재 요청하시겠습니까?')) return;
+
+  try {
+    const res = await fetch('/approval/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+      },
+      body: 'docVerId=' + encodeURIComponent(docVerId)
+    });
+
+    if (!res.ok) {
+      showMsg('결재 요청 실패: ' + res.status);
+      return;
+    }
+
+    // 성공 시 목록으로 이동
+    window.location.href = '/approval/list';
+  } catch (e) {
+    showMsg('결재 요청 중 오류: ' + e);
+  }
+});
   // ===== 상태 =====
   let lines = []; // [{seq, approverId, lineRoleCode}]
   let selectedIndex = -1;
@@ -255,7 +284,6 @@
       }
 
       const data = await res.json();
-      console.log('TREE DATA =', data);
 
       approverTreeCache = data;
       renderApproverTree();
