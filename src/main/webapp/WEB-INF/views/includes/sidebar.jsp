@@ -170,10 +170,124 @@
           </ul>
         </li>
 
+        <!-- 정산·통계 대시보드 -->
         <li class="nav-item">
           <a href="<c:url value='/statistics'/>" class="nav-link">
+            <i class="nav-icon bi bi-speedometer2"></i>
+            <p>정산/통계</p>
+          </a>
+        </li>
+
+        <!-- 매출·지출 통계 Treeview -->
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-lte-toggle="treeview">
             <i class="nav-icon bi bi-bar-chart"></i>
-            <p>통계</p>
+            <p>
+              매출·지출 통계
+              <i class="nav-arrow bi bi-chevron-right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <!-- 매출 통계 -->
+            <li class="nav-item">
+              <a href="#" class="nav-link" data-lte-toggle="treeview">
+                <i class="bi bi-graph-up"></i>
+                <p>
+                  매출 통계
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="<c:url value='/statistics/sales/by-branch'/>" class="nav-link">
+                    <p>지점별</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="<c:url value='/statistics/sales/by-category'/>" class="nav-link">
+                    <p>항목별</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="<c:url value='/statistics/sales/by-period'/>" class="nav-link">
+                    <p>기간별</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!-- 지출 통계 -->
+            <li class="nav-item">
+              <a href="#" class="nav-link" data-lte-toggle="treeview">
+                <i class="bi bi-graph-down"></i>
+                <p>
+                  지출 통계
+                  <i class="nav-arrow bi bi-chevron-right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="<c:url value='/statistics/expenses/by-branch'/>" class="nav-link">
+                    <p>지점별</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="<c:url value='/statistics/expenses/by-category'/>" class="nav-link">
+                    <p>항목별</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="<c:url value='/statistics/expenses/by-period'/>" class="nav-link">
+                    <p>기간별</p>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <!-- 정산 관리 Treeview -->
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-lte-toggle="treeview">
+            <i class="nav-icon bi bi-calculator"></i>
+            <p>
+              정산 관리
+              <i class="nav-arrow bi bi-chevron-right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="<c:url value='/sales'/>" class="nav-link">
+                <p>정산 대상 매출 (매출보고서)</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<c:url value='/statistics/comparison'/>" class="nav-link">
+                <p>손익 비교</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<c:url value='/settlements/confirm'/>" class="nav-link">
+                <p>정산 확정</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<c:url value='/settlements'/>" class="nav-link">
+                <p>정산 내역 조회</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<c:url value='/settlements/history'/>" class="nav-link">
+                <p>정산 이력 로그</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- 지출 관리 -->
+        <li class="nav-item">
+          <a href="<c:url value='/expenses'/>" class="nav-link">
+            <i class="nav-icon bi bi-wallet2"></i>
+            <p>지출 관리</p>
           </a>
         </li>
 

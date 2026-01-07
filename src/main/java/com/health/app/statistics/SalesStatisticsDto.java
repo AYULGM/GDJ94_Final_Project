@@ -1,0 +1,33 @@
+package com.health.app.statistics;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+/**
+ * 매출 통계 결과 DTO
+ */
+@Data
+public class SalesStatisticsDto {
+
+    // 지점별 통계
+    private Long branchId;
+    private String branchName;
+
+    // 항목별 통계
+    private String categoryCode;
+    private String categoryName;
+
+    // 기간별 통계
+    private String period;           // 기간 (YYYY-MM, YYYY-Q1, YYYY)
+    private String periodLabel;      // 기간 라벨 (2024년 1월, 2024년 1분기)
+
+    // 통계 데이터
+    private BigDecimal totalAmount;  // 총 매출 금액
+    private Long saleCount;          // 매출 건수
+    private BigDecimal avgAmount;    // 평균 매출 금액
+
+    // 비교 데이터
+    private BigDecimal diffAmount;   // 평균 대비 차이 금액
+    private Double diffPercent;      // 평균 대비 차이 비율 (%)
+}

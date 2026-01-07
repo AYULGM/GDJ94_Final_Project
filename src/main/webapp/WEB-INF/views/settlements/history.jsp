@@ -1,0 +1,329 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+
+<jsp:include page="../includes/admin_header.jsp" />
+
+<!-- Main content -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">정산 이력 로그</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
+                    <li class="breadcrumb-item active">정산 이력 로그</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+
+        <!-- 검색 필터 -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="searchForm" class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label">정산 번호</label>
+                                <input type="number" class="form-control" id="settlementId" name="settlementId" placeholder="전체">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">액션 타입</label>
+                                <select class="form-select" id="actionType" name="actionType">
+                                    <option value="">전체</option>
+                                    <option value="CREATE">생성</option>
+                                    <option value="CONFIRM">확정</option>
+                                    <option value="CANCEL">취소</option>
+                                    <option value="UPDATE">수정</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">시작일</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">종료일</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-search"></i> 검색
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 목록 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">정산 이력 목록</h3>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px">로그번호</th>
+                                    <th>정산번호</th>
+                                    <th>액션</th>
+                                    <th>이전상태</th>
+                                    <th>이후상태</th>
+                                    <th>처리자</th>
+                                    <th>처리일시</th>
+                                    <th>비고</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 페이징 -->
+                    <div class="card-footer clearfix">
+                        <ul class="pagination pagination-sm m-0 float-end" id="pagination">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<jsp:include page="../includes/admin_footer.jsp" />
+
+<script>
+let currentPage = 1;
+const pageSize = 20;
+
+// 페이지 로드
+document.addEventListener('DOMContentLoaded', function() {
+    // 검색 폼 이벤트
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        loadHistoryList();
+    });
+
+    // 초기 데이터 로드
+    loadHistoryList();
+});
+
+// 정산 이력 목록 로드
+async function loadHistoryList() {
+    // TODO: 전체 정산 이력 조회 API가 필요합니다 (GET /settlements/api/all-histories)
+    // 현재는 settlements 목록을 조회한 후 각 정산의 이력을 결합하는 방식으로 구현
+
+    try {
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
+
+        // 정산 목록 조회
+        const settlementsResponse = await fetch('/settlements/api/list?page=1&pageSize=100');
+        const settlementsData = await settlementsResponse.json();
+
+        if (!settlementsData.list || settlementsData.list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">정산 이력이 없습니다.</td></tr>';
+            return;
+        }
+
+        // 각 정산의 이력 조회
+        const historyPromises = settlementsData.list.map(settlement =>
+            fetch(`/settlements/api/${settlement.settlementId}/histories`)
+                .then(r => r.json())
+                .then(histories => histories.map(h => ({...h, settlementNo: settlement.settlementNo})))
+        );
+
+        const allHistories = (await Promise.all(historyPromises)).flat();
+
+        // 날짜순 정렬 (최신순)
+        allHistories.sort((a, b) => new Date(b.actedAt) - new Date(a.actedAt));
+
+        renderHistoryTable(allHistories);
+
+    } catch (error) {
+        console.error('목록 로드 실패:', error);
+        document.getElementById('historyTableBody').innerHTML =
+            '<tr><td colspan="8" class="text-center text-danger">데이터를 불러오는데 실패했습니다.</td></tr>';
+    }
+}
+
+// 테이블 렌더링
+function renderHistoryTable(histories) {
+    const tbody = document.getElementById('historyTableBody');
+
+    if (!histories || histories.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">정산 이력이 없습니다.</td></tr>';
+        return;
+    }
+
+    // 검색 필터 적용
+    const searchForm = new FormData(document.getElementById('searchForm'));
+    const settlementIdFilter = searchForm.get('settlementId');
+    const actionTypeFilter = searchForm.get('actionType');
+    const startDateFilter = searchForm.get('startDate');
+    const endDateFilter = searchForm.get('endDate');
+
+    let filtered = histories;
+
+    if (settlementIdFilter) {
+        filtered = filtered.filter(h => h.settlementId == settlementIdFilter);
+    }
+    if (actionTypeFilter) {
+        filtered = filtered.filter(h => h.actionType === actionTypeFilter);
+    }
+    if (startDateFilter) {
+        const startDate = new Date(startDateFilter);
+        filtered = filtered.filter(h => new Date(h.actedAt) >= startDate);
+    }
+    if (endDateFilter) {
+        const endDate = new Date(endDateFilter);
+        endDate.setHours(23, 59, 59);
+        filtered = filtered.filter(h => new Date(h.actedAt) <= endDate);
+    }
+
+    // 페이징 처리
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const paged = filtered.slice(start, end);
+
+    tbody.innerHTML = paged.map(history => `
+        <tr>
+            <td>${history.logId || '-'}</td>
+            <td>
+                <a href="/settlements/${history.settlementId}">
+                    ${history.settlementId} ${history.settlementNo ? '(' + history.settlementNo + ')' : ''}
+                </a>
+            </td>
+            <td>
+                <span class="badge ${getActionBadgeClass(history.actionType)}">
+                    ${getActionName(history.actionType)}
+                </span>
+            </td>
+            <td>
+                <span class="badge ${getStatusBadgeClass(history.beforeStatus)}">
+                    ${getStatusName(history.beforeStatus)}
+                </span>
+            </td>
+            <td>
+                <span class="badge ${getStatusBadgeClass(history.afterStatus)}">
+                    ${getStatusName(history.afterStatus)}
+                </span>
+            </td>
+            <td>${history.actorUserName || '-'}</td>
+            <td>${formatDateTime(history.actedAt)}</td>
+            <td>${history.reason || '-'}</td>
+        </tr>
+    `).join('');
+
+    // 페이징
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    renderPagination(currentPage, totalPages);
+}
+
+// 페이징 렌더링
+function renderPagination(current, total) {
+    const pagination = document.getElementById('pagination');
+
+    if (total <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+
+    if (current > 1) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${current - 1}); return false;">«</a></li>`;
+    }
+
+    const startPage = Math.max(1, current - 2);
+    const endPage = Math.min(total, current + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<li class="page-item ${i === current ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>
+        </li>`;
+    }
+
+    if (current < total) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${current + 1}); return false;">»</a></li>`;
+    }
+
+    pagination.innerHTML = html;
+}
+
+// 페이지 이동
+function goToPage(page) {
+    currentPage = page;
+    loadHistoryList();
+}
+
+// 액션 이름
+function getActionName(action) {
+    const actions = {
+        'CREATE': '생성',
+        'CONFIRM': '확정',
+        'CANCEL': '취소',
+        'UPDATE': '수정'
+    };
+    return actions[action] || action;
+}
+
+// 액션 뱃지 클래스
+function getActionBadgeClass(action) {
+    const classes = {
+        'CREATE': 'bg-primary',
+        'CONFIRM': 'bg-success',
+        'CANCEL': 'bg-danger',
+        'UPDATE': 'bg-warning'
+    };
+    return classes[action] || 'bg-secondary';
+}
+
+// 상태 이름
+function getStatusName(status) {
+    if (!status) return '-';
+    const statuses = {
+        'PENDING': '대기',
+        'CONFIRMED': '확정',
+        'CANCELLED': '취소'
+    };
+    return statuses[status] || status;
+}
+
+// 상태 뱃지 클래스
+function getStatusBadgeClass(status) {
+    if (!status) return 'bg-light text-dark';
+    const classes = {
+        'PENDING': 'bg-warning',
+        'CONFIRMED': 'bg-success',
+        'CANCELLED': 'bg-secondary'
+    };
+    return classes[status] || 'bg-secondary';
+}
+
+// 날짜/시간 포맷
+function formatDateTime(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleString('ko-KR');
+}
+</script>
