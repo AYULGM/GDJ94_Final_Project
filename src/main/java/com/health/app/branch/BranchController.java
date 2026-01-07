@@ -26,7 +26,7 @@ public class BranchController {
 
         List<BranchDTO> list = branchService.getBranchList();
         model.addAttribute("branchList", list);
-
+        model.addAttribute("pageTitle", "지점 관리");
         return "branch/list";
     }
     
