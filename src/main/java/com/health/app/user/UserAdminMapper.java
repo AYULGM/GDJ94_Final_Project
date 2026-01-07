@@ -14,4 +14,14 @@ public interface UserAdminMapper {
 
     void updateUser(UserAdminDTO dto);
 
+    void insertUserBranchLog(Long userId, Long beforeBranchId, Long afterBranchId,
+            Long createUser, String reason);
+
+	void insertRoleChangeLog(Long userId, String beforeRoleCode, String afterRoleCode,
+	            Long createUser, String reason);
+	
+	void insertUserHistory(Long userId, String changeType,
+	          String beforeValue, String afterValue,
+	          String reason, Long createUser);
+
 }

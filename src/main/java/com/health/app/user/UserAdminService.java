@@ -1,9 +1,12 @@
 package com.health.app.user;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,10 +40,66 @@ public class UserAdminService {
         userAdminMapper.insertUser(dto);
     }
     
+    @Transactional
     public void updateUser(UserAdminDTO dto) {
 
+        // 1. 수정 전 데이터
+        UserAdminDTO before = userAdminMapper.selectUserAdminDetail(dto.getUserId());
+
+        // 2. 지점 변경
+        if (!Objects.equals(before.getBranchId(), dto.getBranchId())) {
+            userAdminMapper.insertUserBranchLog(
+                dto.getUserId(),
+                before.getBranchId(),
+                dto.getBranchId(),
+                dto.getUpdateUser(),
+                "관리자에 의한 지점 변경"
+            );
+        }
+
+        // 3. 권한 변경
+        if (!Objects.equals(before.getRoleCode(), dto.getRoleCode())) {
+            userAdminMapper.insertRoleChangeLog(
+                dto.getUserId(),
+                before.getRoleCode(),
+                dto.getRoleCode(),
+                dto.getUpdateUser(),
+                "관리자에 의한 권한 변경"
+            );
+        }
+
+        // 4. 일반 정보 변경 (name/email/phone/address/department)
+        insertUserHistoryIfChanged("name", before.getName(), dto.getName(), dto);
+        insertUserHistoryIfChanged("email", before.getEmail(), dto.getEmail(), dto);
+        insertUserHistoryIfChanged("phone", before.getPhone(), dto.getPhone(), dto);
+        insertUserHistoryIfChanged("post_no", before.getPostNo(), dto.getPostNo(), dto);
+        insertUserHistoryIfChanged("base_address", before.getBaseAddress(), dto.getBaseAddress(), dto);
+        insertUserHistoryIfChanged("detail_address", before.getDetailAddress(), dto.getDetailAddress(), dto);
+        insertUserHistoryIfChanged("department_code", before.getDepartmentCode(), dto.getDepartmentCode(), dto);
+
+        // 5. users 테이블 업데이트
         userAdminMapper.updateUser(dto);
     }
+
+    private void insertUserHistoryIfChanged(
+            String changeType,
+            String beforeValue,
+            String afterValue,
+            UserAdminDTO dto) {
+
+        if (!Objects.equals(beforeValue, afterValue)) {
+            userAdminMapper.insertUserHistory(
+                dto.getUserId(),
+                changeType,
+                beforeValue,
+                afterValue,
+                "관리자 수정",
+                dto.getUpdateUser()
+            );
+        }
+    }
+
+
 
     
 }

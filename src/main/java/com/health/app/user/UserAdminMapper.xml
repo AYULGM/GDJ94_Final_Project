@@ -159,5 +159,36 @@
 	]]>
 	</update>
 
+	<insert id="insertUserBranchLog">
+	INSERT INTO user_branch_log (
+	    user_id, before_branch_id, after_branch_id,
+	    reason, create_user, create_date
+	) VALUES (
+	    #{userId}, #{beforeBranchId}, #{afterBranchId},
+	    #{reason}, #{createUser}, NOW()
+	)
+	</insert>
+
+	<insert id="insertRoleChangeLog">
+	INSERT INTO role_change_log (
+	    user_id, before_role_code, after_role_code,
+	    reason, create_user, create_date
+	) VALUES (
+	    #{userId}, #{beforeRoleCode}, #{afterRoleCode},
+	    #{reason}, #{createUser}, NOW()
+	)
+	</insert>
+
+	<insert id="insertUserHistory">
+	INSERT INTO user_history (
+	    user_id, change_type,
+	    before_value, after_value,
+	    reason, create_user, create_date
+	) VALUES (
+	    #{userId}, #{changeType},
+	    #{beforeValue}, #{afterValue},
+	    #{reason}, #{createUser}, NOW()
+	)
+	</insert>
 
 </mapper>
