@@ -105,7 +105,9 @@
                   alt="User Image"
                 />
                 <span class="d-none d-md-inline">
-				    <sec:authentication property="principal.name"/>
+				    <%-- <sec:authentication property="principal.name"/> --%>
+				    <!-- mypage에서 이름 수정 시 즉시적용을 위해서 세션방식을 사용 -->
+				    ${sessionScope.LOGIN_USER_NAME}
 				</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
@@ -116,7 +118,9 @@
                     alt="User Image"
                   />
                   <p>
-                     <sec:authentication property="principal.name"/>
+                     <%-- <sec:authentication property="principal.name"/> --%>
+                     <!-- mypage에서 이름 수정 시 즉시적용을 위해서 세션방식을 사용 -->
+                    ${sessionScope.LOGIN_USER_NAME}
 					 <small>안녕하세요</small>
                   </p>
                 </li>

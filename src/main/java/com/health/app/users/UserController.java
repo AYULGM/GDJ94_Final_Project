@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -111,7 +112,7 @@ public class UserController {
     }
     
     @PostMapping("/updateProc")
-    public String updateProc(UserDTO userDTO, Authentication authentication, RedirectAttributes redirectAttributes) {
+    public String updateProc(UserDTO userDTO, Authentication authentication, HttpSession session, RedirectAttributes redirectAttributes) {
 
         String loginId = authentication.getName();
 
@@ -125,6 +126,9 @@ public class UserController {
         }
 
         userService.updateUser(userDTO);
+        
+        // 세션 이름 즉시 갱신 (이 줄이 핵심)
+        session.setAttribute("LOGIN_USER_NAME", userDTO.getName());
         
         // ✅ 수정 완료 메시지
         redirectAttributes.addFlashAttribute(
