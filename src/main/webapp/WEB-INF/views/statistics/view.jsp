@@ -178,6 +178,7 @@
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js"></script>
 
+<!-- v1.1 - 캐시 무효화 -->
 <script>
 // 전역 변수
 let trendChart, profitChart, branchChart;
@@ -187,8 +188,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // 기본 날짜 설정 (이번 달)
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById('startDate').value = formatDate(firstDay);
-    document.getElementById('endDate').value = formatDate(today);
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+
+    startDateInput.value = formatDate(firstDay);
+    endDateInput.value = formatDate(today);
 
     // 지점 목록 로드
     loadBranchOptions();
@@ -196,8 +200,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // 차트 초기화
     initCharts();
 
-    // 데이터 로드
-    loadDashboardData();
+    // ✅ 날짜 설정 후 초기 데이터 자동 로드
+    // requestAnimationFrame으로 DOM 업데이트 완료 후 실행
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            // 날짜 값이 제대로 설정되었는지 확인 후 로드
+            if (startDateInput.value && endDateInput.value) {
+                loadDashboardData();
+            }
+        });
+    });
 
     // 폼 제출 이벤트
     document.getElementById('filterForm').addEventListener('submit', function(e) {
@@ -215,8 +227,8 @@ async function loadBranchOptions() {
         const select = document.getElementById('branchId');
         branches.forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;    // ✅ value → id로 수정
+            option.textContent = branch.name;  // ✅ label → name으로 수정
             select.appendChild(option);
         });
     } catch (error) {
@@ -226,17 +238,35 @@ async function loadBranchOptions() {
 
 // 대시보드 데이터 로드
 async function loadDashboardData() {
-    const branchId = document.getElementById('branchId').value;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+    const branchId = document.getElementById('branchId').value || '0';
+    let startDate = document.getElementById('startDate').value;
+    let endDate = document.getElementById('endDate').value;
+
+    // ✅ 날짜가 비어있으면 기본값으로 재설정 (DOM 업데이트 미완료 대비)
+    if (!startDate || !endDate) {
+        console.warn('[loadDashboardData] 날짜가 비어있어 기본값 사용');
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        startDate = formatDate(firstDay);
+        endDate = formatDate(today);
+
+        // input 필드에도 다시 설정
+        document.getElementById('startDate').value = startDate;
+        document.getElementById('endDate').value = endDate;
+    }
+
+    console.log('[loadDashboardData] 조회 조건:', { startDate, endDate, branchId });
+
+    // ✅ fetch 직전에 다시 한번 확인
+    console.log('[loadDashboardData] fetch 직전 날짜:', { startDate, endDate, branchId });
 
     try {
         // 병렬로 데이터 로드
         const [salesByPeriod, expensesByPeriod, salesByBranch, comparison] = await Promise.all([
-            fetch(`/statistics/api/sales/by-period?startDate=${startDate}&endDate=${endDate}&branchId=${branchId}&groupBy=monthly`).then(r => r.json()),
-            fetch(`/statistics/api/expenses/by-period?startDate=${startDate}&endDate=${endDate}&branchId=${branchId}&groupBy=monthly`).then(r => r.json()),
-            fetch(`/statistics/api/sales/by-branch?startDate=${startDate}&endDate=${endDate}`).then(r => r.json()),
-            fetch(`/statistics/api/comparison?startDate=${startDate}&endDate=${endDate}&branchId=${branchId}&groupBy=monthly`).then(r => r.json())
+            fetch('/statistics/api/sales/by-period?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
+            fetch('/statistics/api/expenses/by-period?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
+            fetch('/statistics/api/sales/by-branch?startDate=' + startDate + '&endDate=' + endDate).then(r => r.json()),
+            fetch('/statistics/api/comparison?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json())
         ]);
 
         // 요약 카드 업데이트
@@ -432,9 +462,30 @@ function formatCurrency(value) {
 }
 
 function formatDate(date) {
+    console.log('[formatDate] 입력:', date);
+    console.log('[formatDate] 타입:', typeof date);
+    console.log('[formatDate] instanceof Date:', date instanceof Date);
+
+    // 날짜 객체 유효성 검사
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        console.error('[formatDate] Invalid date object:', date);
+        return '';  // 빈 문자열 반환
+    }
+
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    console.log('[formatDate] year:', year, 'month:', month, 'day:', day);
+
+    const monthStr = String(month).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+
+    console.log('[formatDate] monthStr:', monthStr, 'dayStr:', dayStr);
+
+    const formatted = year + '-' + monthStr + '-' + dayStr;
+
+    console.log('[formatDate] 최종 결과:', formatted);
+    return formatted;
 }
 </script>

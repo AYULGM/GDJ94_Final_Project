@@ -305,6 +305,7 @@
             </if>
             GROUP BY period, e.branch_id
         )
+        -- MariaDB는 FULL OUTER JOIN 미지원 → LEFT JOIN UNION RIGHT JOIN 방식 사용
         SELECT
             COALESCE(ps.branch_id, pe.branch_id) AS branchId,
             b.branch_name AS branchName,
@@ -326,9 +327,38 @@
                 ELSE 0
             END AS profitRate
         FROM period_sales ps
-        FULL OUTER JOIN period_expenses pe
+        LEFT JOIN period_expenses pe
             ON ps.period = pe.period AND ps.branch_id = pe.branch_id
         LEFT JOIN branch b ON b.branch_id = COALESCE(ps.branch_id, pe.branch_id)
+
+        UNION
+
+        SELECT
+            COALESCE(ps.branch_id, pe.branch_id) AS branchId,
+            b.branch_name AS branchName,
+            COALESCE(ps.period, pe.period) AS period,
+            COALESCE(ps.periodLabel, pe.period) AS periodLabel,
+            COALESCE(ps.salesAmount, 0) AS salesAmount,
+            COALESCE(ps.salesCount, 0) AS salesCount,
+            COALESCE(pe.expenseAmount, 0) AS expenseAmount,
+            COALESCE(pe.expenseCount, 0) AS expenseCount,
+            (COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) AS profitAmount,
+            CASE
+                WHEN (COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) &gt; 0 THEN 'PROFIT'
+                WHEN (COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) &lt; 0 THEN 'LOSS'
+                ELSE 'BREAK_EVEN'
+            END AS profitStatus,
+            CASE
+                WHEN COALESCE(ps.salesAmount, 0) &gt; 0
+                THEN ROUND(((COALESCE(ps.salesAmount, 0) - COALESCE(pe.expenseAmount, 0)) / ps.salesAmount * 100), 2)
+                ELSE 0
+            END AS profitRate
+        FROM period_expenses pe
+        LEFT JOIN period_sales ps
+            ON ps.period = pe.period AND ps.branch_id = pe.branch_id
+        LEFT JOIN branch b ON b.branch_id = COALESCE(ps.branch_id, pe.branch_id)
+        WHERE ps.period IS NULL
+
         ORDER BY period ASC
     </select>
 
