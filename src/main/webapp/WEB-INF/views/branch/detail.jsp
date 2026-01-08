@@ -36,7 +36,7 @@
           </tr>
           <tr>
             <th>상태</th>
-            <td>${branch.statusCode}</td>
+            <td>${branch.statusCode} - ${branch.statusName}</td>
           </tr>
         </table>
       </div>

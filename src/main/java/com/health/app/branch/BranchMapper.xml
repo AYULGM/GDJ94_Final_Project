@@ -5,37 +5,48 @@
 
 <mapper namespace="com.health.app.branch.BranchMapper">
 
-    <select id="selectBranchList" resultType="com.health.app.branch.BranchDTO">
-        SELECT
-            branch_id       AS branchId,
-            branch_name     AS branchName,
-            manager_name    AS managerName,
-            manager_phone   AS managerPhone,
-            operating_hours AS operatingHours,
-            status_code     AS statusCode
-        FROM branch
-        WHERE use_yn = TRUE
-        ORDER BY branch_id DESC
-    </select>
+	<select id="selectBranchList"
+	        resultType="com.health.app.branch.BranchDTO">
+	    SELECT
+	        b.branch_id       AS branchId,
+	        b.branch_name     AS branchName,
+	        b.manager_name    AS managerName,
+	        b.manager_phone   AS managerPhone,
+	        b.operating_hours AS operatingHours,
+	        b.status_code     AS statusCode,
+	        cc.code_desc      AS statusName
+	    FROM branch b
+	    LEFT JOIN common_code cc
+	        ON cc.code_group = 'BRANCH_STATUS'
+	       AND cc.code = b.status_code
+	    WHERE b.use_yn = TRUE
+	    ORDER BY b.branch_id DESC
+	</select>
 
-  	<select id="selectBranchDetail"
-            parameterType="long"
-            resultType="com.health.app.branch.BranchDTO">
-        SELECT
-            branch_id,
-            branch_name,
-            post_no,
-            base_address,
-            detail_address,
-            manager_name,
-            manager_phone,
-            operating_hours,
-            status_code,
-            create_date
-        FROM branch
-        WHERE branch_id = #{branchId}
-          AND use_yn = TRUE
-    </select>
+
+	<select id="selectBranchDetail"
+	        parameterType="long"
+	        resultType="com.health.app.branch.BranchDTO">
+	    SELECT
+	        b.branch_id,
+	        b.branch_name,
+	        b.post_no,
+	        b.base_address,
+	        b.detail_address,
+	        b.manager_name,
+	        b.manager_phone,
+	        b.operating_hours,
+	        b.status_code     AS statusCode,
+	        cc.code_desc      AS statusName,
+	        b.create_date
+	    FROM branch b
+	    LEFT JOIN common_code cc
+	        ON cc.code_group = 'BRANCH_STATUS'
+	       AND cc.code = b.status_code
+	    WHERE b.branch_id = #{branchId}
+	      AND b.use_yn = TRUE
+	</select>
+
     
     <insert id="insertBranch"
         parameterType="com.health.app.branch.BranchDTO">

@@ -51,27 +51,37 @@
         )
     </insert>
     
-    <select id="selectByLoginId"
-        parameterType="java.lang.String"
-        resultType="com.health.app.users.UserDTO">
-    SELECT
-        user_id,
-        login_id,
-        name,
-        email,
-        phone,
-        department_code,
-        branch_id,
-        post_no,
-        base_address,
-        detail_address,
-        role_code,
-        status_code,
-        lock_status_code
-    FROM users
-    WHERE login_id = #{loginId}
-      AND use_yn = TRUE
-</select>
+	<select id="selectByLoginId"
+	    parameterType="java.lang.String"
+	    resultType="com.health.app.users.UserDTO">
+	SELECT
+	    u.user_id,
+	    u.login_id,
+	    u.name,
+	    u.email,
+	    u.phone,
+	    u.department_code,
+	    cd.code_desc AS department_name,
+	    u.branch_id,
+	    u.post_no,
+	    u.base_address,
+	    u.detail_address,
+	    u.role_code,
+	    cr.code_desc AS role_name,
+	    u.status_code,
+	    u.lock_status_code
+	FROM users u
+	LEFT JOIN common_code cr
+	    ON cr.code_group = 'ROLE'
+	   AND cr.code = u.role_code
+	LEFT JOIN common_code cd
+	    ON cd.code_group = 'DEPARTMENT_CODE'
+	   AND cd.code = u.department_code
+	WHERE u.login_id = #{loginId}
+	  AND u.use_yn = TRUE
+	</select>
+
+
 
 <update id="updateUser" parameterType="com.health.app.users.UserDTO">
     UPDATE users
