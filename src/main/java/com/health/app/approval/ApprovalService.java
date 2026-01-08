@@ -22,6 +22,10 @@ public class ApprovalService {
     private final ApprovalProductMapper approvalProductMapper;
     private final SignatureMapper signatureMapper; // ✅ 추가 (대표 서명 조회용)
 
+    public List<ApprovalMyDocRowDTO> getMyDocs(Long drafterId) {
+        return approvalMapper.selectMyDocs(drafterId);
+    }
+
     /* ==================================================
      * 받은 결재함
      * ================================================== */
@@ -294,6 +298,72 @@ public class ApprovalService {
 
         } else {
             throw new IllegalArgumentException("invalid action: " + action);
+        }
+    }
+    
+    public ApprovalDetailPageDTO getDetailPage(Long userId, Long docVerId) {
+
+        ApprovalDocDetailDTO doc = approvalMapper.selectDocDetail(docVerId);
+        List<ApprovalLineViewDTO> lines = approvalMapper.selectLinesForDetail(docVerId);
+
+        ApprovalDetailPageDTO page = new ApprovalDetailPageDTO();
+        page.setDoc(doc);
+        page.setLines(lines);
+
+        boolean isDrafter = (doc != null && doc.getDrafterUserId() != null && doc.getDrafterUserId().equals(userId));
+        boolean canRecall = approvalMapper.canRecallDoc(docVerId, userId) > 0;
+
+        // 수정 가능 정책(예시): 기안자 + 임시저장(AS001) 또는 회수(AS005)일 때
+        boolean canEdit = false;
+        if (doc != null && isDrafter) {
+            String st = doc.getDocStatusCode();
+            canEdit = "AS001".equals(st) || "AS005".equals(st);
+        }
+
+        page.setCanRecall(canRecall);
+        page.setCanEdit(canEdit);
+
+        return page;
+    }
+
+    
+    @Transactional
+    public void handleDecision(Long docVerId, Long userId, String action, String comment) {
+
+        int updated = 0;
+
+        if ("APPROVE".equals(action)) {
+            updated = approvalMapper.approveMyTurn(docVerId, userId, comment);
+
+            // updated=0 이면 내 차례가 아니거나 이미 처리됨
+            if (updated == 0) {
+                throw new IllegalStateException("결재 차례가 아니거나 이미 처리된 문서입니다.");
+            }
+
+            // 다음 결재자 활성화
+            approvalMapper.activateNextApprover(docVerId);
+
+            // 아직 대기(ALS002)가 남아있으면 결재중 유지, 없으면 완료
+            int waiting = approvalMapper.existsWaitingLine(docVerId);
+            if (waiting > 0) {
+                approvalMapper.updateDocStatusByDocVerId(docVerId, "AS002");
+            } else {
+                approvalMapper.updateDocStatusByDocVerId(docVerId, "AS003");
+            }
+
+        } else if ("REJECT".equals(action)) {
+            updated = approvalMapper.rejectMyTurn(docVerId, userId, comment);
+
+            if (updated == 0) {
+                throw new IllegalStateException("결재 차례가 아니거나 이미 처리된 문서입니다.");
+            }
+
+            // 반려 시 문서 상태 반려로
+            approvalMapper.updateDocStatusByDocVerId(docVerId, "AS004");
+
+            // (선택) 반려 시 이후 결재선은 비활성/대기전으로 되돌리고 싶다면 추가 처리 가능
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 action 입니다: " + action);
         }
     }
 }

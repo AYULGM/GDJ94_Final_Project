@@ -30,4 +30,5 @@ public class VacationPrintDTO extends ApprovalPrintDTO {
     private String writtenDateStr;
     private Long drafterSignatureFileId;
 
+
 }

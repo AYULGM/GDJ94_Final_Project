@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.health.app.approval.ApprovalProductDTO;
 import com.health.app.security.model.LoginUser;
@@ -26,9 +27,26 @@ public class ApprovalController {
      * ========================= */
 
     @GetMapping("list")
-    public String approvalList() {
+    public String approvalList(@AuthenticationPrincipal LoginUser loginUser, Model model) {
+        Long userId = loginUser.getUserId();
+        model.addAttribute("list", approvalService.getMyDocs(userId));
         return "approval/list";
     }
+
+    @GetMapping("detail")
+    public String approvalDetail(@AuthenticationPrincipal LoginUser loginUser,
+                                 @RequestParam("docVerId") Long docVerId,
+                                 Model model) {
+
+        Long userId = loginUser.getUserId();
+        ApprovalDetailPageDTO page = approvalService.getDetailPage(userId, docVerId);
+
+        model.addAttribute("page", page);
+        model.addAttribute("docVerId", docVerId); // iframe용
+        return "approval/detail";
+    }
+
+
 
     // ✅ form은 한 군데만 유지 (branches 세팅 포함)
     @GetMapping("form")
@@ -157,18 +175,22 @@ public class ApprovalController {
         return "approval/handle";
     }
 
-    /**
-     * 결재 처리(승인/반려)
-     * form action="/approval/handle" method="post"
-     */
     @PostMapping("handle")
-    public String handleAction(@RequestParam Long docVerId,
-                               @RequestParam String action, // APPROVE or REJECT
-                               @RequestParam(required = false) String comment) {
+    public String handle(@AuthenticationPrincipal LoginUser loginUser,
+                         @RequestParam Long docVerId,
+                         @RequestParam String action,
+                         @RequestParam(required = false) String comment,
+                         RedirectAttributes ra) {
 
-        approvalService.processDecision(docVerId, action, comment);
+        Long userId = loginUser.getUserId();
 
-        // 처리 후 결재함으로
+        try {
+            approvalService.handleDecision(docVerId, userId, action, comment);
+            ra.addFlashAttribute("msg", "처리가 완료되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("msg", e.getMessage());
+        }
+
         return "redirect:/approval/inbox";
     }
 

@@ -9,6 +9,11 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface ApprovalMapper {
 
+	/* ==================================================
+	 * 기안자 문서함(내가 기안한 문서 목록)
+	 * ================================================== */
+	List<ApprovalMyDocRowDTO> selectMyDocs(@Param("drafterId") Long drafterId);
+
     /* ==================================================
      * 문서/버전/확장 저장
      * ================================================== */
@@ -119,4 +124,26 @@ public interface ApprovalMapper {
     int updateNextLineToPending(@Param("docVerId") Long docVerId,
                                 @Param("pendingCode") String pendingCode,
                                 @Param("updateUser") Long updateUser);
+    
+    ApprovalDocDetailDTO selectDocDetail(@Param("docVerId") Long docVerId);
+
+    List<ApprovalLineViewDTO> selectLinesForDetail(@Param("docVerId") Long docVerId);
+
+    int canRecallDoc(@Param("docVerId") Long docVerId, @Param("userId") Long userId);
+
+    int approveMyTurn(@Param("docVerId") Long docVerId,
+	            @Param("userId") Long userId,
+	            @Param("comment") String comment);
+	
+	int rejectMyTurn(@Param("docVerId") Long docVerId,
+	           @Param("userId") Long userId,
+	           @Param("comment") String comment);
+	
+	int activateNextApprover(@Param("docVerId") Long docVerId);
+	
+	int updateDocStatusByDocVerId(@Param("docVerId") Long docVerId,
+	                        @Param("statusCode") String statusCode);
+	
+	int existsWaitingLine(@Param("docVerId") Long docVerId);
+
 }
