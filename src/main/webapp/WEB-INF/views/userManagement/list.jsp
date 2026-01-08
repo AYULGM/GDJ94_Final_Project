@@ -31,7 +31,7 @@
                                 <th>부서</th>
                                 <th>권한</th>
                                 <th>상태</th>
-                                <th>실패횟수</th>
+                                <th>로그인 실패횟수</th>
                                 <th style="width: 120px;">관리</th>
                             </tr>
                         </thead>
@@ -52,11 +52,35 @@
                                 <td>${u.name}</td>
                                 <td>${u.branchName}</td>
                                 <td>${u.departmentName}</td>
-                                <td>
-                                    <span class="badge bg-info text-dark">
-                                        ${u.roleName}
-                                    </span>
-                                </td>
+                                
+							<td>
+								<c:choose>
+								    <c:when test="${u.roleCode eq 'RL001'}">
+								        <span class="badge bg-danger">${u.roleName}</span>
+								    </c:when>
+								
+								    <c:when test="${u.roleCode eq 'RL002'}">
+								        <span class="badge bg-warning text-dark">${u.roleName}</span>
+								    </c:when>
+								
+								    <c:when test="${u.roleCode eq 'RL003'}">
+								        <span class="badge bg-primary">${u.roleName}</span>
+								    </c:when>
+								
+								    <c:when test="${u.roleCode eq 'RL004'}">
+								        <span class="badge bg-success">${u.roleName}</span>
+								    </c:when>
+								
+								    <c:when test="${u.roleCode eq 'RL005'}">
+								        <span class="badge bg-secondary">${u.roleName}</span>
+								    </c:when>
+								
+								    <c:otherwise>
+								        <span class="badge bg-light text-dark">${u.roleName}</span>
+								    </c:otherwise>
+								</c:choose>
+							</td>
+							
                                 <td>
 									<c:choose>
 									    <c:when test="${u.userStatusCode eq 'US001'}">

@@ -38,9 +38,32 @@
                         <tr>
                             <th>권한</th>
                             <td>
-                                <span class="badge bg-info text-dark">
-                                    ${user.roleName}
-                                </span>
+							<c:choose>
+							    <c:when test="${user.roleCode eq 'RL001'}">
+							        <span class="badge bg-danger">${user.roleName}</span>
+							    </c:when>
+							
+							    <c:when test="${user.roleCode eq 'RL002'}">
+							        <span class="badge bg-warning text-dark">${user.roleName}</span>
+							    </c:when>
+							
+							    <c:when test="${user.roleCode eq 'RL003'}">
+							        <span class="badge bg-primary">${user.roleName}</span>
+							    </c:when>
+							
+							    <c:when test="${user.roleCode eq 'RL004'}">
+							        <span class="badge bg-success">${user.roleName}</span>
+							    </c:when>
+							
+							    <c:when test="${user.roleCode eq 'RL005'}">
+							        <span class="badge bg-secondary">${user.roleName}</span>
+							    </c:when>
+							
+							    <c:otherwise>
+							        <span class="badge bg-light text-dark">${user.roleName}</span>
+							    </c:otherwise>
+							</c:choose>
+
                             </td>
                         </tr>
                         <tr>
