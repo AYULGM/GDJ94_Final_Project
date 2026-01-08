@@ -204,26 +204,26 @@ function renderSalesTable(sales) {
         return;
     }
 
-    tbody.innerHTML = sales.map(sale => `
-        <tr>
-            <td>${sale.saleId}</td>
-            <td>${sale.saleNo || '-'}</td>
-            <td>${sale.branchName || '-'}</td>
-            <td>${formatDateTime(sale.soldAt)}</td>
-            <td>${getCategoryName(sale.categoryCode)}</td>
-            <td class="text-end">${formatCurrency(sale.totalAmount || 0)}</td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(sale.statusCode)}">
-                    ${getStatusName(sale.statusCode)}
-                </span>
-            </td>
-            <td>
-                <span class="badge ${sale.settled ? 'bg-secondary' : 'bg-warning'}">
-                    ${sale.settled ? '정산됨' : '미정산'}
-                </span>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = sales.map(sale =>
+        '<tr>' +
+            '<td>' + sale.saleId + '</td>' +
+            '<td>' + (sale.saleNo || '-') + '</td>' +
+            '<td>' + (sale.branchName || '-') + '</td>' +
+            '<td>' + formatDateTime(sale.soldAt) + '</td>' +
+            '<td>' + getCategoryName(sale.categoryCode) + '</td>' +
+            '<td class="text-end">' + formatCurrency(sale.totalAmount || 0) + '</td>' +
+            '<td>' +
+                '<span class="badge ' + getStatusBadgeClass(sale.statusCode) + '">' +
+                    getStatusName(sale.statusCode) +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + (sale.settled ? 'bg-secondary' : 'bg-warning') + '">' +
+                    (sale.settled ? '정산됨' : '미정산') +
+                '</span>' +
+            '</td>' +
+        '</tr>'
+    ).join('');
 }
 
 // 요약 정보 업데이트

@@ -194,27 +194,27 @@ function renderExpenseTable(list) {
         return;
     }
 
-    tbody.innerHTML = list.map(expense => `
-        <tr>
-            <td>${expense.expenseId}</td>
-            <td>${expense.branchName || '-'}</td>
-            <td>${formatDate(expense.expenseAt)}</td>
-            <td>${getCategoryName(expense.categoryCode)}</td>
-            <td class="text-end">${formatCurrency(expense.amount)}</td>
-            <td>${expense.description || '-'}</td>
-            <td>${expense.handledByName || '-'}</td>
-            <td>
-                <span class="badge ${expense.settlementFlag ? 'bg-success' : 'bg-warning'}">
-                    ${expense.settlementFlag ? '정산됨' : '미정산'}
-                </span>
-            </td>
-            <td>
-                <a href="/expenses/${expense.expenseId}" class="btn btn-sm btn-info">
-                    <i class="bi bi-eye"></i>
-                </a>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = list.map(expense =>
+        '<tr>' +
+            '<td>' + expense.expenseId + '</td>' +
+            '<td>' + (expense.branchName || '-') + '</td>' +
+            '<td>' + formatDate(expense.expenseAt) + '</td>' +
+            '<td>' + getCategoryName(expense.categoryCode) + '</td>' +
+            '<td class="text-end">' + formatCurrency(expense.amount) + '</td>' +
+            '<td>' + (expense.description || '-') + '</td>' +
+            '<td>' + (expense.handledByName || '-') + '</td>' +
+            '<td>' +
+                '<span class="badge ' + (expense.settlementFlag ? 'bg-success' : 'bg-warning') + '">' +
+                    (expense.settlementFlag ? '정산됨' : '미정산') +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<a href="/expenses/' + expense.expenseId + '" class="btn btn-sm btn-info">' +
+                    '<i class="bi bi-eye"></i>' +
+                '</a>' +
+            '</td>' +
+        '</tr>'
+    ).join('');
 }
 
 // 페이징 렌더링

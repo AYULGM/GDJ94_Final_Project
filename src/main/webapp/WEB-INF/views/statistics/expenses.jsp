@@ -354,16 +354,14 @@ function updateTable(data) {
 
         const diffClass = (item.diffPercent || 0) >= 0 ? 'text-danger' : 'text-success';
 
-        return `
-            <tr>
-                <td>${firstColumn}</td>
-                <td class="text-end">${formatNumber(item.expenseCount || 0)}</td>
-                <td class="text-end">${formatCurrency(item.totalAmount || 0)}</td>
-                <td class="text-end">${formatCurrency(item.avgAmount || 0)}</td>
-                <td class="text-end ${diffClass}">${formatCurrency(item.diffAmount || 0)}</td>
-                <td class="text-end ${diffClass}">${(item.diffPercent || 0).toFixed(1)}%</td>
-            </tr>
-        `;
+        return '<tr>' +
+            '<td>' + firstColumn + '</td>' +
+            '<td class="text-end">' + formatNumber(item.expenseCount || 0) + '</td>' +
+            '<td class="text-end">' + formatCurrency(item.totalAmount || 0) + '</td>' +
+            '<td class="text-end">' + formatCurrency(item.avgAmount || 0) + '</td>' +
+            '<td class="text-end ' + diffClass + '">' + formatCurrency(item.diffAmount || 0) + '</td>' +
+            '<td class="text-end ' + diffClass + '">' + (item.diffPercent || 0).toFixed(1) + '%</td>' +
+            '</tr>';
     }).join('');
 
     // 합계 행
@@ -371,16 +369,15 @@ function updateTable(data) {
     const totalCount = data.reduce((sum, item) => sum + (item.expenseCount || 0), 0);
     const avgAmount = totalCount > 0 ? totalAmount / totalCount : 0;
 
-    document.getElementById('tableFoot').innerHTML = `
-        <tr class="table-active fw-bold">
-            <td>합계</td>
-            <td class="text-end">${formatNumber(totalCount)}</td>
-            <td class="text-end">${formatCurrency(totalAmount)}</td>
-            <td class="text-end">${formatCurrency(avgAmount)}</td>
-            <td class="text-end">-</td>
-            <td class="text-end">-</td>
-        </tr>
-    `;
+    document.getElementById('tableFoot').innerHTML =
+        '<tr class="table-active fw-bold">' +
+            '<td>합계</td>' +
+            '<td class="text-end">' + formatNumber(totalCount) + '</td>' +
+            '<td class="text-end">' + formatCurrency(totalAmount) + '</td>' +
+            '<td class="text-end">' + formatCurrency(avgAmount) + '</td>' +
+            '<td class="text-end">-</td>' +
+            '<td class="text-end">-</td>' +
+        '</tr>';
 }
 
 // 유틸리티 함수

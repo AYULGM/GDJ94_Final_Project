@@ -205,34 +205,34 @@ function renderHistoryTable(histories) {
     const end = start + pageSize;
     const paged = filtered.slice(start, end);
 
-    tbody.innerHTML = paged.map(history => `
-        <tr>
-            <td>${history.logId || '-'}</td>
-            <td>
-                <a href="/settlements/${history.settlementId}">
-                    ${history.settlementId} ${history.settlementNo ? '(' + history.settlementNo + ')' : ''}
-                </a>
-            </td>
-            <td>
-                <span class="badge ${getActionBadgeClass(history.actionType)}">
-                    ${getActionName(history.actionType)}
-                </span>
-            </td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(history.beforeStatus)}">
-                    ${getStatusName(history.beforeStatus)}
-                </span>
-            </td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(history.afterStatus)}">
-                    ${getStatusName(history.afterStatus)}
-                </span>
-            </td>
-            <td>${history.actorUserName || '-'}</td>
-            <td>${formatDateTime(history.actedAt)}</td>
-            <td>${history.reason || '-'}</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = paged.map(history =>
+        '<tr>' +
+            '<td>' + (history.logId || '-') + '</td>' +
+            '<td>' +
+                '<a href="/settlements/' + history.settlementId + '">' +
+                    history.settlementId + ' ' + (history.settlementNo ? '(' + history.settlementNo + ')' : '') +
+                '</a>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + getActionBadgeClass(history.actionType) + '">' +
+                    getActionName(history.actionType) +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + getStatusBadgeClass(history.beforeStatus) + '">' +
+                    getStatusName(history.beforeStatus) +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + getStatusBadgeClass(history.afterStatus) + '">' +
+                    getStatusName(history.afterStatus) +
+                '</span>' +
+            '</td>' +
+            '<td>' + (history.actorUserName || '-') + '</td>' +
+            '<td>' + formatDateTime(history.actedAt) + '</td>' +
+            '<td>' + (history.reason || '-') + '</td>' +
+        '</tr>'
+    ).join('');
 
     // 페이징
     const totalPages = Math.ceil(filtered.length / pageSize);

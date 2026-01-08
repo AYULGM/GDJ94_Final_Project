@@ -182,27 +182,25 @@ function renderSettlementTable(list) {
     tbody.innerHTML = list.map(settlement => {
         const profitClass = (settlement.profitAmount || 0) >= 0 ? 'text-success' : 'text-danger';
 
-        return `
-            <tr>
-                <td>${settlement.settlementId}</td>
-                <td>${settlement.settlementNo || '-'}</td>
-                <td>${settlement.branchName || '-'}</td>
-                <td>${formatDate(settlement.fromDate)} ~ ${formatDate(settlement.toDate)}</td>
-                <td class="text-end">${formatCurrency(settlement.salesAmount || 0)}</td>
-                <td class="text-end">${formatCurrency(settlement.expenseAmount || 0)}</td>
-                <td class="text-end ${profitClass}">${formatCurrency(settlement.profitAmount || 0)}</td>
-                <td>
-                    <span class="badge ${getStatusBadgeClass(settlement.statusCode)}">
-                        ${getStatusName(settlement.statusCode)}
-                    </span>
-                </td>
-                <td>
-                    <a href="/settlements/${settlement.settlementId}" class="btn btn-sm btn-info">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                </td>
-            </tr>
-        `;
+        return '<tr>' +
+            '<td>' + settlement.settlementId + '</td>' +
+            '<td>' + (settlement.settlementNo || '-') + '</td>' +
+            '<td>' + (settlement.branchName || '-') + '</td>' +
+            '<td>' + formatDate(settlement.fromDate) + ' ~ ' + formatDate(settlement.toDate) + '</td>' +
+            '<td class="text-end">' + formatCurrency(settlement.salesAmount || 0) + '</td>' +
+            '<td class="text-end">' + formatCurrency(settlement.expenseAmount || 0) + '</td>' +
+            '<td class="text-end ' + profitClass + '">' + formatCurrency(settlement.profitAmount || 0) + '</td>' +
+            '<td>' +
+                '<span class="badge ' + getStatusBadgeClass(settlement.statusCode) + '">' +
+                    getStatusName(settlement.statusCode) +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<a href="/settlements/' + settlement.settlementId + '" class="btn btn-sm btn-info">' +
+                    '<i class="bi bi-eye"></i>' +
+                '</a>' +
+            '</td>' +
+        '</tr>';
     }).join('');
 }
 
