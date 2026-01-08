@@ -63,6 +63,8 @@ public class SecurityConfig {
                         "/login",
                         "/users/join",        // 회원가입 화면
                         "/users/joinProc",    // 회원가입 처리
+                        "/users/password/find",
+                        "/users/password/findProc",
                         "/error"
                     ).permitAll()
 
@@ -70,6 +72,12 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
+            .rememberMe(remember -> remember
+                    .key("gdj94-remember-me-key") // 임의의 고정 문자열
+                    .rememberMeParameter("remember-me") // login.jsp의 checkbox name
+                    .tokenValiditySeconds(60 * 60 * 24 * 7) // 7일 지속
+                )
+            
             .formLogin(form -> form
                 .loginPage("/login")              // GET /login
                 .loginProcessingUrl("/login")     // POST /login
@@ -84,7 +92,7 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("JSESSIONID", "remember-me") // 로그아웃할때 세션삭제 뿐만아니라 자동로그인도 해제되게끔
             );
 
         return http.build();

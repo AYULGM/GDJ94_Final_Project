@@ -120,6 +120,14 @@
     WHERE login_id = #{loginId}
 </update>
 
+<select id="countByLoginIdAndEmail" resultType="int">
+    SELECT COUNT(*)
+    FROM users
+    WHERE login_id = #{loginId}
+      AND email = #{email}
+      AND use_yn = TRUE
+</select>
+
     
 
 </mapper>

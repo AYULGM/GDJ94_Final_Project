@@ -1,6 +1,7 @@
 package com.health.app.users;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface UserMapper {
@@ -18,4 +19,8 @@ public interface UserMapper {
     int insertUser(UserDTO userDTO);
     
     UserDTO selectByLoginId(String loginId);
+    
+    int countByLoginIdAndEmail(@Param("loginId") String loginId,
+            @Param("email") String email);
+
 }

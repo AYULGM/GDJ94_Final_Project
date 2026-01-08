@@ -211,4 +211,38 @@ public class UserController {
         // 3️⃣ 가입 후 로그인 페이지로
         return "redirect:/login";
     }
+    
+    // 로그인창에서 비밀번호 찾기
+    @GetMapping("/password/find")
+    public String findPasswordForm() {
+        return "users/password_find";
+    }
+
+    // 로그인창에서 비밀번호 찾기
+    @PostMapping("/password/findProc")
+    public String findPasswordProc(String loginId,
+                                   String email,
+                                   RedirectAttributes redirectAttributes) {
+
+        boolean exists = userService.existsByLoginIdAndEmail(loginId, email);
+
+        if (!exists) {
+            redirectAttributes.addFlashAttribute(
+                "errorMessage",
+                "아이디 또는 이메일이 일치하지 않습니다."
+            );
+            return "redirect:/users/password/find";
+        }
+
+        // 🔥 임시 비밀번호 발급
+        userService.resetPassword(loginId);
+
+        redirectAttributes.addFlashAttribute(
+            "successMessage",
+            "임시 비밀번호를 이메일로 발송했습니다."
+        );
+
+        return "redirect:/login";
+    }
+
 }

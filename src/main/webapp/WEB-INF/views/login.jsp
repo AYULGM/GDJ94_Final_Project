@@ -110,7 +110,7 @@
               <div class="col-8 d-inline-flex align-items-center">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" value="" id="rememberMe" name="remember-me" />
-                  <label class="form-check-label" for="rememberMe"> 아이디 저장 </label>
+                  <label class="form-check-label" for="rememberMe"> 자동 로그인 </label>
                 </div>
               </div>
               <!-- /.col -->
@@ -128,7 +128,11 @@
 			<p class="mb-1">
   				<a href="<c:url value='/users/join'/>">회원가입</a>
 			</p>
-          <p class="mb-1"><a href="#">비밀번호를 잊으셨나요?</a></p>
+          <p class="mb-1">
+			    <a href="<c:url value='/users/password/find'/>">
+			        비밀번호를 잊으셨나요?
+			    </a>
+		  </p>
         </div>
         <!-- /.login-card-body -->
       </div>
