@@ -29,6 +29,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
         LoginUser user = (LoginUser) authentication.getPrincipal();
 
+        // 세션 값 세팅 (헤더의 이름 수정 시 즉시 반영)
         HttpSession session = request.getSession();
         session.setAttribute("LOGIN_USER_NAME", user.getName());
         

@@ -1,9 +1,5 @@
 package com.health.app.security;
 
-import com.health.app.security.handler.CustomAuthenticationFailureHandler;
-import com.health.app.security.handler.CustomAuthenticationSuccessHandler;
-import jakarta.servlet.DispatcherType;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +9,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.health.app.security.handler.CustomAuthenticationFailureHandler;
+import com.health.app.security.handler.CustomAuthenticationSuccessHandler;
+import com.health.app.security.service.CustomUserDetailsService;
+
+import jakarta.servlet.DispatcherType;
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class SecurityConfig {
 
     private final CustomAuthenticationFailureHandler failureHandler;
     private final CustomAuthenticationSuccessHandler successHandler;
+    private final CustomUserDetailsService userDetailsService;
 
     /**
      * 정적자원은 Security FilterChain 자체를 타지 않게 제외
@@ -76,6 +80,7 @@ public class SecurityConfig {
                     .key("gdj94-remember-me-key") // 임의의 고정 문자열
                     .rememberMeParameter("remember-me") // login.jsp의 checkbox name
                     .tokenValiditySeconds(60 * 60 * 24 * 7) // 7일 지속
+                    .userDetailsService(userDetailsService)
                 )
             
             .formLogin(form -> form

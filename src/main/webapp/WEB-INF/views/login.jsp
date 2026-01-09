@@ -109,7 +109,7 @@
             <div class="row">
               <div class="col-8 d-inline-flex align-items-center">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="" id="rememberMe" name="remember-me" />
+                  <input class="form-check-input" type="checkbox" id="rememberMe" name="remember-me" value="on"/>
                   <label class="form-check-label" for="rememberMe"> 자동 로그인 </label>
                 </div>
               </div>
