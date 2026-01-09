@@ -14,9 +14,26 @@
  <%-- 기안자 서명: 하단 성명(인) 옆 --%>
       <c:if test="${doc.drafterSignatureFileId != null}">
 		  <img src="/files/preview/${doc.drafterSignatureFileId}"
-		       style="position:absolute; left:875px; top:200px; width:120px; height:60px; object-fit:contain;"
+		       style="position:absolute; left:975px; top:200px; width:120px; height:60px; object-fit:contain;"
 		       alt="drafter-sign"/>
 		</c:if>
+<c:forEach var="line" items="${doc.lines}">
+  <c:if test="${line.signatureFileId != null}">
+    <c:choose>
+      <c:when test="${line.lineNo == 1}">
+        <img src="/files/preview/${line.signatureFileId}"
+             style="position:absolute; left:1080px; top:200px; width:120px; height:60px; object-fit:contain;"
+             alt="approver1-sign"/>
+      </c:when>
+      <c:when test="${line.lineNo == 2}">
+        <img src="/files/preview/${line.signatureFileId}"
+             style="position:absolute; left:1190px; top:200px; width:120px; height:60px; object-fit:contain;"
+             alt="approver2-sign"/>
+      </c:when>
+    </c:choose>
+  </c:if>
+</c:forEach>
+
 
 <%-- ====== 인적사항 ====== --%>
 <div class="field" style="left:450px; top:343px; width:420px;">

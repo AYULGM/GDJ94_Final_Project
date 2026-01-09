@@ -1,5 +1,7 @@
 package com.health.app.approval;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -9,6 +11,10 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.health.app.schedules.CalendarEventDto;
+import com.health.app.schedules.CalendarEventMapper;
+import com.health.app.schedules.ScheduleStatus;
+import com.health.app.schedules.ScheduleType;
 import com.health.app.signature.SignatureDTO;
 import com.health.app.signature.SignatureMapper;
 
@@ -21,7 +27,7 @@ public class ApprovalService {
     private final ApprovalMapper approvalMapper;
     private final ApprovalProductMapper approvalProductMapper;
     private final SignatureMapper signatureMapper; // ✅ 추가 (대표 서명 조회용)
-
+    private final CalendarEventMapper calendarEventMapper; // ✅ 추가
     public List<ApprovalMyDocRowDTO> getMyDocs(Long drafterId) {
         return approvalMapper.selectMyDocs(drafterId);
     }
@@ -433,40 +439,115 @@ public class ApprovalService {
     @Transactional
     public void handleDecision(Long docVerId, Long userId, String action, String comment) {
 
+        // ✅ 대표서명(file_id) 조회
+        Long signatureFileId = null;
+        SignatureDTO sign = signatureMapper.selectPrimaryByUserId(userId);
+        if (sign != null) signatureFileId = sign.getFileId();
+
         int updated = 0;
 
         if ("APPROVE".equals(action)) {
-            updated = approvalMapper.approveMyTurn(docVerId, userId, comment);
+            // ✅ 4파라미터 호출로 변경
+            updated = approvalMapper.approveMyTurn(docVerId, userId, comment, signatureFileId);
 
-            // updated=0 이면 내 차례가 아니거나 이미 처리됨
-            if (updated == 0) {
-                throw new IllegalStateException("결재 차례가 아니거나 이미 처리된 문서입니다.");
-            }
+            if (updated == 0) throw new IllegalStateException("결재 차례가 아니거나 이미 처리된 문서입니다.");
 
-            // 다음 결재자 활성화
             approvalMapper.activateNextApprover(docVerId);
 
-            // 아직 대기(ALS002)가 남아있으면 결재중 유지, 없으면 완료
             int waiting = approvalMapper.existsWaitingLine(docVerId);
             if (waiting > 0) {
                 approvalMapper.updateDocStatusByDocVerId(docVerId, "AS002");
             } else {
                 approvalMapper.updateDocStatusByDocVerId(docVerId, "AS003");
+
+                // ✅ 버전 상태도 완료로 맞추는 게 정합성 좋음
+                approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003", userId);
+
+                // ✅ 최종 승인 시에만 휴가 일정 생성
+                createLeaveCalendarEvent(docVerId, userId);
             }
+
 
         } else if ("REJECT".equals(action)) {
-            updated = approvalMapper.rejectMyTurn(docVerId, userId, comment);
+            // ✅ 4파라미터 호출로 변경
+            updated = approvalMapper.rejectMyTurn(docVerId, userId, comment, signatureFileId);
 
-            if (updated == 0) {
-                throw new IllegalStateException("결재 차례가 아니거나 이미 처리된 문서입니다.");
-            }
+            if (updated == 0) throw new IllegalStateException("결재 차례가 아니거나 이미 처리된 문서입니다.");
 
-            // 반려 시 문서 상태 반려로
             approvalMapper.updateDocStatusByDocVerId(docVerId, "AS004");
 
-            // (선택) 반려 시 이후 결재선은 비활성/대기전으로 되돌리고 싶다면 추가 처리 가능
         } else {
             throw new IllegalArgumentException("지원하지 않는 action 입니다: " + action);
         }
     }
+    private void createLeaveCalendarEvent(Long docVerId, Long actorUserId) {
+
+        VacationPrintDTO doc = approvalMapper.selectVacationPrint(docVerId);
+        if (doc == null) throw new IllegalStateException("휴가 문서를 찾을 수 없습니다. docVerId=" + docVerId);
+
+        // ✅ owner는 기안자
+        Long ownerUserId = doc.getDrafterUserId();
+        if (ownerUserId == null) throw new IllegalStateException("기안자 정보가 없습니다. docVerId=" + docVerId);
+
+        // ✅ 조직정보 보강 (department_code, branch_id)
+        Map<String, Object> org = approvalMapper.selectUserOrg(ownerUserId);
+        String departmentCode = org == null ? null : (String) org.get("departmentCode");
+        Long branchId = null;
+        if (org != null && org.get("branchId") != null) {
+            branchId = ((Number) org.get("branchId")).longValue();
+        }
+
+        // ✅ 휴가 시작/종료: (날짜형이면) 종일 일정으로 00:00~23:59:59
+        // selectVacationPrint에서 ext_dt1/ext_dt2를 그대로 들고 있다고 가정
+        LocalDate startDate = doc.getLeaveStartDate();
+        LocalDate endDate   = doc.getLeaveEndDate();
+
+
+        LocalDateTime startAt = startDate.atStartOfDay();
+        LocalDateTime endAt   = endDate.atTime(23, 59, 59);
+
+        String title = buildLeaveTitle(doc); // 아래 헬퍼 참고
+        String description = buildLeaveDescription(doc, docVerId);
+
+        CalendarEventDto event = CalendarEventDto.builder()
+        	.scope(ScheduleType.PERSONAL)
+            .title(title)
+            .description(description)
+            .startAt(startAt)
+            .endAt(endAt)
+            .location(null)
+            .statusCode(ScheduleStatus.SCHEDULED)   // ✅ 너희 배치(updatePastEventsToCompleted)가 SCHEDULED 기준이라 이게 가장 자연스러움
+            .allDay(true)
+            .repeating(false)
+            .repeatInfo(null)
+            .departmentCode(departmentCode)
+            .ownerUserId(ownerUserId)
+            .branchId(branchId)
+            .createUser(actorUserId)
+            .useYn(true)
+            .build();
+
+        calendarEventMapper.insertCalendarEvent(event);
+    }
+    private String buildLeaveTitle(VacationPrintDTO doc) {
+        String t = doc.getLeaveType();
+        if (t == null || t.isBlank()) return "휴가";
+        return "휴가(" + t + ")";
+    }
+
+    private String buildLeaveDescription(VacationPrintDTO doc, Long docVerId) {
+        String reason = doc.getLeaveReason() == null ? "" : doc.getLeaveReason();
+        String handover = doc.getHandoverNote() == null ? "" : doc.getHandoverNote();
+
+        StringBuilder sb = new StringBuilder();
+        if (!reason.isBlank()) sb.append("사유: ").append(reason);
+        if (!handover.isBlank()) {
+            if (sb.length() > 0) sb.append("\n");
+            sb.append("인수인계: ").append(handover);
+        }
+        if (sb.length() > 0) sb.append("\n");
+        sb.append("(docVerId=").append(docVerId).append(")");
+        return sb.toString();
+    }
+
 }

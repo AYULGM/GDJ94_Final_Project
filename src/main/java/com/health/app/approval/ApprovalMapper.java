@@ -136,14 +136,6 @@ public interface ApprovalMapper {
     List<ApprovalLineViewDTO> selectLinesForDetail(@Param("docVerId") Long docVerId);
 
     int canRecallDoc(@Param("docVerId") Long docVerId, @Param("userId") Long userId);
-
-    int approveMyTurn(@Param("docVerId") Long docVerId,
-	            @Param("userId") Long userId,
-	            @Param("comment") String comment);
-	
-	int rejectMyTurn(@Param("docVerId") Long docVerId,
-	           @Param("userId") Long userId,
-	           @Param("comment") String comment);
 	
 	int activateNextApprover(@Param("docVerId") Long docVerId);
 	
@@ -151,5 +143,18 @@ public interface ApprovalMapper {
 	                        @Param("statusCode") String statusCode);
 	
 	int existsWaitingLine(@Param("docVerId") Long docVerId);
+	
+	int approveMyTurn(@Param("docVerId") Long docVerId,
+            @Param("userId") Long userId,
+            @Param("comment") String comment,
+            @Param("signatureFileId") Long signatureFileId);
+
+int rejectMyTurn(@Param("docVerId") Long docVerId,
+           @Param("userId") Long userId,
+           @Param("comment") String comment,
+           @Param("signatureFileId") Long signatureFileId);
+
+Map<String, Object> selectUserOrg(@Param("userId") Long userId);
+
 
 }

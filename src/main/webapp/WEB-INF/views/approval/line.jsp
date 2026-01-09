@@ -36,7 +36,7 @@
       </div>
     </div>
     <div class="d-flex gap-2">
-      <a href="/approval/form" class="btn btn-outline-secondary">문서로 돌아가기</a>
+      <a href="/approval/form?docVerId=${docVerId}" class="btn btn-outline-secondary">문서로 돌아가기</a>
       <button type="button" class="btn btn-primary" id="btnSaveLines">결재 라인 저장</button>
 	  <button type="button" class="btn btn-success" id="btnSubmit">결재요청</button>
 

@@ -158,15 +158,6 @@
                 required><c:out value='${empty draft ? "" : draft.body}'/></textarea>
     </div>
 
-    <!-- 버튼 -->
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-outline-primary" onclick="submitTemp()">
-        <c:choose>
-          <c:when test="${mode == 'edit'}">임시저장(수정)</c:when>
-          <c:otherwise>임시저장</c:otherwise>
-        </c:choose>
-      </button>
-
       <button type="submit" class="btn btn-primary">
         <c:choose>
           <c:when test="${mode == 'edit'}">저장</c:when>

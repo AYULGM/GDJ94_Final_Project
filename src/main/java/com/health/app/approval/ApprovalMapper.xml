@@ -512,6 +512,9 @@
 
       e.ext_no1         AS leaveDays,
       e.ext_txt3        AS handoverNote,
+      e.ext_dt1			AS leaveStartDate,
+	  e.ext_dt2 		AS leaveEndDate,
+      
 
       DATE_FORMAT(u.create_date, '%Y년 %m월 %d일') AS joinDateStr,
       DATE_FORMAT(e.ext_dt1, '%Y년 %m월 %d일')     AS leaveStartDateStr,
@@ -672,6 +675,7 @@
       l.seq                AS seq,
       l.user_id            AS userId,
       u.name               AS approverName,
+      l.signature_file_id  AS signatureFileId,  
       l.status_code        AS lineStatusCode,
       cc_line.code_desc    AS lineStatusName,
       l.acted_at           AS actionDate,
@@ -687,6 +691,7 @@
     AND l.doc_ver_id = #{docVerId}
   ORDER BY l.seq ASC
 </select>
+
 
 <select id="canRecallDoc" resultType="int">
   SELECT COUNT(*)
@@ -710,6 +715,7 @@
   SET status_code = 'ALS003',
       acted_at = NOW(),
       comment = #{comment},
+      signature_file_id = #{signatureFileId},
       update_user = #{userId},
       update_date = NOW()
   WHERE use_yn = 1
@@ -723,6 +729,7 @@
   SET status_code = 'ALS004',
       acted_at = NOW(),
       comment = #{comment},
+      signature_file_id = #{signatureFileId},
       update_user = #{userId},
       update_date = NOW()
   WHERE use_yn = 1
@@ -730,6 +737,13 @@
     AND user_id = #{userId}
     AND status_code = 'ALS002'
 </update>
+<select id="selectUserOrg" resultType="map">
+  SELECT department_code AS departmentCode,
+         branch_id       AS branchId
+  FROM users
+  WHERE user_id = #{userId}
+</select>
+
 
 <update id="activateNextApprover">
   UPDATE approval_lines l

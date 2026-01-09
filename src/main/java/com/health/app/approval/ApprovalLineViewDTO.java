@@ -8,6 +8,7 @@ public class ApprovalLineViewDTO {
     private Integer seq;
     private Long userId;
     private String approverName;
+    private Long signatureFileId;
 
     private String lineStatusCode;
     private String lineStatusName;
