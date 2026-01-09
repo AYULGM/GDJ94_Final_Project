@@ -1,5 +1,8 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+
 <style>
-  .field { position:absolute; font-size:14px; line-height:1.4; color:#111; }
+  .field { position:absolute; font-size:20px; line-height:1.4; color:#111; }
   .field-sm { font-size:13px; }
   .field-lg { font-size:16px; font-weight:600; }
   .pre { white-space:pre-wrap; }
@@ -8,20 +11,44 @@
   .mark { position:absolute; font-size:18px; font-weight:700; line-height:1; }
 </style>
 
+ <%-- 기안자 서명: 하단 성명(인) 옆 --%>
+      <c:if test="${doc.drafterSignatureFileId != null}">
+		  <img src="/files/preview/${doc.drafterSignatureFileId}"
+		       style="position:absolute; left:975px; top:200px; width:120px; height:60px; object-fit:contain;"
+		       alt="drafter-sign"/>
+		</c:if>
+<c:forEach var="line" items="${doc.lines}">
+  <c:if test="${line.signatureFileId != null}">
+    <c:choose>
+      <c:when test="${line.lineNo == 1}">
+        <img src="/files/preview/${line.signatureFileId}"
+             style="position:absolute; left:1080px; top:200px; width:120px; height:60px; object-fit:contain;"
+             alt="approver1-sign"/>
+      </c:when>
+      <c:when test="${line.lineNo == 2}">
+        <img src="/files/preview/${line.signatureFileId}"
+             style="position:absolute; left:1190px; top:200px; width:120px; height:60px; object-fit:contain;"
+             alt="approver2-sign"/>
+      </c:when>
+    </c:choose>
+  </c:if>
+</c:forEach>
+
+
 <%-- ====== 인적사항 ====== --%>
-<div class="field" style="left:450px; top:345px; width:420px;">
+<div class="field" style="left:450px; top:343px; width:420px;">
   <c:out value="${doc.employeeName}" />
 </div>
 
-<div class="field" style="left:980px; top:345px; width:420px;">
+<div class="field" style="left:975px; top:340px; width:420px;">
   <c:out value="${doc.departmentName}" />
 </div>
 
-<div class="field" style="left:450px; top:408px; width:420px;">
+<div class="field" style="left:450px; top:400px; width:420px;">
   <c:out value="${doc.positionName}" />
 </div>
 
-<div class="field" style="left:900px; top:395px; width:420px;">
+<div class="field" style="left:975px; top:400px; width:420px;">
   <c:out value="${doc.joinDateStr}" />
 </div>
 
@@ -29,62 +56,44 @@
   <c:out value="${doc.mainDuty}" />
 </div>
 
-<%-- ====== 휴가종류 체크 (이미지의 □ 옆에 ● 표시) ======
-     leaveType 예: ANNUAL / SICK / OFFICIAL / ETC
---%>
-<c:if test="${doc.leaveType == 'ANNUAL'}">
-  <div class="mark" style="left:470px; top:523px;">●</div>
-</c:if>
-<c:if test="${doc.leaveType == 'SICK'}">
-  <div class="mark" style="left:700px; top:523px;">●</div>
-</c:if>
-<c:if test="${doc.leaveType == 'OFFICIAL'}">
-  <div class="mark" style="left:930px; top:523px;">●</div>
-</c:if>
-<c:if test="${doc.leaveType == 'ETC'}">
-  <div class="mark" style="left:1140px; top:523px;">●</div>
-</c:if>
+<div class="field" style="left:450px; top:462px; width:420px;">
+  <c:out value="${doc.leaveTypeEtc}" />
+</div>
 
-<%-- 기타( ) 텍스트 입력 칸 (ETC일 때만 표시 권장) --%>
-<c:if test="${doc.leaveType == 'ETC'}">
-  <div class="field field-sm" style="left:1235px; top:520px; width:90px;">
-    <c:out value="${doc.leaveTypeEtc}" />
-  </div>
-</c:if>
+<div class="field" style="left:450px; top:517px; width:420px;">
+  <c:out value="${doc.leaveType}" />
+</div>
 
-<%-- ====== 휴가 사유 (대형 박스) ====== --%>
-<div class="field pre" style="left:330px; top:585px; width:990px; height:240px;">
+<div class="field pre" style="left:450px; top:585px; width:990px; height:240px;">
   <c:out value="${doc.leaveReason}" />
 </div>
 
-<%-- ====== 휴가 기간 ======
-     이미지에 "20 년 월 일 부터 / 까지"가 인쇄되어 있으므로,
-     날짜만 그 위치에 찍습니다.
---%>
-<div class="field" style="left:520px; top:870px; width:320px;">
-  <c:out value="${doc.leaveStartDateStr}" />
+<div class="field" style="left:620px; top:870px; width:320px;">
+  <c:out value="${doc.leaveStartDateStr}" />부터
 </div>
 
-<div class="field" style="left:520px; top:915px; width:320px;">
-  <c:out value="${doc.leaveEndDateStr}" />
+<div class="field" style="left:620px; top:900px; width:320px;">
+  <c:out value="${doc.leaveEndDateStr}" />까지
 </div>
 
-<%-- (○일간) 칸: 일수 표시 --%>
-<div class="field center" style="left:1040px; top:895px; width:220px;">
-  <c:out value="${doc.leaveDays}" />일
+<div class="field center" style="left:1020px; top:885px; width:220px;">
+  ( <c:out value="${doc.leaveDays}" />일간 )
 </div>
 
-<%-- ====== 휴가기간 내 담당업무/진행사항 ====== --%>
-<div class="field pre" style="left:330px; top:980px; width:990px; height:360px;">
+<div class="field pre" style="left:450px; top:980px; width:990px; height:360px;">
   <c:out value="${doc.handoverNote}" />
 </div>
 
-<%-- ====== 하단 작성일 (가운데 날짜) ====== --%>
 <div class="field center" style="left:520px; top:1565px; width:420px;">
   <c:out value="${doc.writtenDateStr}" />
 </div>
+<c:if test="${doc.drafterSignatureFileId != null}">
+  <img src="/files/preview/${doc.drafterSignatureFileId}"
+       style="position:absolute; left:1245px; top:1700px; width:120px; height:60px; object-fit:contain;"
+       alt="drafter-sign"/>
+</c:if>
 
-<%-- ====== 하단 서명 성명(인) ====== --%>
-<div class="field" style="left:1085px; top:1705px; width:230px;">
+
+<div class="field" style="left:1115px; top:1715px; width:230px;">
   <c:out value="${doc.employeeName}" />
 </div>

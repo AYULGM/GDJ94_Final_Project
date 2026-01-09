@@ -2,10 +2,10 @@
   const typeSelect = document.getElementById('approvalTypeCode');
   const extras = document.querySelectorAll('.doc-extra');
   const formCodeInput = document.getElementById('formCode');
+  const modeInput = document.getElementById('mode'); // ✅ edit/new 판단
 
-  if (!typeSelect) return; // ✅ 방어
+  if (!typeSelect) return;
 
-  // AT -> DF 매핑 (정책: AT012도 DF012로 임시 확정)
   const typeToForm = {
     "AT001": "DF001",
     "AT002": "DF002",
@@ -18,12 +18,11 @@
     "AT009": "DF009",
     "AT010": "DF010",
     "AT011": "DF011",
-    "AT012": "DF012" // ✅ 임시 정책 확정(나중에 바꾸면 됨)
+    "AT012": "DF012"
   };
 
-  function syncFormCode(typeCode) {
-    if (!formCodeInput) return;
-    formCodeInput.value = typeToForm[typeCode] || "";
+  function isEditMode() {
+    return modeInput && modeInput.value === 'edit';
   }
 
   function setEnabled(container, enabled) {
@@ -38,8 +37,8 @@
     });
   }
 
-  function showDefaultOnly() {
-    hideAll();
+  // ✅ 기본(__DEFAULT__)은 항상 보여주는 정책
+  function showDefault() {
     extras.forEach(el => {
       if (el.getAttribute('data-type') === '__DEFAULT__') {
         el.style.display = '';
@@ -48,30 +47,40 @@
     });
   }
 
-  function showExtras(typeCode) {
-    hideAll();
+  function showSelected(typeCode) {
+    if (!typeCode) return;
 
-    let matched = false;
     extras.forEach(el => {
       const t = el.getAttribute('data-type');
-      const on = (t === typeCode);
-
-      if (on) {
+      if (t === typeCode) {
         el.style.display = '';
         setEnabled(el, true);
-        matched = true;
       }
     });
+  }
 
-    if (!matched) {
-      showDefaultOnly();
+  // ✅ 신규: typeCode 기반으로 항상 갱신
+  // ✅ 수정: 기존 formCode가 있으면 유지, 비어있을 때만 채움
+  function syncFormCode(typeCode) {
+    if (!formCodeInput) return;
+
+    const mapped = typeToForm[typeCode] || "";
+
+    if (isEditMode()) {
+      if (!formCodeInput.value) formCodeInput.value = mapped; // 빈값일 때만
+    } else {
+      formCodeInput.value = mapped; // 신규는 항상 반영
     }
   }
 
   function apply() {
     const typeCode = typeSelect.value;
+
     syncFormCode(typeCode);
-    showExtras(typeCode);
+
+    hideAll();
+    showDefault();
+    showSelected(typeCode);
   }
 
   typeSelect.addEventListener('change', apply);

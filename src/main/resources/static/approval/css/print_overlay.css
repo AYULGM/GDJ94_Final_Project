@@ -32,7 +32,7 @@
 }
 /* ===== 프리뷰 축소 ===== */
 .print-wrap.is-preview .print-page {
-  transform: scale(1);
+  transform: scale(0.75);
   transform-origin: top center;
 }
 
@@ -57,5 +57,7 @@
   .print-page {
     box-shadow: none;
   }
-  
+  .field {
+  	font-size: 20px;
+  }
 }

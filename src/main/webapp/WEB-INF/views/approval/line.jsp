@@ -36,8 +36,8 @@
       </div>
     </div>
     <div class="d-flex gap-2">
-      <a href="/approval/form" class="btn btn-outline-secondary">문서로 돌아가기</a>
-      <button type="button" class="btn btn-primary" id="btnSaveLines">임시저장</button>
+      <a href="/approval/form?docVerId=${docVerId}" class="btn btn-outline-secondary">문서로 돌아가기</a>
+      <button type="button" class="btn btn-primary" id="btnSaveLines">결재 라인 저장</button>
 	  <button type="button" class="btn btn-success" id="btnSubmit">결재요청</button>
 
     </div>
@@ -133,12 +133,12 @@ document.getElementById('btnSubmit')?.addEventListener('click', async () => {
     });
 
     if (!res.ok) {
-      showMsg('결재 요청 실패: ' + res.status);
-      return;
-    }
+    	  showMsg('결재 요청 실패: ' + res.status);
+    	  return;
+    	}
 
-    // 성공 시 목록으로 이동
-    window.location.href = '/approval/list';
+    	window.location.href = res.url;
+
   } catch (e) {
     showMsg('결재 요청 중 오류: ' + e);
   }

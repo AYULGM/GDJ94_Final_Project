@@ -10,6 +10,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Getter
 @Setter
 public class ApprovalDraftDTO {
+	 // ====== 화면용(DB 컬럼 아님) ======
+    private String mode;   // "new" / "edit"
+    private String tempYn; // "Y" / "N"
 
     // ====== documents ======
     private Long docId;                

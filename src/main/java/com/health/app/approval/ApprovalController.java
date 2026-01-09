@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.health.app.approval.ApprovalProductDTO;
 import com.health.app.security.model.LoginUser;
@@ -26,17 +27,59 @@ public class ApprovalController {
      * ========================= */
 
     @GetMapping("list")
-    public String approvalList() {
+    public String approvalList(@AuthenticationPrincipal LoginUser loginUser, Model model) {
+        Long userId = loginUser.getUserId();
+        model.addAttribute("list", approvalService.getMyDocs(userId));
         return "approval/list";
     }
 
-    // ✅ form은 한 군데만 유지 (branches 세팅 포함)
+    @GetMapping("detail")
+    public String approvalDetail(@AuthenticationPrincipal LoginUser loginUser,
+                                 @RequestParam("docVerId") Long docVerId,
+                                 Model model) {
+
+        Long userId = loginUser.getUserId();
+        ApprovalDetailPageDTO page = approvalService.getDetailPage(userId, docVerId);
+
+        model.addAttribute("page", page);
+        model.addAttribute("docVerId", docVerId); // iframe용
+        return "approval/detail";
+    }
+
+
+
     @GetMapping("form")
-    public String approvalForm(Model model) {
+    public String approvalForm(@AuthenticationPrincipal LoginUser loginUser,
+                               @RequestParam(required = false) Long docVerId,
+                               Model model) {
+
         model.addAttribute("branches", approvalService.getBranches());
-        model.addAttribute("products", java.util.Collections.emptyList()); // 초기 비움
+
+        if (docVerId != null) {
+            // ===== 수정 모드 =====
+            ApprovalDraftDTO draft =
+                    approvalService.getDraftForEdit(docVerId, loginUser.getUserId());
+
+            model.addAttribute("draft", draft);
+            model.addAttribute("mode", "edit");
+
+            // 수정 시 기존 선택값에 맞는 상품 목록 로딩
+            if (draft.getBranchId() != null) {
+                model.addAttribute("products",
+                        approvalService.getProductsByBranch(draft.getBranchId()));
+            } else {
+                model.addAttribute("products", java.util.Collections.emptyList());
+            }
+
+        } else {
+            // ===== 신규 작성 =====
+            model.addAttribute("mode", "new");
+            model.addAttribute("products", java.util.Collections.emptyList());
+        }
+
         return "approval/form";
     }
+
 
     @GetMapping("signature")
     public String approvalSignature() {
@@ -65,18 +108,22 @@ public class ApprovalController {
 
     @PostMapping("saveDraftForm")
     public String saveDraftForm(@AuthenticationPrincipal LoginUser loginUser,
-                                @ModelAttribute ApprovalDraftDTO dto) {
+                                @ModelAttribute ApprovalDraftDTO dto,
+                                RedirectAttributes ra) {
 
-        ApprovalDraftDTO saved = approvalService.saveDraft(loginUser.getUserId(), dto);
+        Long userId = loginUser.getUserId();
+
+        if ("edit".equals(dto.getMode()) && dto.getDocVerId() != null) {
+            approvalService.updateDraft(userId, dto);
+            ra.addFlashAttribute("msg", "문서가 수정되었습니다.");
+            return "redirect:/approval/detail?docVerId=" + dto.getDocVerId();
+        }
+
+        ApprovalDraftDTO saved = approvalService.saveDraft(userId, dto);
+        ra.addFlashAttribute("msg", "문서가 저장되었습니다.");
         return "redirect:/approval/line?docVerId=" + saved.getDocVerId();
     }
 
-    @PostMapping("submit")
-    public String submit(@AuthenticationPrincipal LoginUser loginUser,
-                         @RequestParam Long docVerId) {
-        approvalService.submit(loginUser.getUserId(), docVerId);
-        return "redirect:/approval/list";
-    }
 
     /* =========================
      * Lines
@@ -87,6 +134,49 @@ public class ApprovalController {
         model.addAttribute("docVerId", docVerId);
         return "approval/line";
     }
+    @PostMapping("recall")
+    public String recall(@AuthenticationPrincipal LoginUser loginUser,
+                         @RequestParam Long docVerId,
+                         RedirectAttributes ra) {
+
+        Long userId = loginUser.getUserId();
+
+        try {
+            approvalService.recall(userId, docVerId);
+            ra.addFlashAttribute("msg", "상신이 취소(회수)되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("msg", e.getMessage());
+        }
+
+        return "redirect:/approval/detail?docVerId=" + docVerId;
+    }
+    @PostMapping("resubmit")
+    public String resubmit(@AuthenticationPrincipal LoginUser loginUser,
+                           @RequestParam Long docVerId,
+                           RedirectAttributes ra) {
+
+        try {
+            approvalService.resubmit(loginUser.getUserId(), docVerId);
+            ra.addFlashAttribute("msg", "재상신되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("msg", e.getMessage());
+        }
+        return "redirect:/approval/detail?docVerId=" + docVerId;
+    }
+    @PostMapping("submit")
+    public String submit(@AuthenticationPrincipal LoginUser loginUser,
+                         @RequestParam Long docVerId,
+                         RedirectAttributes ra) {
+        try {
+            approvalService.resubmit(loginUser.getUserId(), docVerId); // ✅ 여기만 변경
+            ra.addFlashAttribute("msg", "결재 요청되었습니다.");
+            return "redirect:/approval/detail?docVerId=" + docVerId;
+        } catch (Exception e) {
+            ra.addFlashAttribute("msg", e.getMessage());
+            return "redirect:/approval/line?docVerId=" + docVerId;
+        }
+    }
+
 
     @PostMapping("saveLinesForm")
     @ResponseBody
@@ -157,18 +247,22 @@ public class ApprovalController {
         return "approval/handle";
     }
 
-    /**
-     * 결재 처리(승인/반려)
-     * form action="/approval/handle" method="post"
-     */
     @PostMapping("handle")
-    public String handleAction(@RequestParam Long docVerId,
-                               @RequestParam String action, // APPROVE or REJECT
-                               @RequestParam(required = false) String comment) {
+    public String handle(@AuthenticationPrincipal LoginUser loginUser,
+                         @RequestParam Long docVerId,
+                         @RequestParam String action,
+                         @RequestParam(required = false) String comment,
+                         RedirectAttributes ra) {
 
-        approvalService.processDecision(docVerId, action, comment);
+        Long userId = loginUser.getUserId();
 
-        // 처리 후 결재함으로
+        try {
+            approvalService.handleDecision(docVerId, userId, action, comment);
+            ra.addFlashAttribute("msg", "처리가 완료되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("msg", e.getMessage());
+        }
+
         return "redirect:/approval/inbox";
     }
 
