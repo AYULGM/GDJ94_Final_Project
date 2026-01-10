@@ -1,7 +1,30 @@
-<div class="field" style="top:40px; left:600px;">
-  문서번호: ${doc.docNo}
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+
+<c:if test="${doc.drafterSignatureFileId != null}">
+  <img src="/files/preview/${doc.drafterSignatureFileId}"
+       style="position:absolute; left:980px; top:190px; width:120px; height:60px;"
+       alt="drafter-sign"/>
+</c:if>
+
+<c:forEach var="line" items="${doc.lines}">
+  <c:if test="${line.signatureFileId != null}">
+    <img src="/files/preview/${line.signatureFileId}"
+         style="position:absolute;
+                left:${line.lineNo == 1 ? 1090 : 1200}px;
+                top:190px;
+                width:120px; height:60px;"
+         alt="approver-sign"/>
+  </c:if>
+</c:forEach>
+
+<div class="field" style="left:420px; top:340px; width:420px;">
+  <c:out value="${doc.employeeName}" />
 </div>
 
-<div class="field" style="top:80px; left:80px;">
-  기안자: ${doc.drafterName}
+<div class="field" style="left:900px; top:340px; width:420px;">
+  <c:out value="${doc.departmentName}" />
+</div>
+
+<div class="field" style="left:420px; top:395px; width:420px;">
+  <c:out value="${doc.positionName}" />
 </div>

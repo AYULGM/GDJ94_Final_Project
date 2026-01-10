@@ -203,14 +203,48 @@ public class ApprovalController {
         return approvalService.getProductsByBranch(branchId);
     }
 
-    // 출력 뷰(휴가 양식)
     @GetMapping("view")
     public String view(@RequestParam Long docVerId, Model model) {
-        model.addAttribute("doc", approvalService.getPrintData(docVerId));
-        model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
-        model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_vacation.jspf");
-        return "approval/print/vacation_print";
+
+        ApprovalPrintDTO print = approvalService.getPrintData(docVerId);
+        model.addAttribute("print", print);
+
+        String typeCode = print.getTypeCode();
+
+        switch (typeCode) {
+            case "AT001":
+                model.addAttribute("bgImageUrl", "/approval/formPng/expense.png");
+                model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_expense.jspf");
+                break;
+
+            case "AT002":
+                model.addAttribute("bgImageUrl", "/approval/formPng/settlement.png");
+                model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_settlement.jspf");
+                break;
+
+            case "AT003":
+                model.addAttribute("bgImageUrl", "/approval/formPng/sales.jpg");
+                model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_sales.jspf");
+                break;
+
+            case "AT005":
+                model.addAttribute("bgImageUrl", "/approval/formPng/purchase_request.jpg");
+                model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_purchase_request_pr.jspf");
+                break;
+
+            case "AT006":
+                model.addAttribute("bgImageUrl", "/approval/formPng/purchase_order.png");
+                model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_purchase_order_po.jspf");
+                break;
+
+            default:
+                model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
+                model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_vacation.jspf");
+        }
+
+        return "approval/print";
     }
+
 
     // 결재 처리 화면(GET)
     @GetMapping("handle")

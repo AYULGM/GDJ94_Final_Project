@@ -4,11 +4,11 @@
 <c:set var="doc" value="${print}" />
 
 <jsp:include page="_print_base.jspf">
-  <jsp:param name="bg" value="/approval/formPng/expense.png"/>
+  <jsp:param name="bg" value="/approval/formPng/sales.jpg"/>
 </jsp:include>
 
 <jsp:include page="_fields_common.jspf"/>
-<jsp:include page="_fields_expense.jspf"/>
+<jsp:include page="_fields_order.jspf"/>
 
   </div>
 </div>

@@ -66,6 +66,48 @@
     WHERE v.doc_ver_id = #{docVerId}
       AND v.use_yn = 1
   </update>
+  <!-- 확장 문서 출력용 (AT001~AT005 등) -->
+  <select id="selectExtPrint"
+          parameterType="long"
+          resultType="com.health.app.approval.ApprovalExtPrintDTO">
+    SELECT
+        d.doc_id          AS docId,
+        v.doc_ver_id      AS docVerId,
+        d.doc_no          AS docNo,
+        d.type_code       AS typeCode,
+        d.form_code       AS formCode,
+        d.status_code     AS statusCode,
+        d.drafter_user_id AS drafterUserId,
+
+        e.ext_dt1         AS extDt1,
+        e.ext_dt2         AS extDt2,
+        e.ext_dt3         AS extDt3,
+        e.ext_dt4         AS extDt4,
+        e.ext_no1         AS extNo1,
+        e.ext_no2         AS extNo2,
+        e.ext_no3         AS extNo3,
+        e.ext_no4         AS extNo4,
+        e.ext_txt1        AS extTxt1,
+        e.ext_txt2        AS extTxt2,
+        e.ext_txt3        AS extTxt3,
+        e.ext_txt4        AS extTxt4,
+        e.ext_txt5        AS extTxt5,
+        e.ext_txt6        AS extTxt6,
+        e.ext_code1       AS extCode1,
+        e.ext_code2       AS extCode2,
+        e.ext_code3       AS extCode3,
+        e.ext_code4       AS extCode4
+
+    FROM approval_document_versions v
+    JOIN approval_documents d
+      ON d.doc_id = v.doc_id
+     AND d.use_yn = 1
+    LEFT JOIN approval_document_ext e
+      ON e.doc_ver_id = v.doc_ver_id
+     AND e.use_yn = 1
+    WHERE v.doc_ver_id = #{docVerId}
+      AND v.use_yn = 1
+  </select>
 
   <update id="updateDocumentExtByDocVerId" parameterType="com.health.app.approval.ApprovalDraftDTO">
     UPDATE approval_document_ext

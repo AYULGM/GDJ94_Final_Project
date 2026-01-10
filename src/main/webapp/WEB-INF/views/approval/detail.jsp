@@ -73,11 +73,13 @@
         </div>
         <div class="card-body p-0">
           <div class="preview-box">
-            <iframe
-              src="/approval/view?docVerId=${docVerId}"
-              class="preview-iframe"
-              scrolling="no"
-              title="문서 미리보기"></iframe>
+			<iframe
+			  src="/approval/view?docVerId=${docVerId}"
+			  class="preview-iframe"
+			  scrolling="no"
+			  title="문서 미리보기"
+			  onload="console.log('iframe loaded:', this.src)"></iframe>
+
           </div>
         </div>
       </div>

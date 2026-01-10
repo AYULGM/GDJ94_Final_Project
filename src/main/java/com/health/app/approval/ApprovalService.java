@@ -279,18 +279,31 @@ public class ApprovalService {
         approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
     }
 
-    // 출력 데이터
+ // 출력 데이터
     @Transactional(readOnly = true)
     public ApprovalPrintDTO getPrintData(Long docVerId) {
 
-        VacationPrintDTO doc = approvalMapper.selectVacationPrint(docVerId);
-        if (doc == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+        ApprovalDraftDTO draft = approvalMapper.selectDraftByDocVerId(docVerId);
+        if (draft == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+
+        ApprovalPrintDTO doc;
+
+        if ("AT009".equals(draft.getTypeCode())) {
+            VacationPrintDTO v = approvalMapper.selectVacationPrint(docVerId);
+            if (v == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+            doc = v;
+        } else {
+            ApprovalExtPrintDTO e = approvalMapper.selectExtPrint(docVerId);
+            if (e == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+            doc = e;
+        }
 
         doc.setLines(approvalMapper.selectPrintLines(docVerId));
         return doc;
     }
 
-    // 결재 처리(승인/반려)
+
+ // 결재 처리(승인/반려)
     @Transactional
     public void handleDecision(Long docVerId, Long userId, String action, String comment) {
 
@@ -311,7 +324,11 @@ public class ApprovalService {
             } else {
                 approvalMapper.updateDocStatusByDocVerId(docVerId, "AS003");
                 approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003", userId);
-                createLeaveCalendarEvent(docVerId, userId);
+
+                ApprovalDraftDTO draft = approvalMapper.selectDraftByDocVerId(docVerId);
+                if (draft != null && "AT009".equals(draft.getTypeCode())) {
+                    createLeaveCalendarEvent(docVerId, userId);
+                }
             }
 
         } else if ("REJECT".equals(action)) {
@@ -325,6 +342,8 @@ public class ApprovalService {
             throw new IllegalArgumentException("지원하지 않는 action 입니다: " + action);
         }
     }
+
+
 
     // 최종 승인 시 휴가 일정 생성
     private void createLeaveCalendarEvent(Long docVerId, Long actorUserId) {

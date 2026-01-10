@@ -1,62 +1,21 @@
-<%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 
-<style>
-  .field { position:absolute; font-size:20px; line-height:1.4; color:#111; }
-  .field-sm { font-size:13px; }
-  .field-lg { font-size:16px; font-weight:600; }
-  .center { text-align:center; }
-  .right { text-align:right; }
-  .pre { white-space:pre-wrap; }
-</style>
-
-<%-- ================= 서명 ================= --%>
-<c:if test="${doc.drafterSignatureFileId != null}">
-  <img src="/files/preview/${doc.drafterSignatureFileId}"
-       style="position:absolute; left:980px; top:190px; width:120px; height:60px;" />
-</c:if>
-
-<c:forEach var="line" items="${doc.lines}">
-  <c:if test="${line.signatureFileId != null}">
-    <img src="/files/preview/${line.signatureFileId}"
-         style="position:absolute;
-                left:${line.lineNo == 1 ? 1090 : 1200}px;
-                top:190px;
-                width:120px; height:60px;" />
-  </c:if>
-</c:forEach>
-
-<%-- ================= 기안자 정보 ================= --%>
-<div class="field" style="left:420px; top:340px; width:420px;">
-  ${doc.employeeName}
+<div class="field" style="left:420px; top:460px; width:980px;">
+  <c:out value="${doc.extTxt1}" />
 </div>
 
-<div class="field" style="left:900px; top:340px; width:420px;">
-  ${doc.departmentName}
+<div class="field right" style="left:900px; top:520px; width:300px;">
+  <c:out value="${doc.extNo1}" /> 개
 </div>
 
-<div class="field" style="left:420px; top:395px; width:420px;">
-  ${doc.positionName}
+<div class="field right" style="left:900px; top:580px; width:300px;">
+  <c:out value="${doc.extNo2}" /> 원
 </div>
 
-<%-- ================= 구매 정보 ================= --%>
-<div class="field" style="left:420px; top:460px; width:420px;">
-  ${doc.purchaseDateStr}
+<div class="field pre" style="left:420px; top:640px; width:980px; height:220px;">
+  <c:out value="${doc.extTxt2}" />
 </div>
 
-<div class="field" style="left:900px; top:460px; width:420px;">
-  ${doc.vendorName}
-</div>
-
-<div class="field right" style="left:900px; top:515px; width:300px;">
-  ${doc.totalAmount} 원
-</div>
-
-<div class="field pre" style="left:420px; top:580px; width:980px; height:260px;">
-  ${doc.purchaseReason}
-</div>
-
-<%-- ================= 작성일 ================= --%>
 <div class="field center" style="left:520px; top:1550px; width:420px;">
-  ${doc.writtenDateStr}
+  <c:out value="${doc.writtenDateStr}" />
 </div>

@@ -1,0 +1,17 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+
+<div class="field" style="left:420px; top:460px; width:420px;">
+  <c:out value="${doc.extDt1}" />
+</div>
+
+<div class="field right" style="left:900px; top:460px; width:300px;">
+  <c:out value="${doc.extNo3}" /> 원
+</div>
+
+<div class="field pre" style="left:420px; top:520px; width:980px; height:300px;">
+  <c:out value="${doc.extTxt1}" />
+</div>
+
+<div class="field center" style="left:520px; top:1550px; width:420px;">
+  <c:out value="${doc.writtenDateStr}" />
+</div>
