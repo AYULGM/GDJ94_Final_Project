@@ -50,24 +50,39 @@
        ========================================================= -->
     <select id="selectSalesByCategory" parameterType="com.health.app.statistics.StatisticsSearchDto"
             resultType="com.health.app.statistics.SalesStatisticsDto">
+        WITH category_sales AS (
+            SELECT
+                s.category_code AS categoryCode,
+                s.category_code AS categoryName,
+                SUM(s.total_amount) AS totalAmount,
+                COUNT(*) AS saleCount,
+                AVG(s.total_amount) AS avgAmount
+            FROM sales s
+            WHERE s.use_yn = 1
+              AND s.status_code = 'COMPLETED'
+              AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND s.branch_id = #{branchId}
+            </if>
+            <if test="categoryCode != null and categoryCode != ''">
+              AND s.category_code = #{categoryCode}
+            </if>
+            GROUP BY s.category_code
+        ),
+        avg_sales AS (
+            SELECT AVG(totalAmount) AS overallAvg FROM category_sales
+        )
         SELECT
-            s.category_code AS categoryCode,
-            s.category_code AS categoryName,
-            SUM(s.total_amount) AS totalAmount,
-            COUNT(*) AS saleCount,
-            AVG(s.total_amount) AS avgAmount
-        FROM sales s
-        WHERE s.use_yn = 1
-          AND s.status_code = 'COMPLETED'
-          AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
-        <if test="branchId != null and branchId != 0">
-          AND s.branch_id = #{branchId}
-        </if>
-        <if test="categoryCode != null and categoryCode != ''">
-          AND s.category_code = #{categoryCode}
-        </if>
-        GROUP BY s.category_code
-        ORDER BY totalAmount DESC
+            cs.categoryCode,
+            cs.categoryName,
+            cs.totalAmount,
+            cs.saleCount,
+            cs.avgAmount,
+            (cs.totalAmount - av.overallAvg) AS diffAmount,
+            CASE WHEN av.overallAvg > 0 THEN ROUND(((cs.totalAmount - av.overallAvg) / av.overallAvg * 100), 2) ELSE 0 END AS diffPercent
+        FROM category_sales cs
+        CROSS JOIN avg_sales av
+        ORDER BY cs.totalAmount DESC
     </select>
 
     <!-- =========================================================
@@ -75,37 +90,52 @@
        ========================================================= -->
     <select id="selectSalesByPeriod" parameterType="com.health.app.statistics.StatisticsSearchDto"
             resultType="com.health.app.statistics.SalesStatisticsDto">
+        WITH period_sales AS (
+            SELECT
+                <choose>
+                    <when test="groupBy == 'daily'">
+                        DATE_FORMAT(s.sold_at, '%Y-%m-%d') AS period,
+                        DATE_FORMAT(s.sold_at, '%Y년 %m월 %d일') AS periodLabel
+                    </when>
+                    <when test="groupBy == 'quarterly'">
+                        CONCAT(YEAR(s.sold_at), '-Q', QUARTER(s.sold_at)) AS period,
+                        CONCAT(YEAR(s.sold_at), '년 ', QUARTER(s.sold_at), '분기') AS periodLabel
+                    </when>
+                    <when test="groupBy == 'yearly'">
+                        YEAR(s.sold_at) AS period,
+                        CONCAT(YEAR(s.sold_at), '년') AS periodLabel
+                    </when>
+                    <otherwise>
+                        DATE_FORMAT(s.sold_at, '%Y-%m') AS period,
+                        DATE_FORMAT(s.sold_at, '%Y년 %m월') AS periodLabel
+                    </otherwise>
+                </choose>,
+                SUM(s.total_amount) AS totalAmount,
+                COUNT(*) AS saleCount,
+                AVG(s.total_amount) AS avgAmount
+            FROM sales s
+            WHERE s.use_yn = 1
+              AND s.status_code = 'COMPLETED'
+              AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND s.branch_id = #{branchId}
+            </if>
+            GROUP BY period, periodLabel
+        ),
+        avg_sales AS (
+            SELECT AVG(totalAmount) AS overallAvg FROM period_sales
+        )
         SELECT
-            <choose>
-                <when test="groupBy == 'daily'">
-                    DATE_FORMAT(s.sold_at, '%Y-%m-%d') AS period,
-                    DATE_FORMAT(s.sold_at, '%Y년 %m월 %d일') AS periodLabel
-                </when>
-                <when test="groupBy == 'quarterly'">
-                    CONCAT(YEAR(s.sold_at), '-Q', QUARTER(s.sold_at)) AS period,
-                    CONCAT(YEAR(s.sold_at), '년 ', QUARTER(s.sold_at), '분기') AS periodLabel
-                </when>
-                <when test="groupBy == 'yearly'">
-                    YEAR(s.sold_at) AS period,
-                    CONCAT(YEAR(s.sold_at), '년') AS periodLabel
-                </when>
-                <otherwise>
-                    DATE_FORMAT(s.sold_at, '%Y-%m') AS period,
-                    DATE_FORMAT(s.sold_at, '%Y년 %m월') AS periodLabel
-                </otherwise>
-            </choose>,
-            SUM(s.total_amount) AS totalAmount,
-            COUNT(*) AS saleCount,
-            AVG(s.total_amount) AS avgAmount
-        FROM sales s
-        WHERE s.use_yn = 1
-          AND s.status_code = 'COMPLETED'
-          AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
-        <if test="branchId != null and branchId != 0">
-          AND s.branch_id = #{branchId}
-        </if>
-        GROUP BY period, periodLabel
-        ORDER BY period ASC
+            ps.period,
+            ps.periodLabel,
+            ps.totalAmount,
+            ps.saleCount,
+            ps.avgAmount,
+            (ps.totalAmount - av.overallAvg) AS diffAmount,
+            CASE WHEN av.overallAvg > 0 THEN ROUND(((ps.totalAmount - av.overallAvg) / av.overallAvg * 100), 2) ELSE 0 END AS diffPercent
+        FROM period_sales ps
+        CROSS JOIN avg_sales av
+        ORDER BY ps.period ASC
     </select>
 
     <!-- =========================================================
@@ -153,24 +183,39 @@
        ========================================================= -->
     <select id="selectExpensesByCategory" parameterType="com.health.app.statistics.StatisticsSearchDto"
             resultType="com.health.app.statistics.ExpenseStatisticsDto">
+        WITH category_expenses AS (
+            SELECT
+                e.category_code AS categoryCode,
+                e.category_code AS categoryName,
+                SUM(e.amount) AS totalAmount,
+                COUNT(*) AS expenseCount,
+                AVG(e.amount) AS avgAmount
+            FROM expenses e
+            WHERE e.use_yn = 1
+              AND e.settlement_flag = TRUE
+              AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND e.branch_id = #{branchId}
+            </if>
+            <if test="categoryCode != null and categoryCode != ''">
+              AND e.category_code = #{categoryCode}
+            </if>
+            GROUP BY e.category_code
+        ),
+        avg_expenses AS (
+            SELECT AVG(totalAmount) AS overallAvg FROM category_expenses
+        )
         SELECT
-            e.category_code AS categoryCode,
-            e.category_code AS categoryName,
-            SUM(e.amount) AS totalAmount,
-            COUNT(*) AS expenseCount,
-            AVG(e.amount) AS avgAmount
-        FROM expenses e
-        WHERE e.use_yn = 1
-          AND e.settlement_flag = TRUE
-          AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
-        <if test="branchId != null and branchId != 0">
-          AND e.branch_id = #{branchId}
-        </if>
-        <if test="categoryCode != null and categoryCode != ''">
-          AND e.category_code = #{categoryCode}
-        </if>
-        GROUP BY e.category_code
-        ORDER BY totalAmount DESC
+            ce.categoryCode,
+            ce.categoryName,
+            ce.totalAmount,
+            ce.expenseCount,
+            ce.avgAmount,
+            (ce.totalAmount - av.overallAvg) AS diffAmount,
+            CASE WHEN av.overallAvg > 0 THEN ROUND(((ce.totalAmount - av.overallAvg) / av.overallAvg * 100), 2) ELSE 0 END AS diffPercent
+        FROM category_expenses ce
+        CROSS JOIN avg_expenses av
+        ORDER BY ce.totalAmount DESC
     </select>
 
     <!-- =========================================================
@@ -178,37 +223,52 @@
        ========================================================= -->
     <select id="selectExpensesByPeriod" parameterType="com.health.app.statistics.StatisticsSearchDto"
             resultType="com.health.app.statistics.ExpenseStatisticsDto">
+        WITH period_expenses AS (
+            SELECT
+                <choose>
+                    <when test="groupBy == 'daily'">
+                        DATE_FORMAT(e.expense_at, '%Y-%m-%d') AS period,
+                        DATE_FORMAT(e.expense_at, '%Y년 %m월 %d일') AS periodLabel
+                    </when>
+                    <when test="groupBy == 'quarterly'">
+                        CONCAT(YEAR(e.expense_at), '-Q', QUARTER(e.expense_at)) AS period,
+                        CONCAT(YEAR(e.expense_at), '년 ', QUARTER(e.expense_at), '분기') AS periodLabel
+                    </when>
+                    <when test="groupBy == 'yearly'">
+                        YEAR(e.expense_at) AS period,
+                        CONCAT(YEAR(e.expense_at), '년') AS periodLabel
+                    </when>
+                    <otherwise>
+                        DATE_FORMAT(e.expense_at, '%Y-%m') AS period,
+                        DATE_FORMAT(e.expense_at, '%Y년 %m월') AS periodLabel
+                    </otherwise>
+                </choose>,
+                SUM(e.amount) AS totalAmount,
+                COUNT(*) AS expenseCount,
+                AVG(e.amount) AS avgAmount
+            FROM expenses e
+            WHERE e.use_yn = 1
+              AND e.settlement_flag = TRUE
+              AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+            <if test="branchId != null and branchId != 0">
+              AND e.branch_id = #{branchId}
+            </if>
+            GROUP BY period, periodLabel
+        ),
+        avg_expenses AS (
+            SELECT AVG(totalAmount) AS overallAvg FROM period_expenses
+        )
         SELECT
-            <choose>
-                <when test="groupBy == 'daily'">
-                    DATE_FORMAT(e.expense_at, '%Y-%m-%d') AS period,
-                    DATE_FORMAT(e.expense_at, '%Y년 %m월 %d일') AS periodLabel
-                </when>
-                <when test="groupBy == 'quarterly'">
-                    CONCAT(YEAR(e.expense_at), '-Q', QUARTER(e.expense_at)) AS period,
-                    CONCAT(YEAR(e.expense_at), '년 ', QUARTER(e.expense_at), '분기') AS periodLabel
-                </when>
-                <when test="groupBy == 'yearly'">
-                    YEAR(e.expense_at) AS period,
-                    CONCAT(YEAR(e.expense_at), '년') AS periodLabel
-                </when>
-                <otherwise>
-                    DATE_FORMAT(e.expense_at, '%Y-%m') AS period,
-                    DATE_FORMAT(e.expense_at, '%Y년 %m월') AS periodLabel
-                </otherwise>
-            </choose>,
-            SUM(e.amount) AS totalAmount,
-            COUNT(*) AS expenseCount,
-            AVG(e.amount) AS avgAmount
-        FROM expenses e
-        WHERE e.use_yn = 1
-          AND e.settlement_flag = TRUE
-          AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
-        <if test="branchId != null and branchId != 0">
-          AND e.branch_id = #{branchId}
-        </if>
-        GROUP BY period, periodLabel
-        ORDER BY period ASC
+            pe.period,
+            pe.periodLabel,
+            pe.totalAmount,
+            pe.expenseCount,
+            pe.avgAmount,
+            (pe.totalAmount - av.overallAvg) AS diffAmount,
+            CASE WHEN av.overallAvg > 0 THEN ROUND(((pe.totalAmount - av.overallAvg) / av.overallAvg * 100), 2) ELSE 0 END AS diffPercent
+        FROM period_expenses pe
+        CROSS JOIN avg_expenses av
+        ORDER BY pe.period ASC
     </select>
 
     <!-- =========================================================
