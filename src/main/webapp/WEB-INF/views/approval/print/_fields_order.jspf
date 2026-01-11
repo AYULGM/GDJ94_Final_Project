@@ -1,15 +1,22 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 
+<!-- 지점(branchId) -->
 <div class="field" style="left:420px; top:460px; width:420px;">
-  <c:out value="${doc.extDt1}" />
+  <c:out value="${doc.extNo1}" />
 </div>
 
+<!-- 합계금액 -->
 <div class="field right" style="left:900px; top:460px; width:300px;">
-  <c:out value="${doc.extNo3}" /> 원
+  <c:out value="${doc.extNo2}" /> 원
 </div>
 
+<!-- 비고 + 다건 JSON(원하면 JSON은 별도 파싱 출력 권장) -->
 <div class="field pre" style="left:420px; top:520px; width:980px; height:300px;">
-  <c:out value="${doc.extTxt1}" />
+  <c:out value="${doc.extTxt2}" />
+  <c:if test="${not empty doc.extTxt6}">
+    &#10;---&#10;
+    <c:out value="${doc.extTxt6}" />
+  </c:if>
 </div>
 
 <div class="field center" style="left:520px; top:1550px; width:420px;">

@@ -1,19 +1,38 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 
+<!-- 거래처명 -->
 <div class="field" style="left:420px; top:460px; width:980px;">
   <c:out value="${doc.extTxt1}" />
 </div>
 
+<!-- 총액 -->
 <div class="field right" style="left:900px; top:520px; width:300px;">
-  <c:out value="${doc.extNo1}" /> 개
+  <c:out value="${doc.extNo1}" /> 원
 </div>
 
+<!-- 납기일 -->
 <div class="field right" style="left:900px; top:580px; width:300px;">
-  <c:out value="${doc.extNo3}" /> 원
+  <c:out value="${doc.extDt1}" />
 </div>
 
+<!-- 담당자/연락처 + 결제조건 + 품목 JSON + 비고 -->
 <div class="field pre" style="left:420px; top:640px; width:980px; height:220px;">
-  <c:out value="${doc.extTxt2}" />
+  <c:if test="${not empty doc.extTxt2}">
+    <c:out value="${doc.extTxt2}" />&#10;
+  </c:if>
+  <c:if test="${not empty doc.extTxt3}">
+    <c:out value="${doc.extTxt3}" />&#10;
+  </c:if>
+
+  <c:if test="${not empty doc.extTxt6}">
+    ---&#10;
+    <c:out value="${doc.extTxt6}" />&#10;
+  </c:if>
+
+  <c:if test="${not empty doc.extTxt4}">
+    ---&#10;
+    <c:out value="${doc.extTxt4}" />
+  </c:if>
 </div>
 
 <div class="field center" style="left:520px; top:1550px; width:420px;">

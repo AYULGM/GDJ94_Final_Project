@@ -1,4 +1,4 @@
-<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+
 
 <c:if test="${doc.drafterSignatureFileId != null}">
   <img src="/files/preview/${doc.drafterSignatureFileId}"

@@ -207,47 +207,47 @@ public class ApprovalController {
     public String view(@RequestParam Long docVerId, Model model) {
 
         ApprovalPrintDTO print = approvalService.getPrintData(docVerId);
-        model.addAttribute("print", print);
+        model.addAttribute("doc", print);
+
 
         String typeCode = print.getTypeCode();
 
         switch (typeCode) {
-	        case "AT001":
-	        	  model.addAttribute("bgImageUrl", "/approval/formPng/expense.png");
-	        	  model.addAttribute("fieldsJspf", "print/_fields_expense.jspf");
-	        	  break;
-	
-	        	case "AT002":
-	        	  model.addAttribute("bgImageUrl", "/approval/formPng/settlement.png");
-	        	  model.addAttribute("fieldsJspf", "print/_fields_settlement.jspf");
-	        	  break;
-	
-	        	case "AT003":
-	        	  model.addAttribute("bgImageUrl", "/approval/formPng/sales.jpg");
-	        	  model.addAttribute("fieldsJspf", "print/_fields_sales.jspf");
-	        	  break;
-	
-	        	case "AT005":
-	        	  model.addAttribute("bgImageUrl", "/approval/formPng/purchase_request.jpg");
-	        	  model.addAttribute("fieldsJspf", "print/_fields_purchase_request_pr.jspf");
-	        	  break;
-	
-	        	case "AT006":
-	        	  model.addAttribute("bgImageUrl", "/approval/formPng/purchase_order.png");
-	        	  model.addAttribute("fieldsJspf", "print/_fields_purchase_order_po.jspf");
-	        	  break;
-	
-	        	case "AT009":
-	        	default:
-	        	  model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
-	        	  model.addAttribute("fieldsJspf", "print/_fields_vacation.jspf");
-	
+            case "AT001":
+                model.addAttribute("bgImageUrl", "/approval/formPng/expense.png");
+                model.addAttribute("fieldsJspf", "print/_fields_expense.jspf");
+                break;
 
+            case "AT002":
+                model.addAttribute("bgImageUrl", "/approval/formPng/settlement.png");
+                model.addAttribute("fieldsJspf", "print/_fields_settlement.jspf");
+                break;
+
+            case "AT003":
+                model.addAttribute("bgImageUrl", "/approval/formPng/sales.jpg");
+                // NOTE: 실제 파일명은 _fields_order.jspf 입니다.
+                model.addAttribute("fieldsJspf", "print/_fields_order.jspf");
+                break;
+
+            case "AT005":
+                model.addAttribute("bgImageUrl", "/approval/formPng/purchase_request.jpg");
+                // NOTE: 실제 파일명은 _fields_purchase.jspf 입니다.
+                model.addAttribute("fieldsJspf", "print/_fields_purchase.jspf");
+                break;
+
+            case "AT006":
+                model.addAttribute("bgImageUrl", "/approval/formPng/purchase_order.png");
+                model.addAttribute("fieldsJspf", "print/_fields_purchase_order_po.jspf");
+                break;
+
+            case "AT009":
+            default:
+                model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
+                model.addAttribute("fieldsJspf", "print/_fields_vacation.jspf");
         }
 
         return "approval/print";
     }
-
 
     // 결재 처리 화면(GET)
     @GetMapping("handle")

@@ -8,8 +8,9 @@
   <c:out value="${doc.extNo3}" /> 원
 </div>
 
+<!-- 확정 사유 -->
 <div class="field pre" style="left:420px; top:520px; width:980px; height:300px;">
-  <c:out value="${doc.extTxt1}" />
+  <c:out value="${doc.extTxt2}" />
 </div>
 
 <div class="field center" style="left:520px; top:1550px; width:420px;">
