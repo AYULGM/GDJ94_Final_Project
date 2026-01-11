@@ -24,7 +24,7 @@ public class ApprovalService {
     private final ApprovalProductMapper approvalProductMapper;
     private final SignatureMapper signatureMapper;
     private final CalendarEventMapper calendarEventMapper;
-
+    private final ApprovalApplyService approvalApplyService;
     // 내가 기안한 문서 목록
     @Transactional(readOnly = true)
     public List<ApprovalMyDocRowDTO> getMyDocs(Long drafterId) {
@@ -243,7 +243,15 @@ public class ApprovalService {
         approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002", loginUserId);
         approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
         approvalMapper.updateFirstLineToPending(docVerId, "ALS002", loginUserId);
+
+        // 🔴 🔴 🔴 이게 빠져 있었음
+        String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+        if (!"AT009".equals(typeCode)) {
+            approvalApplyService.applyApprovedDoc(docVerId, loginUserId);
+        }
+
     }
+
 
     // 재상신(임시/반려/회수만 가능)
     @Transactional

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.health.app.approval.ApprovalMapper">
 
@@ -66,6 +66,70 @@
     WHERE v.doc_ver_id = #{docVerId}
       AND v.use_yn = 1
   </update>
+  <!-- 확장 문서 출력용 (AT001~AT006 등) -->
+<select id="selectExtPrint"
+        parameterType="long"
+        resultType="com.health.app.approval.ApprovalExtPrintDTO">
+  SELECT
+      d.doc_id          AS docId,
+      v.doc_ver_id      AS docVerId,
+      d.doc_no          AS docNo,
+      d.type_code       AS typeCode,
+      d.form_code       AS formCode,
+      d.status_code     AS statusCode,
+      d.drafter_user_id AS drafterUserId,
+
+      /* 기안자 서명(휴가와 동일 방식) */
+      (
+        SELECT us.file_id
+        FROM user_signatures us
+        WHERE us.user_id = d.drafter_user_id
+          AND us.use_yn = 1
+          AND us.is_primary = 1
+        ORDER BY us.signature_id DESC
+        LIMIT 1
+      ) AS drafterSignatureFileId,
+
+      /* 공통 출력(기안자 인적사항) */
+      u.name       AS employeeName,
+      cd.code_desc AS departmentName,
+      cr.code_desc AS positionName,
+
+      /* 확장 필드 */
+      e.ext_dt1    AS extDt1,
+      e.ext_dt2    AS extDt2,
+      e.ext_no1    AS extNo1,
+      e.ext_no2    AS extNo2,
+      e.ext_no3    AS extNo3,
+      e.ext_txt1   AS extTxt1,
+      e.ext_txt2   AS extTxt2,
+      e.ext_txt3   AS extTxt3,
+      e.ext_txt4   AS extTxt4,
+      e.ext_txt6   AS extTxt6,
+      e.ext_code1  AS extCode1,
+
+      /* 작성일 문자열(휴가처럼 날짜 포맷) */
+      DATE_FORMAT(e.ext_dt3, '%Y년 %m월 %d일') AS writtenDateStr
+
+  FROM approval_document_versions v
+  JOIN approval_documents d
+    ON d.doc_id = v.doc_id
+   AND d.use_yn = 1
+  LEFT JOIN approval_document_ext e
+    ON e.doc_ver_id = v.doc_ver_id
+   AND e.use_yn = 1
+  LEFT JOIN users u
+    ON u.user_id = d.drafter_user_id
+  LEFT JOIN common_code cd
+    ON cd.code_group = 'DEPARTMENT_CODE'
+   AND cd.code = u.department_code
+  LEFT JOIN common_code cr
+    ON cr.code_group = 'ROLE'
+   AND cr.code = u.role_code
+  WHERE v.doc_ver_id = #{docVerId}
+    AND v.use_yn = 1
+</select>
+
 
   <update id="updateDocumentExtByDocVerId" parameterType="com.health.app.approval.ApprovalDraftDTO">
     UPDATE approval_document_ext
@@ -602,5 +666,14 @@
       AND doc_ver_id = #{docVerId}
       AND status_code = 'ALS002'
   </select>
+<select id="selectTypeCodeByDocVerId" resultType="string">
+  SELECT d.type_code
+  FROM approval_document_versions v
+  JOIN approval_documents d
+    ON d.doc_id = v.doc_id
+   AND d.use_yn = 1
+  WHERE v.doc_ver_id = #{docVerId}
+    AND v.use_yn = 1
+</select>
 
 </mapper>
