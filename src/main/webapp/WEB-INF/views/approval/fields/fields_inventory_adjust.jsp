@@ -60,20 +60,6 @@
     <div class="form-text">extNo3 = 조정수량</div>
   </div>
 
-  <!-- ✅ 기준수량/조정후수량 제거 (inventory.quantity 미매핑 정책) -->
-  <!--
-  <div class="col-md-4">
-    <label class="form-label mt-2">기준 수량</label>
-    <input type="number" class="form-control" name="extNo4" id="baseQty" readonly />
-    <div class="form-text">extNo4 = 기준수량</div>
-  </div>
-
-  <div class="col-md-4">
-    <label class="form-label mt-2">조정 후 수량</label>
-    <input type="number" class="form-control" name="extNo5" id="afterQty" readonly />
-    <div class="form-text">extNo5 = 조정후수량</div>
-  </div>
-  -->
 
   <div class="col-12 mt-2">
     <label class="form-label">조정 사유</label>
@@ -218,31 +204,26 @@
 
   // ✅ 지점 선택 시 해당 지점 상품 목록 로드
   async function loadProductsByBranch(branchId) {
-    rebuildProductOptions([]);   // 일단 비움
-    resetAllRowsAndJson();       // ✅ 지점 바뀌면 기존 내역은 무조건 리셋(안전)
+  rebuildProductOptions([]);
+  resetAllRowsAndJson();
+  if (!branchId) return;
 
-    if (!branchId) return;
+  try {
+    const res = await fetch(`${pageContext.request.contextPath}/approval/products?branchId=` + encodeURIComponent(branchId), {
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
 
-    try {
-      // 컨트롤러가 이 경로를 제공해야 함
-      // 만약 /approval/products?branchId= 형태라면 아래 URL만 바꾸면 됨
-      const res = await fetch(`/approval/api/branches/${branchId}/products`, {
-        headers: { "Accept": "application/json" }
-      });
-
-      if (!res.ok) {
-        alert("지점 상품 목록을 불러오지 못했습니다.");
-        return;
-      }
-
-      const list = await res.json(); // [{productId, productName, productDesc, price}, ...]
-      rebuildProductOptions(list);
-
-    } catch (e) {
-      console.error(e);
-      alert("상품 목록 조회 중 오류가 발생했습니다.");
-    }
+    const products = await res.json();
+    rebuildProductOptions(products);
+  } catch (e) {
+    console.error(e);
+    alert("상품 목록을 불러오지 못했습니다.");
+    rebuildProductOptions([]);
   }
+}
+
+  
 
   // 입력행 미리보기 갱신(유형/수량 + 물품명 자동세팅)
   function recalcPreview() {
