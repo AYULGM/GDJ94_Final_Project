@@ -147,10 +147,10 @@ async function loadBranchOptions() {
         const branches = await response.json();
 
         const select = document.getElementById('branchId');
-        branches.forEach(branch => {
+        branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;
+            option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
     } catch (error) {

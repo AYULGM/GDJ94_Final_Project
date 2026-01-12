@@ -187,7 +187,7 @@ async function loadExpenseDetail() {
         document.getElementById('updateDate').textContent = formatDateTime(expense.updateDate);
 
         // 수정 버튼 링크 설정
-        document.getElementById('editButton').href = `/expenses/form?expenseId=${expense.expenseId}`;
+        document.getElementById('editButton').href = '/expenses/form?expenseId=' + expense.expenseId;
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);

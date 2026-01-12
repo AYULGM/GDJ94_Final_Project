@@ -5,6 +5,7 @@ import com.health.app.expenses.ExpenseDto;
 import com.health.app.expenses.ExpenseSearchDto;
 import com.health.app.expenses.ExpenseMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,9 @@ import java.util.Map;
 
 /**
  * 지출 관리 Service 구현체
+ *
+ * @CacheEvict: 지출 데이터 변경 시 통계 캐시 무효화
+ * - 지출 등록/수정/삭제 시 모든 통계 캐시를 삭제하여 데이터 정합성 보장
  */
 @Service
 @RequiredArgsConstructor
@@ -53,6 +57,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "statistics", allEntries = true)
     public void createExpense(ExpenseDto expenseDto, Long currentUserId) {
         expenseDto.setCreateUser(currentUserId);
 
@@ -66,6 +71,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "statistics", allEntries = true)
     public void updateExpense(ExpenseDto expenseDto, Long currentUserId) {
         expenseDto.setUpdateUser(currentUserId);
         expenseMapper.updateExpense(expenseDto);
@@ -73,11 +79,13 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "statistics", allEntries = true)
     public void deleteExpense(Long expenseId, Long currentUserId) {
         expenseMapper.deleteExpense(expenseId, currentUserId);
     }
 
     @Override
+    @org.springframework.cache.annotation.Cacheable(value = "options", key = "'branches'")
     public List<com.health.app.inventory.OptionDto> getBranchOptions() {
         return expenseMapper.selectBranchOptions();
     }

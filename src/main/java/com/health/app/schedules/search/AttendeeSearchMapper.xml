@@ -19,7 +19,7 @@
         FROM
             users u
         LEFT JOIN
-            common_code c ON u.department_code = c.code AND c.code_group = 'DEPARTMENT'
+            common_code c ON u.department_code = c.code AND c.code_group = 'DEPARTMENT_CODE'
         WHERE
             u.name LIKE CONCAT('%', #{name}, '%')
             AND u.use_yn = TRUE
@@ -35,7 +35,7 @@
         FROM
             users u
         LEFT JOIN
-            common_code c ON u.department_code = c.code AND c.code_group = 'DEPARTMENT'
+            common_code c ON u.department_code = c.code AND c.code_group = 'DEPARTMENT_CODE'
         WHERE
             u.user_id IN
             <foreach item="userId" collection="userIds" open="(" separator="," close=")">

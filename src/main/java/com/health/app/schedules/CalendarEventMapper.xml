@@ -23,6 +23,7 @@
         <result property="ownerUserId" column="owner_user_id"/>
         <result property="branchId" column="branch_id"/>
         <result property="createUser" column="create_user"/>
+        <result property="createUserName" column="create_user_name"/>
         <result property="createDate" column="create_date" javaType="java.time.LocalDateTime" jdbcType="TIMESTAMP"/>
         <result property="updateUser" column="update_user"/>
         <result property="updateDate" column="update_date" javaType="java.time.LocalDateTime" jdbcType="TIMESTAMP"/>
@@ -45,36 +46,53 @@
 
     <select id="selectCalendarEventById" parameterType="java.lang.Long" resultMap="calendarEventResultMap">
         SELECT
-            event_id, scope, title, description, start_at, end_at, location, status_code,
-            is_all_day, is_repeating, repeat_info, department_code, owner_user_id, branch_id,
-            create_user, create_date, update_user, update_date, use_yn
-        FROM calendar_events
-        WHERE event_id = #{eventId} AND use_yn = TRUE
+            ce.event_id, ce.scope, ce.title, ce.description, ce.start_at, ce.end_at, ce.location, ce.status_code,
+            ce.is_all_day, ce.is_repeating, ce.repeat_info, ce.department_code, ce.owner_user_id, ce.branch_id,
+            ce.create_user, u.name AS create_user_name, ce.create_date, ce.update_user, ce.update_date, ce.use_yn
+        FROM calendar_events ce
+        LEFT JOIN users u ON ce.create_user = u.user_id
+        WHERE ce.event_id = #{eventId} AND ce.use_yn = TRUE
     </select>
 
     <select id="selectCalendarEvents" parameterType="map" resultMap="calendarEventResultMap">
         SELECT
-            event_id, scope, title, description, start_at, end_at, location, status_code,
-            is_all_day, is_repeating, repeat_info, department_code, owner_user_id, branch_id,
-            create_user, create_date, update_user, update_date, use_yn
-        FROM calendar_events
-        WHERE use_yn = TRUE
-        <if test="start != null and end != null">
-            AND ((start_at BETWEEN #{start} AND #{end}) OR (end_at BETWEEN #{start} AND #{end}))
-        </if>
-        <if test="scope != null">
-            AND scope = #{scope}
-        </if>
-        <if test="ownerUserId != null">
-            AND owner_user_id = #{ownerUserId}
-        </if>
-        <if test="branchId != null">
-            AND branch_id = #{branchId}
-        </if>
-        <if test="departmentCode != null">
-            AND department_code = #{departmentCode}
-        </if>
-        ORDER BY start_at ASC
+            ce.event_id, ce.scope, ce.title, ce.description, ce.start_at, ce.end_at, ce.location, ce.status_code,
+            ce.is_all_day, ce.is_repeating, ce.repeat_info, ce.department_code, ce.owner_user_id, ce.branch_id,
+            ce.create_user, u.name AS create_user_name, ce.create_date, ce.update_user, ce.update_date, ce.use_yn
+        FROM calendar_events ce
+        LEFT JOIN users u ON ce.create_user = u.user_id
+        <where>
+            ce.use_yn = TRUE
+            <if test="start != null and end != null">
+                AND ((ce.start_at BETWEEN #{start} AND #{end}) OR (ce.end_at BETWEEN #{start} AND #{end}))
+            </if>
+
+            <choose>
+                <!-- 1. scope가 명시적으로 주어진 경우 (my, department, company 등) -->
+                <when test="scope != null">
+                    AND ce.scope = #{scope}
+                    <if test='scope == "PERSONAL"'>
+                        AND ce.owner_user_id = #{currentUserId}
+                    </if>
+                    <if test='scope == "DEPARTMENT"'>
+                        AND ce.department_code = #{currentUserDepartmentCode}
+                    </if>
+                </when>
+                <!-- 2. scope가 'all' 이거나 주어지지 않은 경우: 기본 권한 적용 -->
+                <otherwise>
+                    AND (
+                        ce.scope = 'COMPANY'
+                        OR (ce.scope = 'DEPARTMENT' AND ce.department_code = #{currentUserDepartmentCode})
+                        OR (ce.scope = 'PERSONAL' AND ce.owner_user_id = #{currentUserId})
+                    )
+                </otherwise>
+            </choose>
+
+            <if test="branchId != null">
+                AND ce.branch_id = #{branchId}
+            </if>
+        </where>
+        ORDER BY ce.start_at ASC
     </select>
 
     <update id="updateCalendarEvent" parameterType="com.health.app.schedules.CalendarEventDto">

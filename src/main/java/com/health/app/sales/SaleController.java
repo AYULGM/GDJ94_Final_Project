@@ -79,8 +79,8 @@ public class SaleController {
     public ResponseEntity<Map<String, Object>> createSale(
             @RequestBody SaleDto saleDto,
             Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        saleService.createSale(saleDto, loginUser.getUserId());
+        Long currentUserId = getCurrentUserId(authentication);
+        saleService.createSale(saleDto, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,
@@ -98,9 +98,9 @@ public class SaleController {
             @PathVariable Long saleId,
             @RequestBody SaleDto saleDto,
             Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long currentUserId = getCurrentUserId(authentication);
         saleDto.setSaleId(saleId);
-        saleService.updateSale(saleDto, loginUser.getUserId());
+        saleService.updateSale(saleDto, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,
@@ -117,8 +117,8 @@ public class SaleController {
     public ResponseEntity<Map<String, Object>> deleteSale(
             @PathVariable Long saleId,
             Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        saleService.deleteSale(saleId, loginUser.getUserId());
+        Long currentUserId = getCurrentUserId(authentication);
+        saleService.deleteSale(saleId, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,
@@ -134,5 +134,16 @@ public class SaleController {
     @ResponseBody
     public ResponseEntity<?> getBranchOptions() {
         return ResponseEntity.ok(saleService.getBranchOptions());
+    }
+
+    /**
+     * 현재 사용자 ID 조회 (인증 없을 경우 기본값 1L 반환)
+     */
+    private Long getCurrentUserId(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
+            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            return loginUser.getUserId();
+        }
+        return 1L; // 기본 사용자 ID (개발용)
     }
 }

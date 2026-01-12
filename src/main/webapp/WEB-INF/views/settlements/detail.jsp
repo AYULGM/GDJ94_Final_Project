@@ -214,7 +214,7 @@ async function loadSettlementDetail() {
         document.getElementById('settlementNo').textContent = settlement.settlementNo || '-';
         document.getElementById('branchName').textContent = settlement.branchName || '-';
         document.getElementById('settlementPeriod').textContent =
-            `${formatDate(settlement.fromDate)} ~ ${formatDate(settlement.toDate)}`;
+            formatDate(settlement.fromDate) + ' ~ ' + formatDate(settlement.toDate);
 
         document.getElementById('salesCount').textContent = formatNumber(settlement.salesCount || 0) + ' 건';
         document.getElementById('salesAmount').textContent = formatCurrency(settlement.salesAmount || 0);
@@ -230,7 +230,7 @@ async function loadSettlementDetail() {
         document.getElementById('settledAt').textContent = formatDateTime(settlement.settledAt);
 
         // 상태 뱃지
-        const statusBadge = `<span class="badge ${getStatusBadgeClass(settlement.statusCode)}">${getStatusName(settlement.statusCode)}</span>`;
+        const statusBadge = '<span class="badge ' + getStatusBadgeClass(settlement.statusCode) + '">' + getStatusName(settlement.statusCode) + '</span>';
         document.getElementById('statusCode').innerHTML = statusBadge;
 
         // 이력 정보
@@ -262,18 +262,18 @@ async function loadSettlementHistories() {
             return;
         }
 
-        tbody.innerHTML = histories.map(history => `
-            <tr>
-                <td>${formatDateTime(history.historyDate)}</td>
-                <td>
-                    <span class="badge ${getStatusBadgeClass(history.statusCode)}">
-                        ${getStatusName(history.statusCode)}
-                    </span>
-                </td>
-                <td>${history.handledByName || '-'}</td>
-                <td>${history.reason || '-'}</td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = histories.map(history =>
+            '<tr>' +
+                '<td>' + formatDateTime(history.historyDate) + '</td>' +
+                '<td>' +
+                    '<span class="badge ' + getStatusBadgeClass(history.statusCode) + '">' +
+                        getStatusName(history.statusCode) +
+                    '</span>' +
+                '</td>' +
+                '<td>' + (history.handledByName || '-') + '</td>' +
+                '<td>' + (history.reason || '-') + '</td>' +
+            '</tr>'
+        ).join('');
 
     } catch (error) {
         console.error('이력 로드 실패:', error);

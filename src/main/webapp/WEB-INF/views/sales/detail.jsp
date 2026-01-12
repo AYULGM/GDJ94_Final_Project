@@ -171,7 +171,7 @@ async function loadSaleDetail() {
         document.getElementById('memo').textContent = sale.memo || '-';
 
         // 상태 뱃지
-        const statusBadge = `<span class="badge ${getStatusBadgeClass(sale.statusCode)}">${getStatusName(sale.statusCode)}</span>`;
+        const statusBadge = '<span class="badge ' + getStatusBadgeClass(sale.statusCode) + '">' + getStatusName(sale.statusCode) + '</span>';
         document.getElementById('statusCode').innerHTML = statusBadge;
 
         // 이력 정보
@@ -181,7 +181,7 @@ async function loadSaleDetail() {
         document.getElementById('updateDate').textContent = formatDateTime(sale.updateDate);
 
         // 수정 버튼 링크 설정
-        document.getElementById('editButton').href = `/sales/form?saleId=${sale.saleId}`;
+        document.getElementById('editButton').href = '/sales/form?saleId=' + sale.saleId;
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);

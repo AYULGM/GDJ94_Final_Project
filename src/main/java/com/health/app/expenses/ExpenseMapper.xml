@@ -208,8 +208,8 @@
        ========================================================= -->
     <select id="selectBranchOptions" resultType="com.health.app.inventory.OptionDto">
         SELECT
-            branch_id   AS value,
-            branch_name AS label
+            branch_id   AS id,
+            branch_name AS name
         FROM branch
         WHERE use_yn = 1
         ORDER BY branch_name

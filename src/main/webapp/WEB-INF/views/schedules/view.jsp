@@ -168,6 +168,10 @@
                                         <div class="col-md-9" id="detailEventAttendees"></div>
                                     </div>
                                     <div class="row mb-3">
+                                        <div class="col-md-3"><strong>등록자</strong></div>
+                                        <div class="col-md-9" id="detailEventCreator"></div>
+                                    </div>
+                                    <div class="row mb-3">
                                         <div class="col-md-3"><strong>반복 여부</strong></div>
                                         <div class="col-md-9" id="detailEventRepeating"></div>
                                     </div>

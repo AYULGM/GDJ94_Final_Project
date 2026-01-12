@@ -77,6 +77,11 @@ public class ScheduleService {
         calendarEvent.setUseYn(true);
         calendarEvent.setStatusCode(ScheduleStatus.SCHEDULED);
 
+        // 개인 일정인 경우 ownerUserId를 생성자로 설정
+        if (calendarEvent.getScope() == ScheduleType.PERSONAL) {
+            calendarEvent.setOwnerUserId(calendarEvent.getCreateUser());
+        }
+
         if (calendarEvent.getAllDay() == null) {
             calendarEvent.setAllDay(false);
         }
@@ -229,10 +234,15 @@ public class ScheduleService {
         if (calendarEvent.getEventId() == null) {
             throw new IllegalArgumentException("Event ID cannot be null for update operation.");
         }
-        
+
         // TODO: 수정 권한 확인 로직 추가 필요 (현재는 임시로 사용자 ID 1L로 설정)
         // calendarEvent.setUpdateUser(로그인한 사용자 ID);
         calendarEvent.setUpdateDate(LocalDateTime.now());
+
+        // 개인 일정인 경우 ownerUserId를 updateUser로 설정 (수정자 기준)
+        if (calendarEvent.getScope() == ScheduleType.PERSONAL && calendarEvent.getUpdateUser() != null) {
+            calendarEvent.setOwnerUserId(calendarEvent.getUpdateUser());
+        }
 
         // 1. 시간 충돌 확인 (수정 중인 이벤트 제외)
         List<AttendeeConflictDto> conflicts = checkTimeConflicts(calendarEvent.getEventId(), calendarEvent.getStartAt(), calendarEvent.getEndAt(), calendarEvent.getAttendeeIds());

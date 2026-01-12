@@ -100,7 +100,7 @@
                                     <th class="text-end">총 매출</th>
                                     <th class="text-end">지출 건수</th>
                                     <th class="text-end">총 지출</th>
-                                    <th class="text-end">손익</th>
+                                    <th class="text-end">추정 손익 (세후)</th>
                                     <th class="text-end">수익률</th>
                                     <th>상태</th>
                                 </tr>
@@ -135,10 +135,10 @@ let comparisonChart;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
-    // 기본 날짜 설정 (이번 달)
+    // 기본 날짜 설정 (최근 6개월)
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById('startDate').value = formatDate(firstDay);
+    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+    document.getElementById('startDate').value = formatDate(sixMonthsAgo);
     document.getElementById('endDate').value = formatDate(today);
 
     // 지점 목록 로드
@@ -164,10 +164,10 @@ async function loadBranchOptions() {
         const branches = await response.json();
 
         const select = document.getElementById('branchId');
-        branches.forEach(branch => {
+        branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;
+            option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
     } catch (error) {
@@ -274,51 +274,57 @@ function updateTable(data) {
         return;
     }
 
-    // 테이블 바디
+    // 테이블 바디 (각 행도 법인세 반영)
     tbody.innerHTML = data.map(item => {
-        const profitClass = getProfitClass(item.profitStatus);
+        // 각 행별 세후 순이익 계산
+        const grossProfit = (item.salesAmount || 0) - (item.expenseAmount || 0);
+        const tax = calculateCorporateTax(grossProfit);
+        const netProfit = grossProfit - tax;
+        const profitRate = item.salesAmount > 0 ? ((netProfit / item.salesAmount) * 100) : 0;
 
-        return `
-            <tr>
-                <td>${item.periodLabel || item.period}</td>
-                <td>${item.branchName || '전체'}</td>
-                <td class="text-end">${formatNumber(item.salesCount || 0)}</td>
-                <td class="text-end">${formatCurrency(item.salesAmount || 0)}</td>
-                <td class="text-end">${formatNumber(item.expenseCount || 0)}</td>
-                <td class="text-end">${formatCurrency(item.expenseAmount || 0)}</td>
-                <td class="text-end ${profitClass}">${formatCurrency(item.profitAmount || 0)}</td>
-                <td class="text-end ${profitClass}">${(item.profitRate || 0).toFixed(1)}%</td>
-                <td>
-                    <span class="badge ${getProfitBadgeClass(item.profitStatus)}">
-                        ${getProfitStatusName(item.profitStatus)}
-                    </span>
-                </td>
-            </tr>
-        `;
+        const profitClass = netProfit >= 0 ? 'text-success' : 'text-danger';
+        const profitStatus = netProfit >= 0 ? 'PROFIT' : 'LOSS';
+
+        return '<tr>' +
+                '<td>' + (item.periodLabel || item.period) + '</td>' +
+                '<td>' + (item.branchName || '전체') + '</td>' +
+                '<td class="text-end">' + formatNumber(item.salesCount || 0) + '</td>' +
+                '<td class="text-end">' + formatCurrency(item.salesAmount || 0) + '</td>' +
+                '<td class="text-end">' + formatNumber(item.expenseCount || 0) + '</td>' +
+                '<td class="text-end">' + formatCurrency(item.expenseAmount || 0) + '</td>' +
+                '<td class="text-end ' + profitClass + '">' + formatCurrency(netProfit) + '</td>' +
+                '<td class="text-end ' + profitClass + '">' + profitRate.toFixed(1) + '%</td>' +
+                '<td>' +
+                    '<span class="badge ' + getProfitBadgeClass(profitStatus) + '">' +
+                        getProfitStatusName(profitStatus) +
+                    '</span>' +
+                '</td>' +
+            '</tr>';
     }).join('');
 
-    // 합계 행
+    // 합계 행 (법인세 반영)
     const totalSales = data.reduce((sum, item) => sum + (item.salesAmount || 0), 0);
     const totalExpenses = data.reduce((sum, item) => sum + (item.expenseAmount || 0), 0);
-    const totalProfit = totalSales - totalExpenses;
+    const grossProfit = totalSales - totalExpenses;  // 세전 순이익
+    const corporateTax = calculateCorporateTax(grossProfit);  // 법인세
+    const totalProfit = grossProfit - corporateTax;  // 세후 순이익 (추정)
     const totalRate = totalSales > 0 ? ((totalProfit / totalSales) * 100) : 0;
     const totalSalesCount = data.reduce((sum, item) => sum + (item.salesCount || 0), 0);
     const totalExpenseCount = data.reduce((sum, item) => sum + (item.expenseCount || 0), 0);
 
     const profitClass = totalProfit >= 0 ? 'text-success' : 'text-danger';
 
-    document.getElementById('tableFoot').innerHTML = `
-        <tr class="table-active fw-bold">
-            <td colspan="2">합계</td>
-            <td class="text-end">${formatNumber(totalSalesCount)}</td>
-            <td class="text-end">${formatCurrency(totalSales)}</td>
-            <td class="text-end">${formatNumber(totalExpenseCount)}</td>
-            <td class="text-end">${formatCurrency(totalExpenses)}</td>
-            <td class="text-end ${profitClass}">${formatCurrency(totalProfit)}</td>
-            <td class="text-end ${profitClass}">${totalRate.toFixed(1)}%</td>
-            <td>-</td>
-        </tr>
-    `;
+    document.getElementById('tableFoot').innerHTML =
+        '<tr class="table-active fw-bold">' +
+            '<td colspan="2">합계</td>' +
+            '<td class="text-end">' + formatNumber(totalSalesCount) + '</td>' +
+            '<td class="text-end">' + formatCurrency(totalSales) + '</td>' +
+            '<td class="text-end">' + formatNumber(totalExpenseCount) + '</td>' +
+            '<td class="text-end">' + formatCurrency(totalExpenses) + '</td>' +
+            '<td class="text-end ' + profitClass + '">' + formatCurrency(totalProfit) + '</td>' +
+            '<td class="text-end ' + profitClass + '">' + totalRate.toFixed(1) + '%</td>' +
+            '<td>-</td>' +
+        '</tr>';
 }
 
 // 손익 상태별 클래스
@@ -357,5 +363,33 @@ function formatDate(date) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+/**
+ * 법인세 자동 계산 (누진세율)
+ *
+ * 세율 구조:
+ * - 2억 이하: 9%
+ * - 2억 초과: 2억까지는 9%, 초과분은 19%
+ *
+ * @param {number} profit - 세전 순이익
+ * @returns {number} - 법인세액
+ */
+function calculateCorporateTax(profit) {
+    if (profit <= 0) return 0;  // 이익이 0 이하면 세금 없음
+
+    const threshold = 200000000;  // 2억원
+    const lowRate = 0.09;         // 9% (2억 이하)
+    const highRate = 0.19;        // 19% (2억 초과분)
+
+    if (profit <= threshold) {
+        // 2억 이하: 전체에 9% 적용
+        return profit * lowRate;
+    } else {
+        // 2억 초과: 2억까지는 9%, 초과분은 19%
+        const lowTax = threshold * lowRate;          // 2억 × 9% = 1,800만원
+        const highTax = (profit - threshold) * highRate;  // 초과분 × 19%
+        return lowTax + highTax;
+    }
 }
 </script>

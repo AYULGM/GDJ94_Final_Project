@@ -7,6 +7,7 @@ import com.health.app.settlements.SettlementStatus;
 import com.health.app.settlements.*;
 import com.health.app.settlements.SettlementMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,9 @@ import java.util.Map;
 
 /**
  * 정산 Service 구현체
+ *
+ * @CacheEvict: 정산 데이터 변경 시 통계 및 정산 캐시 무효화
+ * - 정산 생성/확정/취소 시 통계 캐시를 삭제하여 데이터 정합성 보장
  */
 @Service
 @RequiredArgsConstructor
@@ -59,6 +63,7 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"statistics", "settlements"}, allEntries = true)
     public Long createSettlement(CreateSettlementRequestDto requestDto, Long currentUserId) {
         // 1. 기간별 매출/지출 집계
         BigDecimal salesAmount = settlementMapper.selectSalesTotalAmount(
@@ -127,6 +132,7 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"statistics", "settlements"}, allEntries = true)
     public void confirmSettlement(Long settlementId, String reason, Long currentUserId) {
         // 1. 기존 정산 정보 조회
         SettlementDetailDto settlement = settlementMapper.selectSettlementDetail(settlementId);
@@ -187,6 +193,7 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"statistics", "settlements"}, allEntries = true)
     public void cancelSettlement(Long settlementId, String reason, Long currentUserId) {
         // 1. 기존 정산 정보 조회
         SettlementDetailDto settlement = settlementMapper.selectSettlementDetail(settlementId);
@@ -237,6 +244,7 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"statistics", "settlements"}, allEntries = true)
     public void deleteSettlement(Long settlementId, Long currentUserId) {
         settlementMapper.deleteSettlement(settlementId, currentUserId);
     }

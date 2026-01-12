@@ -90,7 +90,10 @@
                 <div class="small-box text-bg-success">
                     <div class="inner">
                         <h3 id="netProfit">-</h3>
-                        <p>추정 순이익</p>
+                        <p>추정 순이익 (세후)</p>
+                        <small class="text-white-50" style="font-size: 0.75rem;">
+                            법인세: <span id="corporateTax">-</span>
+                        </small>
                     </div>
                     <div class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
                         <i class="bi bi-currency-dollar"></i>
@@ -103,10 +106,10 @@
             <div class="col-lg-3 col-6">
                 <div class="small-box text-bg-warning">
                     <div class="inner">
-                        <h3 id="profitRate">-</h3>
-                        <p>수익률</p>
+                        <h3 id="profitRate" class="text-white">-</h3>
+                        <p class="text-white">수익률</p>
                     </div>
-                    <div class="small-box-footer link-dark link-underline-opacity-0 link-underline-opacity-50-hover">
+                    <div class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
                         <i class="bi bi-percent"></i>
                         <span id="rateChange" class="ms-2">-</span>
                     </div>
@@ -178,17 +181,21 @@
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js"></script>
 
+<!-- v1.2 - 전월 대비 증감률 기능 추가 -->
 <script>
 // 전역 변수
 let trendChart, profitChart, branchChart;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
-    // 기본 날짜 설정 (이번 달)
+    // 기본 날짜 설정 (최근 6개월)
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById('startDate').value = formatDate(firstDay);
-    document.getElementById('endDate').value = formatDate(today);
+    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+
+    startDateInput.value = formatDate(sixMonthsAgo);
+    endDateInput.value = formatDate(today);
 
     // 지점 목록 로드
     loadBranchOptions();
@@ -196,8 +203,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // 차트 초기화
     initCharts();
 
-    // 데이터 로드
-    loadDashboardData();
+    // ✅ 날짜 설정 후 초기 데이터 자동 로드
+    // requestAnimationFrame으로 DOM 업데이트 완료 후 실행
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            // 날짜 값이 제대로 설정되었는지 확인 후 로드
+            if (startDateInput.value && endDateInput.value) {
+                loadDashboardData();
+            }
+        });
+    });
 
     // 폼 제출 이벤트
     document.getElementById('filterForm').addEventListener('submit', function(e) {
@@ -213,10 +228,10 @@ async function loadBranchOptions() {
         const branches = await response.json();
 
         const select = document.getElementById('branchId');
-        branches.forEach(branch => {
+        branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;
+            option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
     } catch (error) {
@@ -226,26 +241,56 @@ async function loadBranchOptions() {
 
 // 대시보드 데이터 로드
 async function loadDashboardData() {
-    const branchId = document.getElementById('branchId').value;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+    const branchId = document.getElementById('branchId').value || '0';
+    let startDate = document.getElementById('startDate').value;
+    let endDate = document.getElementById('endDate').value;
+
+    // ✅ 날짜가 비어있으면 기본값으로 재설정 (DOM 업데이트 미완료 대비)
+    if (!startDate || !endDate) {
+        console.warn('[loadDashboardData] 날짜가 비어있어 기본값 사용');
+        const today = new Date();
+        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+        startDate = formatDate(sixMonthsAgo);
+        endDate = formatDate(today);
+
+        // input 필드에도 다시 설정
+        document.getElementById('startDate').value = startDate;
+        document.getElementById('endDate').value = endDate;
+    }
+
+    console.log('[loadDashboardData] 조회 조건:', { startDate, endDate, branchId });
+
+    // 전월 기간 계산 (증감률 비교용)
+    const currentStart = new Date(startDate);
+    const prevMonthEnd = new Date(currentStart.getFullYear(), currentStart.getMonth(), 0); // 전월 마지막날
+    const prevMonthStart = new Date(prevMonthEnd.getFullYear(), prevMonthEnd.getMonth(), 1); // 전월 첫날
+    const prevStartDate = formatDate(prevMonthStart);
+    const prevEndDate = formatDate(prevMonthEnd);
+
+    console.log('[loadDashboardData] 전월 기간:', { prevStartDate, prevEndDate });
 
     try {
-        // 병렬로 데이터 로드
-        const [salesByPeriod, expensesByPeriod, salesByBranch, comparison] = await Promise.all([
-            fetch(`/statistics/api/sales/by-period?startDate=${startDate}&endDate=${endDate}&branchId=${branchId}&groupBy=monthly`).then(r => r.json()),
-            fetch(`/statistics/api/expenses/by-period?startDate=${startDate}&endDate=${endDate}&branchId=${branchId}&groupBy=monthly`).then(r => r.json()),
-            fetch(`/statistics/api/sales/by-branch?startDate=${startDate}&endDate=${endDate}`).then(r => r.json()),
-            fetch(`/statistics/api/comparison?startDate=${startDate}&endDate=${endDate}&branchId=${branchId}&groupBy=monthly`).then(r => r.json())
+        // 병렬로 데이터 로드 (현재 월 + 전월 데이터)
+        const [salesByPeriod, expensesByPeriod, salesByBranch, expensesByBranch, comparison,
+               prevSalesByPeriod, prevExpensesByPeriod] = await Promise.all([
+            // 현재 월 데이터
+            fetch('/statistics/api/sales/by-period?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
+            fetch('/statistics/api/expenses/by-period?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
+            fetch('/statistics/api/sales/by-branch?startDate=' + startDate + '&endDate=' + endDate).then(r => r.json()),
+            fetch('/statistics/api/expenses/by-branch?startDate=' + startDate + '&endDate=' + endDate).then(r => r.json()),
+            fetch('/statistics/api/comparison?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
+            // 전월 데이터 (증감률 계산용)
+            fetch('/statistics/api/sales/by-period?startDate=' + prevStartDate + '&endDate=' + prevEndDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
+            fetch('/statistics/api/expenses/by-period?startDate=' + prevStartDate + '&endDate=' + prevEndDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json())
         ]);
 
-        // 요약 카드 업데이트
-        updateSummaryCards(salesByPeriod, expensesByPeriod);
+        // 요약 카드 업데이트 (전월 데이터 포함)
+        updateSummaryCards(salesByPeriod, expensesByPeriod, prevSalesByPeriod, prevExpensesByPeriod);
 
         // 차트 업데이트
         updateTrendChart(salesByPeriod, expensesByPeriod);
         updateProfitChart(comparison);
-        updateBranchChart(salesByBranch);
+        updateBranchChart(salesByBranch, expensesByBranch);
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);
@@ -254,22 +299,104 @@ async function loadDashboardData() {
 }
 
 // 요약 카드 업데이트
-function updateSummaryCards(salesData, expensesData) {
+function updateSummaryCards(salesData, expensesData, prevSalesData, prevExpensesData) {
+    // 현재 월 집계
     const totalSales = salesData.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
     const totalExpenses = expensesData.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-    const netProfit = totalSales - totalExpenses;
+    const grossProfit = totalSales - totalExpenses;  // 세전 순이익
+
+    // 법인세 자동 계산 (누진세율)
+    const corporateTax = calculateCorporateTax(grossProfit);
+    const netProfit = grossProfit - corporateTax;  // 세후 순이익 (추정)
     const profitRate = totalSales > 0 ? ((netProfit / totalSales) * 100) : 0;
 
+    // 전월 집계 (데이터 없을 경우 빈 배열로 처리)
+    const prevTotalSales = (prevSalesData || []).reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    const prevTotalExpenses = (prevExpensesData || []).reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    const prevGrossProfit = prevTotalSales - prevTotalExpenses;  // 전월 세전 순이익
+    const prevCorporateTax = calculateCorporateTax(prevGrossProfit);
+    const prevNetProfit = prevGrossProfit - prevCorporateTax;  // 전월 세후 순이익
+    const prevProfitRate = prevTotalSales > 0 ? ((prevNetProfit / prevTotalSales) * 100) : 0;
+
+    // 증감률 계산
+    const salesGrowth = calculateGrowthRate(totalSales, prevTotalSales);
+    const expensesGrowth = calculateGrowthRate(totalExpenses, prevTotalExpenses);
+    const profitGrowth = calculateGrowthRate(netProfit, prevNetProfit);
+    const rateChange = profitRate - prevProfitRate;
+
+    // 요약 카드 업데이트
     document.getElementById('totalSales').textContent = formatCurrency(totalSales);
     document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
     document.getElementById('netProfit').textContent = formatCurrency(netProfit);
+    document.getElementById('corporateTax').textContent = formatCurrency(corporateTax);  // 법인세액 표시
     document.getElementById('profitRate').textContent = profitRate.toFixed(1) + '%';
 
-    // 증감률 표시 (임시로 0으로 설정, 실제로는 이전 기간 데이터와 비교 필요)
-    document.getElementById('salesGrowth').textContent = '전월 대비 -';
-    document.getElementById('expensesGrowth').textContent = '전월 대비 -';
-    document.getElementById('profitGrowth').textContent = '전월 대비 -';
-    document.getElementById('rateChange').textContent = '전월 대비 -';
+    // 증감률 표시
+    document.getElementById('salesGrowth').innerHTML = formatGrowthRate(salesGrowth, '매출');
+    document.getElementById('expensesGrowth').innerHTML = formatGrowthRate(expensesGrowth, '지출', true);
+    document.getElementById('profitGrowth').innerHTML = formatGrowthRate(profitGrowth, '순이익');
+    document.getElementById('rateChange').innerHTML = formatRateChange(rateChange);
+}
+
+/**
+ * 법인세 자동 계산 (누진세율)
+ *
+ * 세율 구조:
+ * - 2억 이하: 9%
+ * - 2억 초과: 2억까지는 9%, 초과분은 19%
+ *
+ * @param {number} profit - 세전 순이익
+ * @returns {number} - 법인세액
+ */
+function calculateCorporateTax(profit) {
+    if (profit <= 0) return 0;  // 이익이 0 이하면 세금 없음
+
+    const threshold = 200000000;  // 2억원
+    const lowRate = 0.09;         // 9% (2억 이하)
+    const highRate = 0.19;        // 19% (2억 초과분)
+
+    if (profit <= threshold) {
+        // 2억 이하: 전체에 9% 적용
+        return profit * lowRate;
+    } else {
+        // 2억 초과: 2억까지는 9%, 초과분은 19%
+        const lowTax = threshold * lowRate;          // 2억 × 9% = 1,800만원
+        const highTax = (profit - threshold) * highRate;  // 초과분 × 19%
+        return lowTax + highTax;
+    }
+}
+
+// 증감률 계산 함수
+function calculateGrowthRate(current, previous) {
+    if (previous === 0) {
+        if (current === 0) return 0;
+        return 100; // 전월 0원에서 현재 값이 있으면 100% 증가로 표시
+    }
+    return ((current - previous) / previous) * 100;
+}
+
+// 증감률 포맷팅 함수
+function formatGrowthRate(rate, label, isExpense = false) {
+    if (rate === 0) {
+        return '전월 대비 <span class="text-white-50">0%</span>';
+    }
+
+    const icon = rate > 0 ? '↑' : '↓';
+    const absRate = Math.abs(rate).toFixed(1);
+
+    return '전월 대비 <span class="text-white">' + icon + ' ' + absRate + '%</span>';
+}
+
+// 수익률 변화 포맷팅 함수
+function formatRateChange(change) {
+    if (change === 0) {
+        return '전월 대비 <span class="text-white-50">0%p</span>';
+    }
+
+    const icon = change > 0 ? '↑' : '↓';
+    const absChange = Math.abs(change).toFixed(1);
+
+    return '전월 대비 <span class="text-white">' + icon + ' ' + absChange + '%p</span>';
 }
 
 // 매출/지출 추이 차트 초기화
@@ -404,12 +531,16 @@ function updateProfitChart(comparisonData) {
 }
 
 // 지점별 비교 차트 업데이트
-function updateBranchChart(branchData) {
-    const branchNames = branchData.map(item => item.branchName);
-    const salesValues = branchData.map(item => item.totalAmount || 0);
+function updateBranchChart(salesData, expensesData) {
+    // 매출 데이터를 기준으로 지점명 추출 (매출이 있는 지점만 표시)
+    const branchNames = salesData.map(item => item.branchName);
+    const salesValues = salesData.map(item => item.totalAmount || 0);
 
-    // 지출 데이터는 별도 API 호출 필요 (임시로 0으로 설정)
-    const expensesValues = branchData.map(() => 0);
+    // 매출 지점 순서에 맞춰 지출 데이터 매칭
+    const expensesValues = salesData.map(salesItem => {
+        const expenseItem = expensesData.find(e => e.branchId === salesItem.branchId);
+        return expenseItem ? (expenseItem.totalAmount || 0) : 0;
+    });
 
     branchChart.updateOptions({
         xaxis: { categories: branchNames },
@@ -432,9 +563,30 @@ function formatCurrency(value) {
 }
 
 function formatDate(date) {
+    console.log('[formatDate] 입력:', date);
+    console.log('[formatDate] 타입:', typeof date);
+    console.log('[formatDate] instanceof Date:', date instanceof Date);
+
+    // 날짜 객체 유효성 검사
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        console.error('[formatDate] Invalid date object:', date);
+        return '';  // 빈 문자열 반환
+    }
+
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    console.log('[formatDate] year:', year, 'month:', month, 'day:', day);
+
+    const monthStr = String(month).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+
+    console.log('[formatDate] monthStr:', monthStr, 'dayStr:', dayStr);
+
+    const formatted = year + '-' + monthStr + '-' + dayStr;
+
+    console.log('[formatDate] 최종 결과:', formatted);
+    return formatted;
 }
 </script>

@@ -40,6 +40,7 @@ public class CalendarEventDto {
     private List<Attachment> attachments; // 첨부파일 목록
 
     private Long createUser;
+    private String createUserName; // 등록자 이름
     private LocalDateTime createDate;
     private Long updateUser;
     private LocalDateTime updateDate;
