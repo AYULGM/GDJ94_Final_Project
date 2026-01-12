@@ -204,10 +204,24 @@
 
   // ✅ 지점 선택 시 해당 지점 상품 목록 로드
   async function loadProductsByBranch(branchId) {
-    rebuildProductOptions([]);   // 일단 비움
-    resetAllRowsAndJson();       // ✅ 지점 바뀌면 기존 내역은 무조건 리셋(안전)
+  rebuildProductOptions([]);
+  resetAllRowsAndJson();
+  if (!branchId) return;
 
-    if (!branchId) return;
+  try {
+    const res = await fetch(`${pageContext.request.contextPath}/approval/products?branchId=` + encodeURIComponent(branchId), {
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const products = await res.json();
+    rebuildProductOptions(products);
+  } catch (e) {
+    console.error(e);
+    alert("상품 목록을 불러오지 못했습니다.");
+    rebuildProductOptions([]);
+  }
+}
 
   
 

@@ -39,7 +39,7 @@ public class ApprovalController {
         return "approval/detail";
     }
 
-    // 작성/수정 폼
+ // 작성/수정 폼
     @GetMapping("form")
     public String approvalForm(@AuthenticationPrincipal LoginUser loginUser,
                                @RequestParam(required = false) Long docVerId,
@@ -51,6 +51,7 @@ public class ApprovalController {
             ApprovalDraftDTO draft = approvalService.getDraftForEdit(docVerId, loginUser.getUserId());
             model.addAttribute("draft", draft);
             model.addAttribute("mode", "edit");
+
             model.addAttribute("products",
                     draft.getBranchId() != null
                             ? approvalService.getProductsByBranch(draft.getBranchId())
@@ -62,6 +63,7 @@ public class ApprovalController {
 
         return "approval/form";
     }
+
 
     // 서명 페이지
     @GetMapping("signature")
@@ -121,7 +123,8 @@ public class ApprovalController {
             ra.addFlashAttribute("msg", e.getMessage());
         }
 
-        return "redirect:/approval/detail?docVerId=" + docVerId;
+        return "redirect:/approval/list";
+
     }
 
     // 재상신
@@ -137,7 +140,8 @@ public class ApprovalController {
             ra.addFlashAttribute("msg", e.getMessage());
         }
 
-        return "redirect:/approval/detail?docVerId=" + docVerId;
+        return "redirect:/approval/list";
+
     }
 
     // 결재 요청(최초 상신)
@@ -145,14 +149,26 @@ public class ApprovalController {
     public String submit(@AuthenticationPrincipal LoginUser loginUser,
                          @RequestParam Long docVerId,
                          RedirectAttributes ra) {
+    	
 
         try {
             approvalService.submit(loginUser.getUserId(), docVerId);
             ra.addFlashAttribute("msg", "결재 요청되었습니다.");
-            return "redirect:/approval/detail?docVerId=" + docVerId;
+
+            String typeCode = approvalService
+                    .getDraftForEdit(docVerId, loginUser.getUserId())
+                    .getTypeCode();
+
+            // AT009만 DETAIL, 나머지는 LIST
+            if ("AT009".equals(typeCode)) {
+                return "redirect:/approval/detail?docVerId=" + docVerId;
+            } else {
+                return "redirect:/approval/list";
+            }
+
         } catch (Exception e) {
             ra.addFlashAttribute("msg", e.getMessage());
-            return "redirect:/approval/line?docVerId=" + docVerId;
+            return "redirect:/approval/list";
         }
     }
 

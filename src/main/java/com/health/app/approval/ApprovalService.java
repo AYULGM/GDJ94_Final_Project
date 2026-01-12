@@ -234,10 +234,10 @@ public class ApprovalService {
         if (!loginUserId.equals(drafterId)) throw new IllegalStateException("기안자만 상신할 수 있습니다.");
 
         int lineCount = approvalMapper.countLinesByDocVerId(docVerId);
-        if (lineCount <= 0) throw new IllegalStateException("결재선이 없습니다.");
+        if (lineCount <= 0) throw new IllegalStateException("결재선이 없습니다. 결재선을 먼저 설정하세요.");
 
         String docStatus = approvalMapper.selectDocStatusByDocVerId(docVerId);
-        if (!"AS001".equals(docStatus)) throw new IllegalStateException("임시저장 문서만 상신 가능");
+        if (!"AS001".equals(docStatus)) throw new IllegalStateException("임시저장 문서만 결재 요청할 수 있습니다.");
 
         approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS002", loginUserId);
         approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002", loginUserId);
@@ -246,7 +246,7 @@ public class ApprovalService {
 
         String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
 
-        // ✅ AT005, AT006 포함 전부 즉시 반영 (AT009만 제외)
+        // ✅ AT009(휴가)만 최종승인 시 처리, 나머지(AT001~AT006 포함)는 상신 즉시 반영
         if (!"AT009".equals(typeCode)) {
             approvalApplyService.applyApprovedDoc(docVerId, loginUserId);
         }
@@ -401,4 +401,9 @@ public class ApprovalService {
 
         return sb.toString();
     }
+    
+    public Long getMyBranchId(Long userId) {
+        return approvalMapper.selectBranchIdByUserId(userId);
+    }
+
 }
