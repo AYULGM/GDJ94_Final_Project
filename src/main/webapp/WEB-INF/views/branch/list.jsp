@@ -13,12 +13,13 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">지점 목록</h3>
-                    </div>
                     
-                    <a href="./register" class="btn btn-primary">
-					    지점 등록
-					</a>
-
+	                    <div class="card-tools">
+		                    <a href="./register" class="btn btn-primary">
+							    지점 등록
+							</a>
+						</div>
+					</div>
                     <div class="card-body">
                         <table class="table table-bordered table-hover">
                             <thead>
