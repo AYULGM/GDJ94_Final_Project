@@ -75,8 +75,8 @@
     }
 
     signaturePad = new SignaturePad(canvas, {
-      minWidth: 0.7,
-      maxWidth: 2.5,
+      minWidth: 2.0,
+      maxWidth: 6.0,
       penColor: "black",
       backgroundColor: "rgba(0,0,0,0)"
     });

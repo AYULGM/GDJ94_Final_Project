@@ -30,10 +30,7 @@
 
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-      <h3 class="mb-0">결재선 설정</h3>
-      <div class="text-body-secondary small">
-        임시저장된 문서 버전(docVerId)에 결재선을 등록합니다.
-      </div>
+      <h3 class="mb-0">결재라인 설정</h3>
     </div>
     <div class="d-flex gap-2">
       <a href="/approval/form?docVerId=${docVerId}" class="btn btn-outline-secondary">문서로 돌아가기</a>
@@ -59,7 +56,6 @@
       <div class="card shadow-sm">
         <div class="card-header bg-white">
           <div class="fw-semibold">결재자 추가</div>
-          <div class="text-body-secondary small">본사/지점 트리에서 사용자 클릭 → 결재선에 추가</div>
         </div>
 
         <div class="card-body">
@@ -391,6 +387,12 @@ document.getElementById('btnSubmit')?.addEventListener('click', async () => {
 
 	  const branches = data.branches || {};
 	  const branchIds = Object.keys(branches);
+	  const toArray = (v) => {
+		  if (!v) return [];
+		  if (Array.isArray(v)) return v;
+		  if (typeof v === 'object') return Object.values(v); // 객체면 value들을 배열로
+		  return [];
+		};
 
 	  if (branchIds.length === 0) {
 	    const empty = document.createElement('div');
@@ -398,32 +400,41 @@ document.getElementById('btnSubmit')?.addEventListener('click', async () => {
 	    empty.textContent = '지점 데이터가 없습니다.';
 	    treeEl.appendChild(empty);
 	  } else {
-	    branchIds.forEach(branchId => {
-	      const node = branches[branchId] || {};
-	      const users = node.users || [];
+		  branchIds.forEach(branchId => {
+			  const node = branches[branchId] || {};
 
-	      const title = node.branchName || ('지점 ' + branchId);
-	      const { details, children } = makeDetails(title, `총 ${users.length}명`, false);
+			  const title = node.branchName || ('지점 ' + branchId);
 
-	      let localCount = 0;
-	      users.forEach(u => {
-	        const bid = pickBranchId(u) ?? branchId;
-	        const ok = addUserItem(children, u, 'branchId=' + bid);
-	        if (ok) { localCount++; totalUserCount++; }
-	      });
+			  const rawUsers = node.users ?? node.members ?? node.userList ?? node.approvers ?? [];
+			  const usersArr = toArray(rawUsers); // 이름도 usersArr로 변경(혼동 방지)
 
-	      if (localCount === 0) {
-	        if (keyword) return; // 검색 중이면 숨김
-	        const msg = document.createElement('div');
-	        msg.className = 'text-body-secondary';
-	        msg.textContent = '사용자가 없습니다.';
-	        children.appendChild(msg);
-	      }
+			  const { details, children } = makeDetails(title, '총 ' + usersArr.length + '명', false);
 
-	      if (keyword && localCount > 0) details.open = true;
 
-	      treeEl.appendChild(details);
-	    });
+			  let localCount = 0;
+			  usersArr.forEach(u => {
+			    const bid = pickBranchId(u) ?? branchId;
+			    const ok = addUserItem(children, u, 'branchId=' + bid);
+			    if (ok) { localCount++; totalUserCount++; }
+			  });
+
+			  // 검색이면 필터된 인원으로 배지 업데이트(선택)
+			  if (keyword) {
+				  details.querySelector('.tree-pill').textContent = '총 ' + localCount + '명';
+			    if (localCount > 0) details.open = true;
+			  }
+
+			  if (localCount === 0) {
+			    if (keyword) return;
+			    const msg = document.createElement('div');
+			    msg.className = 'text-body-secondary';
+			    msg.textContent = '사용자가 없습니다.';
+			    children.appendChild(msg);
+			  }
+
+			  treeEl.appendChild(details);
+			});
+
 	  }
 	}
 

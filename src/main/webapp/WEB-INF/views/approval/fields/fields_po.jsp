@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <input type="hidden" name="extTxt6" id="poItemsJson" />
 
@@ -35,26 +36,52 @@
     </div>
 
     <div class="table-responsive mt-2">
+      <!-- ✅ id를 poTable로 통일 -->
       <table class="table table-sm table-bordered align-middle" id="poTable">
         <thead class="table-light">
           <tr>
             <th>품목명</th>
             <th style="width: 110px;" class="text-end">수량</th>
-            <th style="width: 140px;" class="text-end">단가</th>
+            <th style="width: 140px;" class="text-end">예상단가</th>
             <th style="width: 140px;" class="text-end">금액(자동)</th>
             <th style="width: 80px;"></th>
           </tr>
         </thead>
+
         <tbody>
           <tr>
-            <td><input type="text" class="form-control form-control-sm po-name" maxlength="120" /></td>
-            <td><input type="number" class="form-control form-control-sm po-qty text-end" min="1" step="1" value="1" /></td>
-            <td><input type="number" class="form-control form-control-sm po-unit text-end" min="0" step="1" /></td>
-            <td><input type="number" class="form-control form-control-sm po-amt text-end" readonly /></td>
-            <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
+            <td>
+              <!-- ✅ class를 po-product로 통일 -->
+              <select class="form-select form-select-sm po-product">
+                <option value="">상품 선택</option>
+                <c:forEach items="${products}" var="p">
+                  <option value="${p.productId}"
+                          data-name="${p.productName}"
+                          data-price="${p.price}">
+                    ${p.productName}
+                  </option>
+                </c:forEach>
+              </select>
+            </td>
+
+            <td>
+              <input type="number" class="form-control form-control-sm po-qty text-end"
+                     min="1" step="1" value="1" />
+            </td>
+            <td>
+              <input type="number" class="form-control form-control-sm po-unit text-end"
+                     min="0" step="1" />
+            </td>
+            <td>
+              <input type="number" class="form-control form-control-sm po-amt text-end" readonly />
+            </td>
+            <td class="text-center">
+              <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
+            </td>
           </tr>
         </tbody>
       </table>
+
       <div class="form-text">저장 시 품목은 extTxt6(JSON)로 저장됩니다.</div>
     </div>
   </div>
@@ -67,43 +94,85 @@
 
 <script>
 (function() {
-  const tbody = document.querySelector("#poTable tbody");
+  const tbody  = document.querySelector("#poTable tbody");
   const btnAdd = document.getElementById("btnAddPoRow");
   const totalEl = document.getElementById("poTotal");
-  const jsonEl = document.getElementById("poItemsJson");
+  const jsonEl  = document.getElementById("poItemsJson");
 
-  function recalc() {
-    const rows = [...tbody.querySelectorAll("tr")];
-    let total = 0;
-    const items = rows.map(r => {
-      const name = r.querySelector(".po-name").value || "";
-      const qty = Number(r.querySelector(".po-qty").value || 0);
-      const unit = Number(r.querySelector(".po-unit").value || 0);
-      const amt = qty * unit;
-      r.querySelector(".po-amt").value = amt;
-      total += amt;
-      return { name, qty, unit, amt };
-    });
-    totalEl.value = total;
-    jsonEl.value = JSON.stringify(items);
+  if (!tbody || !btnAdd || !totalEl || !jsonEl) {
+    console.error("PO 요소 탐색 실패", { tbody, btnAdd, totalEl, jsonEl });
+    return;
   }
 
-  btnAdd.addEventListener("click", () => {
+  function recalc() {
+    let total = 0;
+    const items = [];
+
+    tbody.querySelectorAll("tr").forEach(r => {
+      const sel = r.querySelector(".po-product");
+      if (!sel || !sel.value) return;
+
+      const opt = sel.selectedOptions[0];
+
+      const qty = Number(r.querySelector(".po-qty")?.value || 0);
+
+      // 단가: 사용자가 입력하면 입력값 우선, 아니면 옵션 price
+      const unitInput = r.querySelector(".po-unit");
+      const basePrice = Number(opt?.dataset?.price || 0);
+      const typedUnit = Number(unitInput?.value || 0);
+      const unitPrice = typedUnit > 0 ? typedUnit : basePrice;
+
+      if (unitInput) unitInput.value = unitPrice;
+
+      const amt = qty * unitPrice;
+      const amtEl = r.querySelector(".po-amt");
+      if (amtEl) amtEl.value = amt;
+
+      total += amt;
+
+      items.push({
+        productId: Number(sel.value),
+        productName: opt?.dataset?.name || opt?.textContent?.trim() || "",
+        qty,
+        unitPrice,
+        amount: amt
+      });
+    });
+
+    totalEl.value = total;
+    jsonEl.value  = JSON.stringify(items);
+  }
+
+  btnAdd.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    const firstSelect = tbody.querySelector(".po-product");
+    if (!firstSelect) return;
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><input type="text" class="form-control form-control-sm po-name" maxlength="120" /></td>
+      <td></td>
       <td><input type="number" class="form-control form-control-sm po-qty text-end" min="1" step="1" value="1" /></td>
       <td><input type="number" class="form-control form-control-sm po-unit text-end" min="0" step="1" /></td>
       <td><input type="number" class="form-control form-control-sm po-amt text-end" readonly /></td>
       <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
     `;
+
+    // 첫 행의 상품 select 그대로 복제
+    const clonedSelect = firstSelect.cloneNode(true);
+    clonedSelect.value = "";
+    tr.querySelector("td").appendChild(clonedSelect);
+
     tbody.appendChild(tr);
     recalc();
   });
 
+  tbody.addEventListener("change", recalc);
   tbody.addEventListener("input", recalc);
+
   tbody.addEventListener("click", (e) => {
     if (e.target.classList.contains("btnDelRow")) {
+      e.preventDefault();
       e.target.closest("tr").remove();
       recalc();
     }

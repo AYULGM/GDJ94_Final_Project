@@ -20,6 +20,10 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public List<InventoryViewDto> getInventoryList(Long branchId, String keyword, Boolean onlyLowStock) {
+
+        //  FIX: 체크박스 미체크 시 null 들어올 수 있으니 방어 (안정성)
+        if (onlyLowStock == null) onlyLowStock = false;
+
         return inventoryMapper.selectInventoryList(branchId, keyword, onlyLowStock);
     }
 
