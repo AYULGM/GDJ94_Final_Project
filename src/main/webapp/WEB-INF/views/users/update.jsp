@@ -1,5 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+
 
 <jsp:include page="../includes/admin_header.jsp" />
 
@@ -48,6 +50,8 @@
                             </div>
 
                             <!-- 부서 -->
+                            
+                            <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
                             <div class="mb-3">
                                 <label class="form-label">부서</label>
                                 <select name="departmentCode" class="form-select">
@@ -61,8 +65,10 @@
                                     <option value="DP007" ${user.departmentCode == 'DP007' ? 'selected' : ''}>일정관리팀</option>
                                 </select>
                             </div>
+                            </sec:authorize>
 
                             <!-- 소속 지점 -->
+                            <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
                             <div class="mb-3">
                                 <label class="form-label">소속 지점 ID</label>
                                 <input type="number"
@@ -70,7 +76,7 @@
                                        class="form-control"
                                        value="${user.branchId}">
                             </div>
-
+							</sec:authorize>
 							<!-- 주소 -->
 							
 							<div class="mb-3">
