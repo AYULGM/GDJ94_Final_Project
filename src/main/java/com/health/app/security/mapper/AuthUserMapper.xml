@@ -16,7 +16,8 @@
             lock_status_code  AS lockStatusCode,
             fail_count        AS failCount,
             lock_until        AS lockUntil,
-            use_yn            AS useYn
+            use_yn            AS useYn,
+            branch_id         AS branchId
         FROM users
         WHERE login_id = #{loginId}
     </select>

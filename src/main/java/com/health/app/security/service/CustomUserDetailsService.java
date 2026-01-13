@@ -56,7 +56,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 u.getLockStatusCode(),
                 u.getFailCount(),
                 u.getLockUntil(),
-                u.getUseYn()
+                u.getUseYn(),
+                u.getBranchId()
         );
     }
 }

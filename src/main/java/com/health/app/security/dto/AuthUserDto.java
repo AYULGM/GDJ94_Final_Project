@@ -22,4 +22,6 @@ public class AuthUserDto {
     private LocalDateTime lockUntil;
 
     private Boolean useYn;
+
+    private Long branchId;          // 소속 지점 ID (캡틴 권한 처리용)
 }

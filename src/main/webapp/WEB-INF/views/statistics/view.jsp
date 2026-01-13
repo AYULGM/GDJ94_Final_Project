@@ -1,7 +1,17 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
+
+<!-- 권한 정보를 JavaScript에서 사용하기 위한 숨김 필드 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userRoleCode" value="${loginUser.roleCode}"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+    <input type="hidden" id="isAdminOrHigher" value="${loginUser.adminOrHigher}"/>
+    <input type="hidden" id="isCaptain" value="${loginUser.captain}"/>
+</sec:authorize>
 
 
 
@@ -85,6 +95,10 @@
                         <span id="profitGrowth" class="ms-2">-</span>
                     </div>
                 </div>
+                <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                    ※ 계산기준: (매출 - 지출) - 법인세<br>
+                    ※ 법인세율: 2억 이하 9%, 2억 초과 19%
+                </small>
             </div>
 
             <!-- 수익률 -->
@@ -141,8 +155,9 @@
             </div>
         </div>
 
-        <!-- 지점별 비교 -->
-        <div class="row mt-4">
+        <!-- 지점별 비교 (관리자 이상만 표시) -->
+        <sec:authorize access="hasAnyRole('GRANDMASTER', 'MASTER', 'ADMIN')">
+        <div class="row mt-4" id="branchComparisonSection">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
@@ -157,6 +172,7 @@
                 </div>
             </div>
         </div>
+        </sec:authorize>
 
     </div>
 </div>
@@ -166,10 +182,18 @@
 <!-- ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js"></script>
 
-<!-- v1.2 - 전월 대비 증감률 기능 추가 -->
+<!-- v1.3 - 권한 처리 추가 -->
 <script>
 // 전역 변수
 let trendChart, profitChart, branchChart;
+
+// 권한 정보 (hidden input에서 읽어옴)
+const userPermissions = {
+    roleCode: document.getElementById('userRoleCode')?.value || '',
+    branchId: document.getElementById('userBranchId')?.value || '0',
+    isAdminOrHigher: document.getElementById('isAdminOrHigher')?.value === 'true',
+    isCaptain: document.getElementById('isCaptain')?.value === 'true'
+};
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
@@ -208,11 +232,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 지점 옵션 로드
 async function loadBranchOptions() {
+    const select = document.getElementById('branchId');
+
+    // 캡틴인 경우: 본인 지점만 선택 가능하도록 처리
+    if (userPermissions.isCaptain && userPermissions.branchId && userPermissions.branchId !== '0') {
+        try {
+            const response = await fetch('/sales/api/options/branches');
+            const branches = await response.json();
+
+            // 전체 옵션 제거
+            select.innerHTML = '';
+
+            // 본인 지점만 추가
+            const myBranch = branches.find(b => b && b.id && b.id.toString() === userPermissions.branchId);
+            if (myBranch) {
+                const option = document.createElement('option');
+                option.value = myBranch.id;
+                option.textContent = myBranch.name || '미지정';
+                option.selected = true;
+                select.appendChild(option);
+            }
+
+            // 선택 비활성화 (readonly 효과)
+            select.disabled = true;
+            select.classList.add('bg-light');
+            select.title = '본인 소속 지점만 조회 가능합니다';
+
+        } catch (error) {
+            console.error('지점 목록 로드 실패:', error);
+        }
+        return;
+    }
+
+    // 관리자 이상: 전체 지점 선택 가능
     try {
         const response = await fetch('/sales/api/options/branches');
         const branches = await response.json();
 
-        const select = document.getElementById('branchId');
         branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
             option.value = branch.id;
@@ -255,19 +311,35 @@ async function loadDashboardData() {
     console.log('[loadDashboardData] 전월 기간:', { prevStartDate, prevEndDate });
 
     try {
-        // 병렬로 데이터 로드 (현재 월 + 전월 데이터)
-        const [salesByPeriod, expensesByPeriod, salesByBranch, expensesByBranch, comparison,
-               prevSalesByPeriod, prevExpensesByPeriod] = await Promise.all([
+        // 기본 데이터 요청 목록
+        const fetchPromises = [
             // 현재 월 데이터
             fetch('/statistics/api/sales/by-period?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
             fetch('/statistics/api/expenses/by-period?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
-            fetch('/statistics/api/sales/by-branch?startDate=' + startDate + '&endDate=' + endDate).then(r => r.json()),
-            fetch('/statistics/api/expenses/by-branch?startDate=' + startDate + '&endDate=' + endDate).then(r => r.json()),
             fetch('/statistics/api/comparison?startDate=' + startDate + '&endDate=' + endDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
             // 전월 데이터 (증감률 계산용)
             fetch('/statistics/api/sales/by-period?startDate=' + prevStartDate + '&endDate=' + prevEndDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json()),
             fetch('/statistics/api/expenses/by-period?startDate=' + prevStartDate + '&endDate=' + prevEndDate + '&branchId=' + branchId + '&groupBy=monthly').then(r => r.json())
-        ]);
+        ];
+
+        // 관리자 이상만 지점별 비교 데이터 로드
+        if (userPermissions.isAdminOrHigher) {
+            fetchPromises.push(
+                fetch('/statistics/api/sales/by-branch?startDate=' + startDate + '&endDate=' + endDate).then(r => r.json()),
+                fetch('/statistics/api/expenses/by-branch?startDate=' + startDate + '&endDate=' + endDate).then(r => r.json())
+            );
+        }
+
+        const results = await Promise.all(fetchPromises);
+
+        // 결과 분리
+        const salesByPeriod = results[0];
+        const expensesByPeriod = results[1];
+        const comparison = results[2];
+        const prevSalesByPeriod = results[3];
+        const prevExpensesByPeriod = results[4];
+        const salesByBranch = results[5] || [];
+        const expensesByBranch = results[6] || [];
 
         // 요약 카드 업데이트 (전월 데이터 포함)
         updateSummaryCards(salesByPeriod, expensesByPeriod, prevSalesByPeriod, prevExpensesByPeriod);
@@ -275,7 +347,11 @@ async function loadDashboardData() {
         // 차트 업데이트
         updateTrendChart(salesByPeriod, expensesByPeriod);
         updateProfitChart(comparison);
-        updateBranchChart(salesByBranch, expensesByBranch);
+
+        // 지점별 비교 차트는 관리자 이상만 업데이트
+        if (userPermissions.isAdminOrHigher && branchChart) {
+            updateBranchChart(salesByBranch, expensesByBranch);
+        }
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);
@@ -285,9 +361,15 @@ async function loadDashboardData() {
 
 // 요약 카드 업데이트
 function updateSummaryCards(salesData, expensesData, prevSalesData, prevExpensesData) {
-    // 현재 월 집계
-    const totalSales = salesData.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-    const totalExpenses = expensesData.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    // NaN 방지용 안전한 숫자 변환 함수
+    const safeNumber = (val) => {
+        const num = Number(val);
+        return isNaN(num) ? 0 : num;
+    };
+
+    // 현재 월 집계 (NaN 방지)
+    const totalSales = (salesData || []).reduce((sum, item) => sum + safeNumber(item.totalAmount), 0);
+    const totalExpenses = (expensesData || []).reduce((sum, item) => sum + safeNumber(item.totalAmount), 0);
     const grossProfit = totalSales - totalExpenses;  // 세전 순이익
 
     // 법인세 자동 계산 (누진세율)
@@ -295,9 +377,9 @@ function updateSummaryCards(salesData, expensesData, prevSalesData, prevExpenses
     const netProfit = grossProfit - corporateTax;  // 세후 순이익 (추정)
     const profitRate = totalSales > 0 ? ((netProfit / totalSales) * 100) : 0;
 
-    // 전월 집계 (데이터 없을 경우 빈 배열로 처리)
-    const prevTotalSales = (prevSalesData || []).reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-    const prevTotalExpenses = (prevExpensesData || []).reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    // 전월 집계 (NaN 방지)
+    const prevTotalSales = (prevSalesData || []).reduce((sum, item) => sum + safeNumber(item.totalAmount), 0);
+    const prevTotalExpenses = (prevExpensesData || []).reduce((sum, item) => sum + safeNumber(item.totalAmount), 0);
     const prevGrossProfit = prevTotalSales - prevTotalExpenses;  // 전월 세전 순이익
     const prevCorporateTax = calculateCorporateTax(prevGrossProfit);
     const prevNetProfit = prevGrossProfit - prevCorporateTax;  // 전월 세후 순이익
@@ -439,64 +521,90 @@ function initCharts() {
     profitChart = new ApexCharts(document.querySelector("#profitChart"), profitOptions);
     profitChart.render();
 
-    // 지점별 비교 차트
-    const branchOptions = {
-        series: [{
-            name: '매출',
-            data: []
-        }, {
-            name: '지출',
-            data: []
-        }],
-        chart: {
-            type: 'bar',
-            height: 400
-        },
-        colors: ['#0d6efd', '#dc3545'],
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                columnWidth: '55%',
-                endingShape: 'rounded'
-            }
-        },
-        dataLabels: { enabled: false },
-        stroke: {
-            show: true,
-            width: 2,
-            colors: ['transparent']
-        },
-        xaxis: {
-            categories: []
-        },
-        yaxis: {
-            labels: {
-                formatter: function(val) {
-                    return formatCurrency(val);
+    // 지점별 비교 차트 (관리자 이상만 초기화)
+    const branchChartElement = document.querySelector("#branchComparisonChart");
+    if (userPermissions.isAdminOrHigher && branchChartElement) {
+        const branchOptions = {
+            series: [{
+                name: '매출',
+                data: []
+            }, {
+                name: '지출',
+                data: []
+            }],
+            chart: {
+                type: 'bar',
+                height: 400
+            },
+            colors: ['#0d6efd', '#dc3545'],
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                }
+            },
+            dataLabels: { enabled: false },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: []
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(val) {
+                        return formatCurrency(val);
+                    }
+                }
+            },
+            fill: { opacity: 1 },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return formatCurrency(val);
+                    }
                 }
             }
-        },
-        fill: { opacity: 1 },
-        tooltip: {
-            y: {
-                formatter: function(val) {
-                    return formatCurrency(val);
-                }
-            }
-        }
-    };
-    branchChart = new ApexCharts(document.querySelector("#branchComparisonChart"), branchOptions);
-    branchChart.render();
+        };
+        branchChart = new ApexCharts(branchChartElement, branchOptions);
+        branchChart.render();
+    }
 }
 
 // 추이 차트 업데이트
 function updateTrendChart(salesData, expensesData) {
-    const categories = salesData.map(item => item.periodLabel || item.period);
-    const salesValues = salesData.map(item => item.totalAmount || 0);
-    const expensesValues = expensesData.map(item => item.totalAmount || 0);
+    // 모든 기간을 합쳐서 유니크한 categories 생성
+    const allPeriods = new Set();
+    salesData.forEach(item => allPeriods.add(item.period));
+    expensesData.forEach(item => allPeriods.add(item.period));
+
+    // 기간 정렬
+    const categories = Array.from(allPeriods).sort();
+
+    // 각 기간에 대해 매출/지출 값 매칭 (없으면 0)
+    const salesValues = categories.map(period => {
+        const item = salesData.find(s => s.period === period);
+        const value = item ? (item.totalAmount || 0) : 0;
+        return isNaN(value) ? 0 : value;
+    });
+
+    const expensesValues = categories.map(period => {
+        const item = expensesData.find(e => e.period === period);
+        const value = item ? (item.totalAmount || 0) : 0;
+        return isNaN(value) ? 0 : value;
+    });
+
+    // 기간 라벨 생성 (YYYY-MM 형식을 보기 좋게 변환)
+    const categoryLabels = categories.map(period => {
+        const item = salesData.find(s => s.period === period) || expensesData.find(e => e.period === period);
+        return item ? (item.periodLabel || period) : period;
+    });
 
     trendChart.updateOptions({
-        xaxis: { categories: categories },
+        xaxis: { categories: categoryLabels },
         series: [{
             name: '매출',
             data: salesValues

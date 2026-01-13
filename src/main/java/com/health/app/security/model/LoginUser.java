@@ -17,12 +17,13 @@ public class LoginUser implements UserDetails {
     private final String password;
 
     private final String name;
-    private final String roleCode;       // RL001~ 이런 값 
+    private final String roleCode;       // RL001~ 이런 값
     private final String statusCode;     // US001~ 등
     private final String lockStatusCode; // AL001/AL002
     private final Integer failCount;
     private final LocalDateTime lockUntil;
     private final Boolean useYn;
+    private final Long branchId;         // 소속 지점 ID (캡틴 권한 처리용)
 
     public LoginUser(
             Long userId,
@@ -34,7 +35,8 @@ public class LoginUser implements UserDetails {
             String lockStatusCode,
             Integer failCount,
             LocalDateTime lockUntil,
-            Boolean useYn
+            Boolean useYn,
+            Long branchId
     ) {
         this.userId = userId;
         this.loginId = loginId;
@@ -46,6 +48,7 @@ public class LoginUser implements UserDetails {
         this.failCount = failCount;
         this.lockUntil = lockUntil;
         this.useYn = useYn;
+        this.branchId = branchId;
     }
 
     @Override
@@ -94,5 +97,30 @@ public class LoginUser implements UserDetails {
     public boolean isEnabled() {
         // use_yn이 false면 비활성
         return Boolean.TRUE.equals(useYn);
+    }
+
+    /**
+     * 관리자 이상 권한인지 확인 (GRANDMASTER, MASTER, ADMIN)
+     */
+    public boolean isAdminOrHigher() {
+        return roleCode != null && (
+                "RL001".equals(roleCode) ||  // GRANDMASTER
+                "RL002".equals(roleCode) ||  // MASTER
+                "RL003".equals(roleCode)     // ADMIN
+        );
+    }
+
+    /**
+     * 캡틴 권한인지 확인
+     */
+    public boolean isCaptain() {
+        return "RL004".equals(roleCode);
+    }
+
+    /**
+     * 크루 권한인지 확인
+     */
+    public boolean isCrew() {
+        return "RL005".equals(roleCode);
     }
 }
