@@ -41,69 +41,80 @@ public class UserAdminService {
     }
     
     @Transactional
-    public void updateUser(UserAdminDTO dto) {
+    public void updateUser(UserAdminDTO dto, String reason) {
 
-        // 1. 수정 전 데이터
-        UserAdminDTO before = userAdminMapper.selectUserAdminDetail(dto.getUserId());
+        UserAdminDTO before =
+            userAdminMapper.selectUserAdminDetail(dto.getUserId());
 
-        // 2. 지점 변경
+        // 1. 지점 변경
         if (!Objects.equals(before.getBranchId(), dto.getBranchId())) {
-        	
-        	// 변경 전 branchId가 null 일경우
+
             if (before.getBranchId() == null) {
 
-                // 최초 배정 로그
                 userAdminMapper.insertUserBranchLog(
                     dto.getUserId(),
-                    0L,  // 의미있는 값
+                    0L,
                     dto.getBranchId(),
                     dto.getUpdateUser(),
                     "관리자에 의한 최초 지점 배정"
                 );
 
-            // 변경 전 branchId가 null이 아닐경우
             } else {
 
-                // 변경 로그
                 userAdminMapper.insertUserBranchLog(
                     dto.getUserId(),
                     before.getBranchId(),
                     dto.getBranchId(),
                     dto.getUpdateUser(),
-                    "관리자에 의한 지점 변경"
+                    reason
                 );
-            } 
+            }
         }
 
-        // 3. 권한 변경
+        // 2. 권한 변경
         if (!Objects.equals(before.getRoleCode(), dto.getRoleCode())) {
             userAdminMapper.insertRoleChangeLog(
                 dto.getUserId(),
                 before.getRoleCode(),
                 dto.getRoleCode(),
                 dto.getUpdateUser(),
-                "관리자에 의한 권한 변경"
+                reason
             );
         }
 
-        // 4. 일반 정보 변경 (name/email/phone/address/department)
-        insertUserHistoryIfChanged("name", before.getName(), dto.getName(), dto);
-        insertUserHistoryIfChanged("email", before.getEmail(), dto.getEmail(), dto);
-        insertUserHistoryIfChanged("phone", before.getPhone(), dto.getPhone(), dto);
-        insertUserHistoryIfChanged("post_no", before.getPostNo(), dto.getPostNo(), dto);
-        insertUserHistoryIfChanged("base_address", before.getBaseAddress(), dto.getBaseAddress(), dto);
-        insertUserHistoryIfChanged("detail_address", before.getDetailAddress(), dto.getDetailAddress(), dto);
-        insertUserHistoryIfChanged("department_code", before.getDepartmentCode(), dto.getDepartmentCode(), dto);
+        // 3. 일반 정보 변경
+        insertUserHistoryIfChanged("이름",
+            before.getName(), dto.getName(), dto, reason);
 
-        // 5. users 테이블 업데이트
+        insertUserHistoryIfChanged("이메일",
+            before.getEmail(), dto.getEmail(), dto, reason);
+
+        insertUserHistoryIfChanged("핸드폰 번호",
+            before.getPhone(), dto.getPhone(), dto, reason);
+
+        insertUserHistoryIfChanged("우편번호",
+            before.getPostNo(), dto.getPostNo(), dto, reason);
+
+        insertUserHistoryIfChanged("기본주소",
+            before.getBaseAddress(), dto.getBaseAddress(), dto, reason);
+
+        insertUserHistoryIfChanged("상세주소",
+            before.getDetailAddress(), dto.getDetailAddress(), dto, reason);
+
+        insertUserHistoryIfChanged("department_code",
+            before.getDepartmentCode(), dto.getDepartmentCode(), dto, reason);
+
+        // 4. 실제 업데이트
         userAdminMapper.updateUser(dto);
     }
+
 
     private void insertUserHistoryIfChanged(
             String changeType,
             String beforeValue,
             String afterValue,
-            UserAdminDTO dto) {
+            UserAdminDTO dto,
+            String reason) {
 
         if (!Objects.equals(beforeValue, afterValue)) {
             userAdminMapper.insertUserHistory(
@@ -111,7 +122,7 @@ public class UserAdminService {
                 changeType,
                 beforeValue,
                 afterValue,
-                "관리자 수정",
+                reason,
                 dto.getUpdateUser()
             );
         }
@@ -171,19 +182,8 @@ public class UserAdminService {
         );
     }
 
-    // 이력조회 메서드
-    public List<UserHistoryDTO> getUserHistory(Long userId) {
-        return userAdminMapper.selectUserHistory(userId);
-    }
-    
-	 // 이력조회 메서드
-    public List<UserBranchLogDTO> getUserBranchLogs(Long userId) {
-        return userAdminMapper.selectUserBranchLogs(userId);
-    }
-    
-	 // 이력조회 메서드
-    public List<RoleChangeLogDTO> getRoleChangeLogs(Long userId) {
-        return userAdminMapper.selectRoleChangeLogs(userId);
+    public List<UserBranchLogDTO> getUserAllHistory(Long userId) {
+        return userAdminMapper.selectUserAllHistory(userId);
     }
 
 }

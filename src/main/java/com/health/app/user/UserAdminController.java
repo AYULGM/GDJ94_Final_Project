@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.health.app.security.model.LoginUser;
 
@@ -40,14 +41,10 @@ public class UserAdminController {
         UserAdminDTO user = userAdminService.getUserAdminDetail(userId);
 
         model.addAttribute("user", user);
-        model.addAttribute("pageTitle", "사용자 상세");
+        model.addAttribute("pageTitle", "사용자 상세 / 변경 이력");
         
         model.addAttribute("historyList",
-            userAdminService.getUserHistory(userId));
-        model.addAttribute("branchLogList",
-            userAdminService.getUserBranchLogs(userId));
-        model.addAttribute("roleLogList",
-            userAdminService.getRoleChangeLogs(userId));
+                userAdminService.getUserAllHistory(userId));
 
         return "userManagement/detail";
     }
@@ -89,7 +86,7 @@ public class UserAdminController {
     }
     
     @PostMapping("/edit")
-    public String editUser(UserAdminDTO dto) {
+    public String editUser(UserAdminDTO dto, @RequestParam String reason) {
 
         Authentication auth =
             SecurityContextHolder.getContext().getAuthentication();
@@ -99,7 +96,7 @@ public class UserAdminController {
 
         dto.setUpdateUser(loginUser.getUserId());
 
-        userAdminService.updateUser(dto);
+        userAdminService.updateUser(dto, reason);
 
         return "redirect:/userManagement/detail?userId=" + dto.getUserId();
     }

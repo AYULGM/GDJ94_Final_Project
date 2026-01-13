@@ -30,10 +30,6 @@ public interface UserAdminMapper {
 
 	void updatePassword(Long userId, String password, Long updateUser);
 
-	List<UserHistoryDTO> selectUserHistory(Long userId);
-
-	List<UserBranchLogDTO> selectUserBranchLogs(Long userId);
-
-	List<RoleChangeLogDTO> selectRoleChangeLogs(Long userId);
+	List<UserBranchLogDTO> selectUserAllHistory(Long userId);
 
 }

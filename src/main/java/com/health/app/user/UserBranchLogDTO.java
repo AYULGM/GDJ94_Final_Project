@@ -4,9 +4,12 @@ import lombok.Data;
 
 @Data
 public class UserBranchLogDTO {
-    private Long beforeBranchId;
-    private Long afterBranchId;
+    private String historyType;   // UPDATE / BRANCH / ROLE
+    private String changeField;
+    private String beforeValue;
+    private String afterValue;
     private String reason;
+    private String createUserName;
     private String createDate;
 }
 

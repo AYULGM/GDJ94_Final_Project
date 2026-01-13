@@ -126,6 +126,16 @@
                                     <option value="RL005" ${user.roleCode=='RL005'?'selected':''}>직원</option>
                                 </select>
                             </div>
+                            
+                            <!-- 수정 사유 -->
+							<div class="mb-3">
+							    <label class="form-label fw-bold">수정 사유</label>
+							    <textarea name="reason"
+							              class="form-control"
+							              rows="3"
+							              placeholder="수정 사유를 입력하세요"
+							              required></textarea>
+							</div>
 
                         </div>
                     </div>
