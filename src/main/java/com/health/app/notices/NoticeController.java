@@ -60,7 +60,6 @@ public class NoticeController {
         model.addAttribute("list", noticeService.list(branchId));
         model.addAttribute("branchId", branchId);
         model.addAttribute("isAdmin", isAdmin(user));
-
         model.addAttribute("pageTitle", "공지사항");
         putCodeMaps(model);
         return "notices/list";
@@ -72,6 +71,7 @@ public class NoticeController {
         if (!isAdmin(user)) return "redirect:/notices";
         model.addAttribute("list", noticeService.adminList());
         model.addAttribute("isAdmin", true);
+        model.addAttribute("pageTitle", "공지사항");
         putCodeMaps(model);
         return "notices/admin_list";
     }
@@ -84,6 +84,7 @@ public class NoticeController {
         NoticeDTO notice = noticeService.view(noticeId);
         model.addAttribute("notice", notice);
         model.addAttribute("isAdmin", isAdmin(user));
+        model.addAttribute("pageTitle", "공지사항");
         putCodeMaps(model);
         if (notice != null && "TT002".equals(notice.getTargetType())) {
             model.addAttribute("targets", noticeService.getTargetBranches(noticeId));
@@ -97,6 +98,7 @@ public class NoticeController {
         if (!isAdmin(user)) return "redirect:/notices";
         model.addAttribute("notice", new NoticeDTO());
         model.addAttribute("isAdmin", true);
+        model.addAttribute("pageTitle", "공지사항");
         putFormLists(model);
         return "notices/form";
     }
@@ -105,11 +107,12 @@ public class NoticeController {
     @PostMapping
     public String create(NoticeDTO dto,
                          @RequestParam(required = false) String reason,
-                         @AuthenticationPrincipal LoginUser user) {
+                         @AuthenticationPrincipal LoginUser user, Model model) {
         if (!isAdmin(user)) return "redirect:/notices";
         Long actorUserId = user.getUserId();
         dto.setWriterId(actorUserId);
         noticeService.create(dto, actorUserId, reason);
+        model.addAttribute("pageTitle", "공지사항");
         return "redirect:/notices/admin";
     }
 
@@ -121,6 +124,7 @@ public class NoticeController {
         if (!isAdmin(user)) return "redirect:/notices";
         model.addAttribute("notice", noticeService.getForEdit(noticeId));
         model.addAttribute("isAdmin", true);
+        model.addAttribute("pageTitle", "공지사항");
         putFormLists(model);
         return "notices/form";
     }
@@ -130,11 +134,12 @@ public class NoticeController {
     public String update(@PathVariable Long noticeId,
                          NoticeDTO dto,
                          @RequestParam(required = false) String reason,
-                         @AuthenticationPrincipal LoginUser user) {
+                         @AuthenticationPrincipal LoginUser user, Model model) {
         if (!isAdmin(user)) return "redirect:/notices";
         dto.setNoticeId(noticeId);
         Long actorUserId = user.getUserId();
         noticeService.update(dto, actorUserId, reason);
+        model.addAttribute("pageTitle", "공지사항");
         return "redirect:/notices/admin";
     }
 
