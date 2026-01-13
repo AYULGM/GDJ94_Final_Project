@@ -8,13 +8,11 @@
     <div class="card">
 
       <div class="card-header d-flex align-items-center justify-content-between">
-        <h3 class="card-title mb-0">공지사항 목록</h3>
+        <h3 class="card-title mb-0">공지사항 관리자 목록</h3>
 
         <div class="d-flex gap-2">
-          <c:if test="${isAdmin}">
-            <a class="btn btn-outline-primary btn-sm" href="<c:url value='/notices/admin'/>">관리자 목록</a>
-            <a class="btn btn-primary btn-sm" href="<c:url value='/notices/new'/>">공지 등록</a>
-          </c:if>
+          <a class="btn btn-outline-secondary btn-sm" href="<c:url value='/notices'/>">사용자 목록</a>
+          <a class="btn btn-primary btn-sm" href="<c:url value='/notices/new'/>">공지 등록</a>
         </div>
       </div>
 
@@ -33,9 +31,11 @@
                   <th style="width:120px;">유형</th>
                   <th style="width:120px;">대상</th>
                   <th style="width:120px;">상태</th>
+                  <th style="width:120px;">카테고리</th>
                   <th style="width:90px;">조회수</th>
                   <th style="width:170px;">작성일</th>
                   <th style="width:220px;">게시기간</th>
+                  <th style="width:160px;">관리</th>
                 </tr>
               </thead>
 
@@ -56,6 +56,7 @@
                     <td><c:out value="${noticeTypeMap[n.noticeType]}" /></td>
                     <td><c:out value="${targetTypeMap[n.targetType]}" /></td>
                     <td><c:out value="${statusMap[n.status]}" /></td>
+                    <td><c:out value="${categoryMap[n.categoryCode]}" /></td>
 
                     <td class="text-end"><c:out value="${n.viewCount}" /></td>
 
@@ -95,6 +96,15 @@
                           </div>
                         </c:otherwise>
                       </c:choose>
+                    </td>
+
+                    <td>
+                      <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary btn-sm" href="<c:url value='/notices/${n.noticeId}/edit'/>">수정</a>
+                        <form method="post" action="<c:url value='/notices/${n.noticeId}/delete'/>" onsubmit="return confirm('삭제하시겠습니까?');">
+                          <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                        </form>
+                      </div>
                     </td>
 
                   </tr>
