@@ -6,7 +6,7 @@
 <!--begin::Sidebar-->
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
   <div class="sidebar-brand">
-    <a href="<c:url value='/'/>" class="brand-link">
+    <a href="<c:url value='/statistics'/>" class="brand-link">
       <img
         src="<c:url value='/img/doge.jpg'/>"
         alt="AdminLTE Logo"
@@ -28,9 +28,9 @@
       >
 
         <li class="nav-item">
-          <a href="<c:url value='/'/>" class="nav-link">
+          <a href="<c:url value='/statistics'/>" class="nav-link">
             <i class="nav-icon bi bi-speedometer"></i>
-            <p>Dashboard</p>
+            <p>Dash Board</p>
           </a>
         </li>
 
@@ -173,14 +173,6 @@
               </a>
             </li>
           </ul>
-        </li>
-
-        <!-- 정산·통계 대시보드 -->
-        <li class="nav-item">
-          <a href="<c:url value='/statistics'/>" class="nav-link">
-            <i class="nav-icon bi bi-speedometer2"></i>
-            <p>정산/통계</p>
-          </a>
         </li>
 
         <!-- 매출·지출 통계 Treeview -->
