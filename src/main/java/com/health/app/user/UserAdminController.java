@@ -28,7 +28,7 @@ public class UserAdminController {
 
         List<UserAdminDTO> users = userAdminService.getUserAdminList();
         model.addAttribute("users", users);
-        model.addAttribute("pageTitle", "사용자 관리");
+        model.addAttribute("pageTitle", "사용자 목록");
         
         return "userManagement/list";
     }
@@ -40,6 +40,8 @@ public class UserAdminController {
         UserAdminDTO user = userAdminService.getUserAdminDetail(userId);
 
         model.addAttribute("user", user);
+        model.addAttribute("pageTitle", "사용자 상세");
+        
         model.addAttribute("historyList",
             userAdminService.getUserHistory(userId));
         model.addAttribute("branchLogList",
@@ -54,6 +56,8 @@ public class UserAdminController {
     // 사용자 등록
     @GetMapping("/add")
     public String addForm(HttpSession session, Model model) {
+    	model.addAttribute("pageTitle", "사용자 등록");
+    	
         return "userManagement/add";
     }
     
@@ -79,6 +83,7 @@ public class UserAdminController {
 
         UserAdminDTO user = userAdminService.getUserAdminDetail(userId);
         model.addAttribute("user", user);
+        model.addAttribute("pageTitle", "사용자 수정");
 
         return "userManagement/edit";
     }

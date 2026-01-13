@@ -117,6 +117,14 @@
                    id="operatingHours"
                    value="${branch.operatingHours}">
           </div>
+          
+          <div class="mb-3">
+			  <label class="form-label">수정 사유</label>
+			  <textarea name="reason"
+			            class="form-control"
+			            rows="3"
+			            required></textarea>
+			</div>
 
         </div>
 

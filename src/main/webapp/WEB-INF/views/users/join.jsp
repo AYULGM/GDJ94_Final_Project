@@ -58,7 +58,7 @@
                     <div class="input-group-text">
                         <span class="bi bi-envelope"></span>
                     </div>
-                    <input type="email" name="email" class="form-control" placeholder="이메일">
+                    <input type="email" name="email" class="form-control" placeholder="이메일(필수 입력)" required>
                 </div>
 
                 <!-- 전화번호 -->
@@ -76,13 +76,13 @@
 				    </div>
 				    <select name="departmentCode" class="form-select">
 				        <option value="" selected>부서 없음(선택)</option>
-					        <option value="DP001">시스템관리팀 (SYSTEM)</option>
-					        <option value="DP002">지점운영팀 (BRANCH)</option>
-					        <option value="DP003">회원관리팀 (USER)</option>
-					        <option value="DP004">구매·발주팀 (PURCHASE)</option>
-					        <option value="DP005">정산·회계팀 (ACCOUNTING)</option>
-					        <option value="DP006">기획·공지팀 (PLANNING)</option>
-					        <option value="DP007">일정관리팀 (SCHEDULE)</option>
+					        <option value="DP001">시스템관리팀</option>
+					        <option value="DP002">지점운영팀</option>
+					        <option value="DP003">회원관리팀</option>
+					        <option value="DP004">구매·발주팀</option>
+					        <option value="DP005">정산·회계팀</option>
+					        <option value="DP006">기획·공지팀</option>
+					        <option value="DP007">일정관리팀</option>
 					    </select>
 					</div>
 				
@@ -91,7 +91,7 @@
 				    <div class="input-group-text">
 				        <span class="bi bi-building"></span>
 				    </div>
-				    <input type="number" name="branchId" class="form-control" placeholder="소속 지점 ID (예: 1)" min="1">
+				    <input type="number" name="branchId" class="form-control" placeholder="소속 지점 ID (예: 1), (필수입력)" min="1" required>
 				</div>
 				
 				<div class="mb-3">
@@ -107,7 +107,7 @@
                     <div class="input-group-text">
                         <span class="bi bi-geo-alt"></span>
                     </div>
-                    <input type="text" name="postNo" id="postNo" class="form-control" placeholder="우편번호(필수 입력)" required readonly>
+                    <input type="text" name="postNo" id="postNo" class="form-control" placeholder="우편번호(필수 입력)" required>
                 </div>
 				
                 <!-- 기본주소 -->
@@ -115,7 +115,7 @@
                     <div class="input-group-text">
                         <span class="bi bi-house"></span>
                     </div>
-                    <input type="text" name="baseAddress" id="baseAddress" class="form-control" placeholder="기본 주소(필수 입력)" required readonly>
+                    <input type="text" name="baseAddress" id="baseAddress" class="form-control" placeholder="기본 주소(필수 입력)" required>
                 </div>
 
                 <!-- 상세주소 -->
@@ -150,6 +150,18 @@
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <script src="<c:url value='/js/address.js'/>"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.getElementById("postNo")
+        .addEventListener("keydown", e => e.preventDefault());
+
+    document.getElementById("baseAddress")
+        .addEventListener("keydown", e => e.preventDefault());
+
+});
+</script>
 
 <script src="<c:url value='/js/adminlte.js'/>"></script>
 

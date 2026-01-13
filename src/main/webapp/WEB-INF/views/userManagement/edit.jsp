@@ -120,10 +120,10 @@
                             <div class="col-md-6 mb-3">
                                 <label>권한</label>
                                 <select name="roleCode" class="form-select">
-                                    <option value="RL002" ${user.roleCode=='RL002'?'selected':''}>MASTER</option>
-                                    <option value="RL003" ${user.roleCode=='RL003'?'selected':''}>ADMIN</option>
-                                    <option value="RL004" ${user.roleCode=='RL004'?'selected':''}>CAPTAIN</option>
-                                    <option value="RL005" ${user.roleCode=='RL005'?'selected':''}>CREW</option>
+                                    <option value="RL002" ${user.roleCode=='RL002'?'selected':''}>본사인사팀</option>
+                                    <option value="RL003" ${user.roleCode=='RL003'?'selected':''}>본사관리자</option>
+                                    <option value="RL004" ${user.roleCode=='RL004'?'selected':''}>지점관리자</option>
+                                    <option value="RL005" ${user.roleCode=='RL005'?'selected':''}>직원</option>
                                 </select>
                             </div>
 

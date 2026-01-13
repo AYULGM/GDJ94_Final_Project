@@ -7,7 +7,7 @@
 	<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 	<%@ taglib prefix="c" uri="jakarta.tags.core"%>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>AdminLTE v4 | Dashboard</title>
+    <title>Doge Company</title>
 
     <!--begin::Fonts-->
     <link
@@ -133,8 +133,8 @@
                 </li> 
 -->
                 <li class="user-body">
-                  <a href="/users/mypage" class="btn btn-default btn-flat">My page</a>
-                  <a href="<c:url value='/logout'/>" class="btn btn-default btn-flat float-end">Sign out</a>
+                  <a href="/users/mypage" class="btn btn-outline-primary btn-flat">내 정보</a>
+                  <a href="<c:url value='/logout'/>" class="btn btn-outline-danger btn-flat float-end">로그아웃</a>
                 </li>
               </ul>
             </li>

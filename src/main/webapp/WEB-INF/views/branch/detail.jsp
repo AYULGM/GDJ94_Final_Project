@@ -38,7 +38,8 @@
             <th>상태</th>
             <td>
               <span class="badge bg-info">
-                ${branch.statusCode} - ${branch.statusName}
+                <%-- ${branch.statusCode} - ${branch.statusName} --%>
+                ${branch.statusName}
               </span>
             </td>
           </tr>

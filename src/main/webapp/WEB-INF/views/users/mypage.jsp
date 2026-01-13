@@ -22,10 +22,6 @@
          ====================== -->
     <div class="content-wrapper p-4">
 
-        <!-- 페이지 제목 -->
-        <section class="content-header">
-            <h1>마이페이지</h1>
-        </section>
 
         <!-- ======================
              사용자 정보 카드
@@ -77,7 +73,8 @@
 					                    부서 없음
 					                </c:when>
 					                <c:otherwise>
-					                    ${user.departmentCode} - ${user.departmentName}
+<%-- 					                    ${user.departmentCode} - ${user.departmentName}--%>					
+                    						${user.departmentName}
 					                </c:otherwise>
 					            </c:choose>
 					        </td>
@@ -109,7 +106,9 @@
 					
 					    <tr>
 					        <th>권한</th>
-					        <td>${user.roleCode} - ${user.roleName}</td>
+					        <%-- <td>${user.roleCode} - ${user.roleName}</td> --%>
+					        <td>${user.roleName}</td>
+					        
 					    </tr>
 					
 					    <tr>

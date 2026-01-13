@@ -48,13 +48,31 @@ public class UserAdminService {
 
         // 2. 지점 변경
         if (!Objects.equals(before.getBranchId(), dto.getBranchId())) {
-            userAdminMapper.insertUserBranchLog(
-                dto.getUserId(),
-                before.getBranchId(),
-                dto.getBranchId(),
-                dto.getUpdateUser(),
-                "관리자에 의한 지점 변경"
-            );
+        	
+        	// 변경 전 branchId가 null 일경우
+            if (before.getBranchId() == null) {
+
+                // 최초 배정 로그
+                userAdminMapper.insertUserBranchLog(
+                    dto.getUserId(),
+                    0L,  // 의미있는 값
+                    dto.getBranchId(),
+                    dto.getUpdateUser(),
+                    "관리자에 의한 최초 지점 배정"
+                );
+
+            // 변경 전 branchId가 null이 아닐경우
+            } else {
+
+                // 변경 로그
+                userAdminMapper.insertUserBranchLog(
+                    dto.getUserId(),
+                    before.getBranchId(),
+                    dto.getBranchId(),
+                    dto.getUpdateUser(),
+                    "관리자에 의한 지점 변경"
+                );
+            } 
         }
 
         // 3. 권한 변경

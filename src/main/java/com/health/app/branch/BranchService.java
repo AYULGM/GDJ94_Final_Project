@@ -36,7 +36,7 @@ public class BranchService {
     }
     
     @Transactional
-    public void updateBranch(BranchDTO dto, Long loginUserId) {
+    public void updateBranch(BranchDTO dto, String reason, Long loginUserId) {
 
         // 1️⃣ 수정자 세팅 (필수)
         dto.setUpdateUser(loginUserId);
@@ -52,10 +52,10 @@ public class BranchService {
         if (!Objects.equals(before.getBranchName(), dto.getBranchName())) {
             branchMapper.insertBranchUpdateLog(
                 dto.getBranchId(),
-                "branch_name",
+                "지점 이름",
                 before.getBranchName(),
                 dto.getBranchName(),
-                "지점 이름 수정",
+                reason,
                 loginUserId
             );
         }
@@ -63,10 +63,10 @@ public class BranchService {
         if (!Objects.equals(before.getBaseAddress(), dto.getBaseAddress())) {
             branchMapper.insertBranchUpdateLog(
                 dto.getBranchId(),
-                "base_address",
+                "지점 기본 주소",
                 before.getBaseAddress(),
                 dto.getBaseAddress(),
-                "지점 기본 주소 수정",
+                reason,
                 loginUserId
             );
         }
@@ -74,10 +74,21 @@ public class BranchService {
         if (!Objects.equals(before.getDetailAddress(), dto.getDetailAddress())) {
             branchMapper.insertBranchUpdateLog(
                 dto.getBranchId(),
-                "detail_address",
+                "지점 상세 주소",
                 before.getDetailAddress(),
                 dto.getDetailAddress(),
-                "지점 상세 주소 수정",
+                reason,
+                loginUserId
+            );
+        }
+        
+        if (!Objects.equals(before.getManagerName(), dto.getManagerName())) {
+            branchMapper.insertBranchUpdateLog(
+                dto.getBranchId(),
+                "담당자명",
+                before.getManagerName(),
+                dto.getManagerName(),
+                reason,
                 loginUserId
             );
         }
@@ -85,10 +96,10 @@ public class BranchService {
         if (!Objects.equals(before.getManagerPhone(), dto.getManagerPhone())) {
             branchMapper.insertBranchUpdateLog(
                 dto.getBranchId(),
-                "manager_phone",
+                "지점관리자 연락처",
                 before.getManagerPhone(),
                 dto.getManagerPhone(),
-                "담당자 연락처 수정",
+                reason,
                 loginUserId
             );
         }
@@ -96,10 +107,10 @@ public class BranchService {
         if (!Objects.equals(before.getOperatingHours(), dto.getOperatingHours())) {
             branchMapper.insertBranchUpdateLog(
                 dto.getBranchId(),
-                "operating_hours",
+                "운영 시간",
                 before.getOperatingHours(),
                 dto.getOperatingHours(),
-                "지점 운영시간 수정",
+                reason,
                 loginUserId
             );
         }

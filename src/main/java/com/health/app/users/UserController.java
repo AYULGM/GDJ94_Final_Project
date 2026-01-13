@@ -36,7 +36,9 @@ public class UserController {
 
     
     @GetMapping("/password")
-    public String passwordForm() {
+    public String passwordForm(Model model) {
+    	model.addAttribute("pageTitle", "비밀번호 변경");
+    	
         return "users/password";
     }
 
@@ -107,6 +109,7 @@ public class UserController {
 
         UserDTO userInfo = userService.findByLoginId(loginId);
         model.addAttribute("user", userInfo);
+        model.addAttribute("pageTitle", "정보 수정");
 
         return "users/update";
     }
@@ -154,6 +157,7 @@ public class UserController {
 
         UserDTO userInfo = userService.findByLoginId(loginId);
         model.addAttribute("user", userInfo);
+        model.addAttribute("pageTitle", "내 정보");
 
         return "users/mypage";
     }
