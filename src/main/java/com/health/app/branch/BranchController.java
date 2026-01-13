@@ -68,9 +68,10 @@ public class BranchController {
     @PostMapping("/update")
     public String update(
             BranchDTO dto,
+            @RequestParam String reason,
             @AuthenticationPrincipal LoginUser loginUser
     ) {
-        branchService.updateBranch(dto, loginUser.getUserId());
+        branchService.updateBranch(dto, reason, loginUser.getUserId());
         return "redirect:/branch/detail?branchId=" + dto.getBranchId();
     }
     
