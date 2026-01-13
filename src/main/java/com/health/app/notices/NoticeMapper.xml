@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.notices.NoticeMapper">
+
+  <resultMap id="NoticeMap" type="com.health.app.notices.NoticeDTO">
+    <id property="noticeId" column="notice_id"/>
+    <result property="title" column="title"/>
+    <result property="content" column="content"/>
+    <result property="noticeType" column="notice_type"/>
+    <result property="targetType" column="target_type"/>
+    <result property="categoryCode" column="category_code"/>
+    <result property="isPinned" column="is_pinned"/>
+    <result property="status" column="status"/>
+    <result property="writerId" column="writer_id"/>
+    <result property="viewCount" column="view_count"/>
+    <result property="createDate" column="create_date"/>
+    <result property="updateUser" column="update_user"/>
+    <result property="updateDate" column="update_date"/>
+    <result property="useYn" column="use_yn"/>
+    <result property="publishStartDate" column="publish_start_date"/>
+    <result property="publishEndDate" column="publish_end_date"/>
+  </resultMap>
+
+  <insert id="insertNotice"
+          parameterType="com.health.app.notices.NoticeDTO"
+          useGeneratedKeys="true" keyProperty="noticeId">
+    <![CDATA[
+    INSERT INTO notices (
+      title, content,
+      notice_type, target_type, category_code,
+      is_pinned, status,
+      writer_id, view_count,
+      create_date, update_user, update_date,
+      use_yn, publish_start_date, publish_end_date
+    ) VALUES (
+      #{title}, #{content},
+      #{noticeType}, #{targetType}, #{categoryCode},
+      #{isPinned}, #{status},
+      #{writerId}, 0,
+      NOW(), #{updateUser}, NOW(),
+      1, #{publishStartDate}, #{publishEndDate}
+    )
+    ]]>
+  </insert>
+
+  <update id="updateNotice" parameterType="com.health.app.notices.NoticeDTO">
+    <![CDATA[
+    UPDATE notices
+    SET
+      title = #{title},
+      content = #{content},
+      notice_type = #{noticeType},
+      target_type = #{targetType},
+      category_code = #{categoryCode},
+      is_pinned = #{isPinned},
+      status = #{status},
+      update_user = #{updateUser},
+      update_date = NOW(),
+      publish_start_date = #{publishStartDate},
+      publish_end_date = #{publishEndDate}
+    WHERE notice_id = #{noticeId}
+      AND use_yn = 1
+    ]]>
+  </update>
+
+  <update id="softDelete">
+    <![CDATA[
+    UPDATE notices
+    SET use_yn = 0,
+        update_user = #{updateUser},
+        update_date = NOW()
+    WHERE notice_id = #{noticeId}
+    ]]>
+  </update>
+
+  <select id="selectOne" resultMap="NoticeMap">
+    <![CDATA[
+    SELECT
+      notice_id, title, content,
+      notice_type, target_type, category_code,
+      is_pinned, status,
+      writer_id, view_count,
+      create_date, update_user, update_date,
+      use_yn, publish_start_date, publish_end_date
+    FROM notices
+    WHERE notice_id = #{noticeId}
+    ]]>
+  </select>
+
+  <update id="incrementViewCount">
+    <![CDATA[
+    UPDATE notices
+    SET view_count = view_count + 1
+    WHERE notice_id = #{noticeId}
+    ]]>
+  </update>
+
+  <!-- 목록 쿼리: 비교 연산자(<=, >=) 때문에 CDATA 필수 -->
+  <select id="selectList" resultMap="NoticeMap">
+    <![CDATA[
+    SELECT DISTINCT
+      n.notice_id, n.title, n.content,
+      n.notice_type, n.target_type, n.category_code,
+      n.is_pinned, n.status,
+      n.writer_id, n.view_count,
+      n.create_date, n.update_user, n.update_date,
+      n.use_yn, n.publish_start_date, n.publish_end_date
+    FROM notices n
+    LEFT JOIN notice_targets nt
+      ON n.notice_id = nt.notice_id
+     AND nt.use_yn = 1
+    WHERE n.use_yn = 1
+      AND n.status = 'NS001'
+      AND (n.publish_start_date IS NULL OR n.publish_start_date <= NOW())
+      AND (n.publish_end_date IS NULL OR n.publish_end_date >= NOW())
+      AND (
+        n.target_type = 'TT001'
+        OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
+      )
+    ORDER BY n.is_pinned DESC, n.create_date DESC
+    ]]>
+  </select>
+
+  <!-- targets: create_user NOT NULL 대응 -->
+  <update id="deleteTargets">
+    <![CDATA[
+    UPDATE notice_targets
+    SET use_yn = 0,
+        update_user = #{updateUser},
+        update_date = NOW()
+    WHERE notice_id = #{noticeId}
+      AND use_yn = 1
+    ]]>
+  </update>
+
+  <insert id="insertTarget">
+    <![CDATA[
+    INSERT INTO notice_targets (
+      notice_id, branch_id,
+      create_user, create_date,
+      use_yn
+    ) VALUES (
+      #{noticeId}, #{branchId},
+      #{createUser}, NOW(),
+      1
+    )
+    ]]>
+  </insert>
+
+  <!-- history: create_user NOT NULL, reason NOT NULL 대응 -->
+  <insert id="insertHistory" parameterType="com.health.app.notices.NoticeHistoryDTO">
+    <![CDATA[
+    INSERT INTO notice_history (
+      notice_id, change_type, before_value, after_value, reason,
+      create_user, create_date,
+      use_yn
+    ) VALUES (
+      #{noticeId}, #{changeType}, #{beforeValue}, #{afterValue}, #{reason},
+      #{createUser}, NOW(),
+      1
+    )
+    ]]>
+  </insert>
+<select id="selectTargetBranches" resultType="com.health.app.branch.BranchDTO">
+  <![CDATA[
+  SELECT b.branch_id AS branchId,
+         b.branch_name AS branchName
+  FROM notice_targets nt
+  JOIN branch b ON b.branch_id = nt.branch_id
+  WHERE nt.notice_id = #{noticeId}
+    AND nt.use_yn = 1
+  ORDER BY b.branch_name
+  ]]>
+</select>
+
+</mapper>
