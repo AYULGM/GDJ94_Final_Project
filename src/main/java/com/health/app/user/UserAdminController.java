@@ -3,6 +3,7 @@ package com.health.app.user;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -131,6 +132,21 @@ public class UserAdminController {
             (LoginUser) auth.getPrincipal();
 
         userAdminService.resetPassword(userId, loginUser.getUserId());
+
+        return "redirect:/userManagement/detail?userId=" + userId;
+    }
+
+    // 회원탈퇴기능( use_yn = 0)
+    @PostMapping("/withdraw")
+    public String withdrawUser(Long userId,
+                               String reason,
+                               @AuthenticationPrincipal LoginUser loginUser) {
+
+        userAdminService.withdrawUser(
+            userId,
+            loginUser.getUserId(),
+            reason
+        );
 
         return "redirect:/userManagement/detail?userId=" + userId;
     }

@@ -3,6 +3,19 @@
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <!doctype html>
+
+<style>
+.input-group .form-control,
+.input-group .input-group-text {
+    height: 58px;
+}
+
+.input-group .input-group-text {
+    display: flex;
+    align-items: center;
+}
+
+</style>
 <html lang="ko">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />

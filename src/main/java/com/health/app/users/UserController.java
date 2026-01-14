@@ -22,17 +22,17 @@ public class UserController {
     
     
     // 회원탈퇴 기능
-    @PostMapping("/withdraw")
-    public String withdraw(Authentication authentication,
-                           RedirectAttributes redirectAttributes) {
-
-        String loginId = authentication.getName();
-
-        userService.withdraw(loginId);
-
-        // 로그아웃 후 메시지 전달
-        return "redirect:/login?withdraw";
-    }
+//    @PostMapping("/withdraw")
+//    public String withdraw(Authentication authentication,
+//                           RedirectAttributes redirectAttributes) {
+//
+//        String loginId = authentication.getName();
+//
+//        userService.withdraw(loginId);
+//
+//        // 로그아웃 후 메시지 전달
+//        return "redirect:/login?withdraw";
+//    }
 
     
     @GetMapping("/password")
@@ -162,29 +162,13 @@ public class UserController {
         return "users/mypage";
     }
     
-    /**
-     * 사용자 목록
-     * GET /users
-     */
-//    @GetMapping
-//    public String userList(Model model) {
-//        model.addAttribute("pageTitle", "사용자 관리");
-//        return "users/list";
-//    }
-
-    /**
-     * 회원가입 화면
-     * GET /users/join
-     */
+    // 회원가입 페이지
     @GetMapping("/join")
     public String join() {
         return "users/join";
     }
 
-    /**
-     * 회원가입 처리
-     * POST /users/joinProc
-     */
+    // 회원가입 처리
     @PostMapping("/joinProc")
     public String joinProc(UserDTO userDTO) {
     	

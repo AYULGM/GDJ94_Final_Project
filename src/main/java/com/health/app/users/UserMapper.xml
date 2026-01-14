@@ -112,13 +112,15 @@
       AND use_yn = TRUE
 </select>
 
+<!-- 회원탈퇴기능
 <update id="withdraw" parameterType="string">
     UPDATE users
     SET
         use_yn = FALSE,
         update_date = NOW()
     WHERE login_id = #{loginId}
-</update>
+</update> 
+-->
 
 <select id="countByLoginIdAndEmail" resultType="int">
     SELECT COUNT(*)

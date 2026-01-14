@@ -172,6 +172,78 @@
 			        </small>
 			    </div>
 			</div>
+			
+			<!-- ================= 회원 탈퇴 ================= -->
+			<div class="card card-outline card-danger mt-3">
+			    <div class="card-header">
+			        <h3 class="card-title">회원 탈퇴 처리</h3>
+			    </div>
+			
+			    <div class="card-body text-center">
+			        <button type="button"
+			                class="btn btn-danger"
+			                data-bs-toggle="modal"
+			                data-bs-target="#withdrawModal">
+			            회원 탈퇴 처리
+			        </button>
+			
+			        <small class="text-muted d-block mt-2">
+			            탈퇴 시 사용자 목록에서 제외됩니다.
+			        </small>
+			    </div>
+			</div>
+			
+			<!-- ================= 탈퇴 사유 모달 ================= -->
+			<div class="modal fade" id="withdrawModal" tabindex="-1">
+			    <div class="modal-dialog">
+			        <div class="modal-content">
+			
+			            <form action="/userManagement/withdraw"
+			                  method="post">
+			
+			                <div class="modal-header bg-danger">
+			                    <h5 class="modal-title text-white">회원 탈퇴 처리</h5>
+			                    <button type="button"
+			                            class="btn-close"
+			                            data-bs-dismiss="modal"></button>
+			                </div>
+			
+			                <div class="modal-body">
+			
+			                    <input type="hidden"
+			                           name="userId"
+			                           value="${user.userId}" />
+			
+			                    <div class="mb-3">
+			                        <label class="form-label">탈퇴 사유</label>
+			                        <textarea name="reason"
+			                                  class="form-control"
+			                                  rows="4"
+			                                  placeholder="탈퇴 사유를 입력하세요"
+			                                  required></textarea>
+			                    </div>
+			
+			                </div>
+			
+			                <div class="modal-footer">
+			                    <button type="button"
+			                            class="btn btn-secondary"
+			                            data-bs-dismiss="modal">
+			                        취소
+			                    </button>
+			
+			                    <button type="submit"
+			                            class="btn btn-danger">
+			                        탈퇴 처리
+			                    </button>
+			                </div>
+			
+			            </form>
+			
+			        </div>
+			    </div>
+			</div>
+			
 
             <!-- ================= 변경 이력 ================= -->
 			<div class="card card-outline card-secondary mt-3">

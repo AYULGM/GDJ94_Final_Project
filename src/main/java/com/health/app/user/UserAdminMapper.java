@@ -20,6 +20,7 @@ public interface UserAdminMapper {
 	void insertRoleChangeLog(Long userId, String beforeRoleCode, String afterRoleCode,
 	            Long createUser, String reason);
 	
+	// 이력 저장
 	void insertUserHistory(Long userId, String changeType,
 	          String beforeValue, String afterValue,
 	          String reason, Long createUser);
@@ -31,5 +32,8 @@ public interface UserAdminMapper {
 	void updatePassword(Long userId, String password, Long updateUser);
 
 	List<UserBranchLogDTO> selectUserAllHistory(Long userId);
+	
+    // 탈퇴 처리
+    int updateUseYn(Long userId, Long updateUser);
 
 }
