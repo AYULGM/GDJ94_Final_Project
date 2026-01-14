@@ -191,6 +191,7 @@
 	)
 	</insert>
 
+	<!-- 사용자 상태 변경 -->
 	<update id="updateUserStatus">
 	UPDATE users
 	SET
@@ -209,100 +210,115 @@
 	WHERE user_id = #{userId}
 	</update>
 
-<select id="selectUserAllHistory"
-        parameterType="long"
-        resultType="com.health.app.user.UserBranchLogDTO">
+	<!-- 사용자의 모든 이력 -->
+	<select id="selectUserAllHistory"
+	        parameterType="long"
+	        resultType="com.health.app.user.UserBranchLogDTO">
+	
+	<![CDATA[
+	SELECT *
+	FROM (
+	
+	    -- ① 기본정보 변경
+	    SELECT
+	        uh.create_date AS createDate,
+	        'UPDATE' AS historyType,
+	
+	        CASE
+	            WHEN uh.change_type = 'department_code' THEN '부서'
+	            WHEN uh.change_type = 'status_code'     THEN '사용자 상태'
+	            ELSE uh.change_type
+	        END AS changeField,
+	
+	        -- 변경 전
+	        CASE
+	            WHEN uh.change_type = 'department_code'
+	                THEN cd1.code_desc
+	            WHEN uh.change_type = 'status_code'
+	                THEN sc1.code_desc
+	            ELSE uh.before_value
+	        END AS beforeValue,
+	
+	        -- 변경 후
+	        CASE
+	            WHEN uh.change_type = 'department_code'
+	                THEN cd2.code_desc
+	            WHEN uh.change_type = 'status_code'
+	                THEN sc2.code_desc
+	            ELSE uh.after_value
+	        END AS afterValue,
+	
+	        uh.reason,
+	        u.name AS createUserName
+	
+	    FROM user_history uh
+	    JOIN users u ON u.user_id = uh.create_user
+	
+	    -- 부서 코드
+	    LEFT JOIN common_code cd1
+	      ON cd1.code_group = 'DEPARTMENT_CODE'
+	     AND cd1.code = uh.before_value
+	
+	    LEFT JOIN common_code cd2
+	      ON cd2.code_group = 'DEPARTMENT_CODE'
+	     AND cd2.code = uh.after_value
+	
+	    -- 상태 코드
+	    LEFT JOIN common_code sc1
+	      ON sc1.code_group = 'USER_STATUS'
+	     AND sc1.code = uh.before_value
+	
+	    LEFT JOIN common_code sc2
+	      ON sc2.code_group = 'USER_STATUS'
+	     AND sc2.code = uh.after_value
+	
+	    WHERE uh.user_id = #{userId}
+	
+	    UNION ALL
+	
+	    -- ② 지점 변경
+	    SELECT
+	        bl.create_date,
+	        'BRANCH',
+	        '소속 지점',
+	        b1.branch_name,
+	        b2.branch_name,
+	        bl.reason,
+	        u.name
+	
+	    FROM user_branch_log bl
+	    LEFT JOIN branch b1 ON b1.branch_id = bl.before_branch_id
+	    LEFT JOIN branch b2 ON b2.branch_id = bl.after_branch_id
+	    JOIN users u ON u.user_id = bl.create_user
+	    WHERE bl.user_id = #{userId}
+	
+	    UNION ALL
+	
+	    -- ③ 권한 변경
+	    SELECT
+	        rl.create_date,
+	        'ROLE',
+	        '권한',
+	        c1.code_desc,
+	        c2.code_desc,
+	        rl.reason,
+	        u.name
+	
+	    FROM role_change_log rl
+	    LEFT JOIN common_code c1
+	      ON c1.code_group = 'ROLE'
+	     AND c1.code = rl.before_role_code
+	    LEFT JOIN common_code c2
+	      ON c2.code_group = 'ROLE'
+	     AND c2.code = rl.after_role_code
+	    JOIN users u ON u.user_id = rl.create_user
+	    WHERE rl.user_id = #{userId}
+	
+	) h
+	ORDER BY createDate DESC
+	]]>
+	</select>
 
-<![CDATA[
-SELECT *
-FROM (
-
-    -- ① 기본정보 변경
-    SELECT
-        uh.create_date AS createDate,
-        'UPDATE' AS historyType,
-
-        CASE
-            WHEN uh.change_type = 'department_code'
-            THEN '부서'
-            ELSE uh.change_type
-        END AS changeField,
-
-        -- 🔥 변경 전
-        CASE
-            WHEN uh.change_type = 'department_code'
-            THEN cd1.code_desc
-            ELSE uh.before_value
-        END AS beforeValue,
-
-        -- 🔥 변경 후
-        CASE
-            WHEN uh.change_type = 'department_code'
-            THEN cd2.code_desc
-            ELSE uh.after_value
-        END AS afterValue,
-
-        uh.reason,
-        u.name AS createUserName
-
-    FROM user_history uh
-    JOIN users u ON u.user_id = uh.create_user
-
-    -- 🔥 부서코드 한글 변환
-    LEFT JOIN common_code cd1
-      ON cd1.code_group = 'DEPARTMENT_CODE'
-     AND cd1.code = uh.before_value
-
-    LEFT JOIN common_code cd2
-      ON cd2.code_group = 'DEPARTMENT_CODE'
-     AND cd2.code = uh.after_value
-
-    WHERE uh.user_id = #{userId}
-
-    UNION ALL
-
-    -- ② 지점 변경
-    SELECT
-        bl.create_date,
-        'BRANCH' AS historyType,
-        '소속 지점' AS changeField,
-        b1.branch_name,
-        b2.branch_name,
-        bl.reason,
-        u.name
-
-    FROM user_branch_log bl
-    LEFT JOIN branch b1 ON b1.branch_id = bl.before_branch_id
-    LEFT JOIN branch b2 ON b2.branch_id = bl.after_branch_id
-    JOIN users u ON u.user_id = bl.create_user
-    WHERE bl.user_id = #{userId}
-
-    UNION ALL
-
-    -- ③ 권한 변경
-    SELECT
-        rl.create_date,
-        'ROLE' AS historyType,
-        '권한' AS changeField,
-        c1.code_desc,
-        c2.code_desc,
-        rl.reason,
-        u.name
-
-    FROM role_change_log rl
-    LEFT JOIN common_code c1
-      ON c1.code_group = 'ROLE'
-     AND c1.code = rl.before_role_code
-    LEFT JOIN common_code c2
-      ON c2.code_group = 'ROLE'
-     AND c2.code = rl.after_role_code
-    JOIN users u ON u.user_id = rl.create_user
-    WHERE rl.user_id = #{userId}
-
-) h
-ORDER BY createDate DESC
-]]>
-</select>
 
 
 </mapper>

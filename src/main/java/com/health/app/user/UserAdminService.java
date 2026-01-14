@@ -82,7 +82,7 @@ public class UserAdminService {
             );
         }
 
-        // 3. 일반 정보 변경
+        // 3. 일반 정보 변경 (change_type 한글로 저장)
         insertUserHistoryIfChanged("이름",
             before.getName(), dto.getName(), dto, reason);
 
@@ -101,12 +101,16 @@ public class UserAdminService {
         insertUserHistoryIfChanged("상세주소",
             before.getDetailAddress(), dto.getDetailAddress(), dto, reason);
 
-        insertUserHistoryIfChanged("department_code",
+        insertUserHistoryIfChanged("부서",
             before.getDepartmentCode(), dto.getDepartmentCode(), dto, reason);
 
-        // 4. 실제 업데이트
+        insertUserHistoryIfChanged("사용자 상태",
+            before.getUserStatusCode(), dto.getUserStatusCode(), dto, reason);
+
+        // 4. 실제 UPDATE
         userAdminMapper.updateUser(dto);
     }
+
 
 
     private void insertUserHistoryIfChanged(
@@ -174,7 +178,7 @@ public class UserAdminService {
         // 4. 이력 기록
         userAdminMapper.insertUserHistory(
             userId,
-            "password",
+            "비밀번호",
             "********",
             "RESET",
             "관리자에 의한 비밀번호 초기화",
