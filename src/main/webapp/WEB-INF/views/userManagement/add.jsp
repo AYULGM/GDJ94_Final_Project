@@ -6,6 +6,13 @@
 <div class="content-wrapper">
     <section class="content">
         <div class="container-fluid">
+        
+        <!-- 에러메시지 출력 -->
+        <c:if test="${not empty error}">
+		    <div class="alert alert-danger text-center">
+		        ${error}
+		    </div>
+		</c:if>
 
             <form action="/userManagement/add" method="post">
                 <div class="card card-outline card-primary">

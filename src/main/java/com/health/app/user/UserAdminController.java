@@ -2,6 +2,7 @@ package com.health.app.user;
 
 import java.util.List;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.health.app.security.model.LoginUser;
 
@@ -59,21 +61,37 @@ public class UserAdminController {
         return "userManagement/add";
     }
     
-    // 사용자 등록
+ // 사용자 등록
     @PostMapping("/add")
-    public String addUser(UserAdminDTO dto) {
+    public String addUser(UserAdminDTO dto,
+                          RedirectAttributes ra) {
 
         Authentication auth =
             SecurityContextHolder.getContext().getAuthentication();
 
         LoginUser loginUser =
-            (LoginUser) auth.getPrincipal(); // ⭐ 여기
+            (LoginUser) auth.getPrincipal();
 
-        dto.setCreateUser(loginUser.getUserId()); // ⭐ 여기
+        dto.setCreateUser(loginUser.getUserId());
 
-        userAdminService.addUser(dto);
-        return "redirect:/userManagement/list";
+        try {
+            userAdminService.addUser(dto);
+            return "redirect:/userManagement/list";
+
+        } catch (DuplicateKeyException e) {
+
+            // 🔥 DB UNIQUE 중복 처리
+            ra.addFlashAttribute("error", "이미 사용중인 아이디입니다.");
+            return "redirect:/userManagement/add";
+
+        } catch (IllegalStateException e) {
+
+            // 서비스단에서 던진 예외 처리
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/userManagement/add";
+        }
     }
+
     
     // 사용자 수정
     @GetMapping("/edit")

@@ -170,8 +170,11 @@ public class UserController {
 
     // 회원가입 처리
     @PostMapping("/joinProc")
-    public String joinProc(UserDTO userDTO) {
+    public String joinProc(UserDTO userDTO, RedirectAttributes ra) {
     	
+    	
+    	try {
+    		
         // 🔧 부서 코드 정규화 (회원가입 시 부서코드가 "" 라면 → null (DB에 null이 들어가도록))
         if (userDTO.getDepartmentCode() != null && userDTO.getDepartmentCode().isBlank()) 
         {
@@ -198,6 +201,17 @@ public class UserController {
 
         // 3️⃣ 가입 후 로그인 페이지로
         return "redirect:/login";
+        
+    	}
+    	catch (IllegalStateException e) {
+
+            // 🔥 에러 메시지 전달
+            ra.addFlashAttribute("error", e.getMessage());
+
+            // 다시 회원가입 페이지로
+            return "redirect:/users/join";
+        }
+    	
     }
     
     // 로그인창에서 비밀번호 찾기

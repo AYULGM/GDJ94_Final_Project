@@ -26,6 +26,14 @@
 
         <div class="card-body register-card-body">
             <p class="login-box-msg">아래 정보를 입력하세요</p>
+            
+            <!-- 🔥 에러 메시지 출력 위치 -->
+			<c:if test="${not empty error}">
+			    <div class="alert alert-danger text-center">
+			        ${error}
+			    </div>
+			</c:if>
+            
 
             <form action="<c:url value='/users/joinProc'/>" method="post">
 
