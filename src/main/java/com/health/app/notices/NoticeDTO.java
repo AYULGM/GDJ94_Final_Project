@@ -18,6 +18,7 @@ public class NoticeDTO {
 
     private Boolean isPinned;
     private String status;
+    private String writerName; // 작성자명
 
     private Long writerId;
     private Long viewCount;

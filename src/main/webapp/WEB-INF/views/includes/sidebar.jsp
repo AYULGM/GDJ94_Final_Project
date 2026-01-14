@@ -158,23 +158,13 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="/approval/form" class="nav-link">
-                <p>결재 작성</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="/approval/signature" class="nav-link">
                 <p>서명창</p>
               </a>
             </li>
-			<li class="nav-item">
-              <a href="/approval/line?docVerId=3" class="nav-link">
-                <p>결재 라인</p>
-              </a>
-            </li>
             <li class="nav-item">
               <a href="/approval/inbox" class="nav-link">
-                <p>기안함</p>
+                <p>결재함</p>
               </a>
             </li>
           </ul>

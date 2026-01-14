@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import com.health.app.approval.ApprovalMapper;
 
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ public class NoticeController {
     private final NoticeService noticeService;
     private final BranchMapper branchMapper;
     private final CommonCodeMapper commonCodeMapper;
+    private final ApprovalMapper approvalMapper;
 
     // 관리자 여부 판단
     private boolean isAdmin(LoginUser user) {
@@ -55,26 +57,74 @@ public class NoticeController {
     // 사용자 목록
     @GetMapping
     public String list(@RequestParam(required = false) Long branchId,
+                       @RequestParam(defaultValue = "1") int page,
+                       @RequestParam(defaultValue = "10") int size,
                        @AuthenticationPrincipal LoginUser user,
                        Model model) {
-        model.addAttribute("list", noticeService.list(branchId));
-        model.addAttribute("branchId", branchId);
-        model.addAttribute("isAdmin", isAdmin(user));
 
+        Long effectiveBranchId = branchId;
+
+        // 사용자 목록에서는 기본으로 내 지점 적용(approval 재사용)
+        if (effectiveBranchId == null && user != null) {
+            effectiveBranchId = approvalMapper.selectBranchIdByUserId(user.getUserId());
+        }
+
+        int offset = (page - 1) * size;
+
+        model.addAttribute("list", noticeService.listPaged(effectiveBranchId, size, offset));
+        long total = noticeService.countForUserList(effectiveBranchId);
+
+        int totalPages = (int) Math.ceil((double) total / size);
+
+        model.addAttribute("branchId", effectiveBranchId);
+        model.addAttribute("page", page);
+        model.addAttribute("size", size);
+        model.addAttribute("total", total);
+        model.addAttribute("totalPages", totalPages);
+
+        model.addAttribute("isAdmin", isAdmin(user));
         model.addAttribute("pageTitle", "공지사항");
         putCodeMaps(model);
+
         return "notices/list";
     }
 
+
+
+
     // 관리자 목록
     @GetMapping("/admin")
-    public String adminList(@AuthenticationPrincipal LoginUser user, Model model) {
-        if (!isAdmin(user)) return "redirect:/notices";
-        model.addAttribute("list", noticeService.adminList());
-        model.addAttribute("isAdmin", true);
+    public String adminList(@RequestParam(required = false) Long branchId,
+                            @RequestParam(required = false) String status,
+                            @RequestParam(required = false) String targetType,
+                            @RequestParam(defaultValue = "1") int page,
+                            @RequestParam(defaultValue = "10") int size,
+                            @AuthenticationPrincipal LoginUser user,
+                            Model model) {
+
+        int offset = (page - 1) * size;
+
+        model.addAttribute("list", noticeService.adminListPaged(branchId, status, targetType, size, offset));
+        long total = noticeService.adminCount(branchId, status, targetType);
+
+        int totalPages = (int) Math.ceil((double) total / size);
+
+        model.addAttribute("branchId", branchId);
+        model.addAttribute("status", status);
+        model.addAttribute("targetType", targetType);
+
+        model.addAttribute("page", page);
+        model.addAttribute("size", size);
+        model.addAttribute("total", total);
+        model.addAttribute("totalPages", totalPages);
+
+        model.addAttribute("isAdmin", isAdmin(user));
+        model.addAttribute("pageTitle", "공지사항(관리자)");
         putCodeMaps(model);
+
         return "notices/admin_list";
     }
+
 
     // 상세
     @GetMapping("/{noticeId}")
@@ -84,6 +134,7 @@ public class NoticeController {
         NoticeDTO notice = noticeService.view(noticeId);
         model.addAttribute("notice", notice);
         model.addAttribute("isAdmin", isAdmin(user));
+        model.addAttribute("pageTitle", "공지사항");
         putCodeMaps(model);
         if (notice != null && "TT002".equals(notice.getTargetType())) {
             model.addAttribute("targets", noticeService.getTargetBranches(noticeId));
@@ -97,6 +148,7 @@ public class NoticeController {
         if (!isAdmin(user)) return "redirect:/notices";
         model.addAttribute("notice", new NoticeDTO());
         model.addAttribute("isAdmin", true);
+        model.addAttribute("pageTitle", "공지사항");
         putFormLists(model);
         return "notices/form";
     }
@@ -105,11 +157,12 @@ public class NoticeController {
     @PostMapping
     public String create(NoticeDTO dto,
                          @RequestParam(required = false) String reason,
-                         @AuthenticationPrincipal LoginUser user) {
+                         @AuthenticationPrincipal LoginUser user, Model model) {
         if (!isAdmin(user)) return "redirect:/notices";
         Long actorUserId = user.getUserId();
         dto.setWriterId(actorUserId);
         noticeService.create(dto, actorUserId, reason);
+        model.addAttribute("pageTitle", "공지사항");
         return "redirect:/notices/admin";
     }
 
@@ -121,6 +174,7 @@ public class NoticeController {
         if (!isAdmin(user)) return "redirect:/notices";
         model.addAttribute("notice", noticeService.getForEdit(noticeId));
         model.addAttribute("isAdmin", true);
+        model.addAttribute("pageTitle", "공지사항");
         putFormLists(model);
         return "notices/form";
     }
@@ -130,11 +184,12 @@ public class NoticeController {
     public String update(@PathVariable Long noticeId,
                          NoticeDTO dto,
                          @RequestParam(required = false) String reason,
-                         @AuthenticationPrincipal LoginUser user) {
+                         @AuthenticationPrincipal LoginUser user, Model model) {
         if (!isAdmin(user)) return "redirect:/notices";
         dto.setNoticeId(noticeId);
         Long actorUserId = user.getUserId();
         noticeService.update(dto, actorUserId, reason);
+        model.addAttribute("pageTitle", "공지사항");
         return "redirect:/notices/admin";
     }
 

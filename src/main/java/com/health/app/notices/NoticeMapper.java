@@ -33,4 +33,21 @@ public interface NoticeMapper {
 
     // 변경 이력
     int insertHistory(NoticeHistoryDTO h);
+    
+    List<NoticeDTO> selectListPaged(@Param("branchId") Long branchId,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+    long countUserList(@Param("branchId") Long branchId);
+    
+    List<NoticeDTO> selectAdminListPaged(@Param("branchId") Long branchId,
+            @Param("status") String status,
+            @Param("targetType") String targetType,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+	long countAdminList(@Param("branchId") Long branchId,
+	@Param("status") String status,
+	@Param("targetType") String targetType);
+
 }

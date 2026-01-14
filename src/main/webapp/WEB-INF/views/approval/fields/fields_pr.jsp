@@ -5,22 +5,22 @@
 
 <div class="row g-2">
   <div class="col-md-4">
-    <label class="form-label">희망 납기일(선택)</label>
+    <label class="form-label"><span style="color:red;">*</span>희망 납기일</label>
     <input type="date" class="form-control" name="extDt1" />
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">거래처(선택)</label>
+    <label class="form-label">거래처</label>
     <input type="text" class="form-control" name="extTxt1" maxlength="100" />
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">예상 합계(자동)</label>
-    <input type="number" class="form-control" name="extNo1" id="prTotal" readonly />
+    <label class="form-label">예상 합계</label>
+    <input type="number" class="form-control bg-secondary-subtle" name="extNo1" id="prTotal" readonly />
   </div>
 
   <div class="col-12">
-    <label class="form-label mt-2">요청 사유</label>
+    <label class="form-label mt-2"><span style="color:red;">*</span>요청 사유</label>
     <textarea class="form-control" name="extTxt2" rows="3" maxlength="600" required></textarea>
   </div>
 
@@ -36,10 +36,10 @@
       <table class="table table-sm table-bordered align-middle" id="prTable">
         <thead class="table-light">
           <tr>
-            <th>품목명</th>
-            <th style="width: 110px;" class="text-end">수량</th>
-            <th style="width: 140px;" class="text-end">예상단가</th>
-            <th style="width: 140px;" class="text-end">금액(자동)</th>
+            <th><span style="color:red; font-weight: normal;">*</span>품목명</th>
+            <th style="width: 110px;"><span style="color:red; font-weight: normal;"">*</span>수량</th>
+            <th style="width: 140px;">예상단가</th>
+            <th style="width: 140px;">금액</th>
             <th style="width: 80px;"></th>
           </tr>
         </thead>
@@ -66,7 +66,7 @@
 		      <input type="number" class="form-control form-control-sm pr-unit text-end" readonly />
 		    </td>
 		    <td>
-		      <input type="number" class="form-control form-control-sm pr-amt text-end" readonly />
+		      <input type="number" class="form-control form-control-sm pr-amt text-end bg-secondary-subtle" readonly />
 		    </td>
 		    <td class="text-center">
 		      <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
@@ -75,12 +75,11 @@
 		</tbody>
 
       </table>
-      <div class="form-text">저장 시 품목은 extTxt6(JSON)로 저장됩니다.</div>
     </div>
   </div>
 
   <div class="col-12">
-    <label class="form-label mt-2">비고(선택)</label>
+    <label class="form-label mt-2">비고</label>
     <input type="text" class="form-control" name="extTxt3" maxlength="200" />
   </div>
 </div>
@@ -137,7 +136,7 @@
         <input type="number" class="form-control form-control-sm pr-unit text-end" readonly />
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm pr-amt text-end" readonly />
+        <input type="number" class="form-control form-control-sm pr-amt text-end bg-secondary-subtle" readonly />
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
