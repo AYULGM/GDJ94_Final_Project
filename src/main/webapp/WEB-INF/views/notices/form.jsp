@@ -78,7 +78,7 @@
   <div class="col-12">
     <div class="card">
       <div class="card-header d-flex align-items-center justify-content-between">
-        <h3 class="card-title mb-0">
+        <h3 class="card-title mb-0  col-10">
           <c:choose>
             <c:when test="${empty notice.noticeId}">공지 등록</c:when>
             <c:otherwise>공지 수정</c:otherwise>

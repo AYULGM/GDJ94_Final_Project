@@ -8,7 +8,7 @@
     <div class="card">
 
       <div class="card-header d-flex align-items-center justify-content-between">
-        <h3 class="card-title mb-0">공지 상세</h3>
+        <h3 class="card-title mb-0  col-10">공지 상세</h3>
 
         <div class="d-flex gap-2">
           <a class="btn btn-outline-secondary btn-sm" href="<c:url value='/notices'/>">목록</a>

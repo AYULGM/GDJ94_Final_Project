@@ -8,9 +8,9 @@
     <div class="card">
 
       <div class="card-header d-flex align-items-center justify-content-between">
-        <h3 class="card-title mb-0">공지사항 목록</h3>
+        <h3 class="card-title mb-0 col-10">공지사항 목록</h3>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 ">
           <c:if test="${isAdmin}">
             <a class="btn btn-outline-primary btn-sm" href="<c:url value='/notices/admin'/>">관리자 목록</a>
             <a class="btn btn-primary btn-sm" href="<c:url value='/notices/new'/>">공지 등록</a>
@@ -79,7 +79,7 @@
                             시작:
                             <c:choose>
                               <c:when test="${not empty n.publishStartDate}">
-                                <c:out value="${n.publishStartDate}" />
+                                <c:out value="${n.publishStartDateOnly} ${n.publishStartTimeOnly}" />
                               </c:when>
                               <c:otherwise>즉시</c:otherwise>
                             </c:choose>
