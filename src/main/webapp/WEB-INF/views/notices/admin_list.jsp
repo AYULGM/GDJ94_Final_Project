@@ -43,7 +43,7 @@
                     <th class="text-center">제목</th>
                     <th style="width:110px;" class="text-center">유형</th>
                     <th style="width:110px;" class="text-center">작성자</th>
-                    <th style="width:120px;" class="text-center">대상</th>
+                    <th style="width:130px;" class="text-center">대상</th>
                     <th style="width:90px;" class="text-center">상태</th>
                     <th style="width:100px;" class="text-center">카테고리</th>
                     <th style="width:80px;" class="text-center">조회수</th>
@@ -89,7 +89,7 @@
                       </td>
 
                       <!-- ✅ 게시기간: 높이 줄이기 + T 제거 -->
-                      <td class="text-center">
+                      <td>
                         <c:choose>
                           <c:when test="${empty n.publishStartDate && empty n.publishEndDate}">
                             <p class="period-line text-muted">즉시 ~ 무기한</p>

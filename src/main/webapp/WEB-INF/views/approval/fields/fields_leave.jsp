@@ -64,16 +64,6 @@
   </select>
 </div>
 
-
-  <div class="col-12">
-    <label class="form-label mt-2"><span style="color:red; font-weight: normal;">*</span>휴가 사유</label>
-    <textarea class="form-control"
-              name="extTxt2"
-              rows="3"
-              maxlength="500"
-              required><c:out value="${draft.extTxt2}" /></textarea>
-  </div>
-
   <div class="col-12">
     <label class="form-label mt-2">인수인계 내용</label>
     <textarea class="form-control"

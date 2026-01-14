@@ -6,6 +6,12 @@
 
 <style>
   .page-wrap { background:#f7f8fb; }
+	.notice-content {
+	  white-space: pre-wrap;
+	  line-height: 1.8;
+	  text-align: left !important; /* ✅ 강제 */
+	  margin: 0;
+	}
 
   /* Card tone */
   .soft-card { border:1px solid rgba(0,0,0,.06); border-radius:14px; }
@@ -48,6 +54,19 @@
   /* Summary cards */
   .summary-card .card-body{ padding:.85rem 1rem; }  /* 기존보다 얇게 */
   .summary-card .kv-value{ font-size:1.05rem; }
+  .notice-content p {
+  margin: 0 0 8px 0;
+}
+
+.notice-content ul {
+  margin: 0 0 8px 16px;
+  padding: 0;
+}
+
+.notice-content li {
+  margin: 0 0 4px 0;
+}
+  
 </style>
 
 <div class="page-wrap p-3">
@@ -206,7 +225,7 @@
 
           <div class="section-body">
             <div class="notice-content">
-              <c:out value="${notice.content}"/>
+              <c:out value="${notice.content}" escapeXml="false"/>
             </div>
           </div>
         </div>

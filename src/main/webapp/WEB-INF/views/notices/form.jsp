@@ -102,7 +102,8 @@
 
           <div class="mb-3">
             <label class="form-label">내용</label>
-            <textarea name="content" class="form-control" rows="7" required><c:out value="${notice.content}" /></textarea>
+            <textarea id="content" name="content" class="form-control" rows="10"><c:out value="${notice.content}" /></textarea>
+
           </div>
 
           <div class="row g-3 mb-3">
@@ -421,5 +422,26 @@
     });
   });
 </script>
+<script>
+  $(function () {
+    if (!$.fn || !$.fn.summernote) {
+      console.error("summernote가 로드되지 않았습니다. (jQuery/로드순서 확인)");
+      return;
+    }
+
+    $('#content').summernote({
+      lang: 'ko-KR',
+      height: 320,
+      placeholder: '공지 내용을 입력하세요.',
+      toolbar: [
+        ['style', ['bold', 'italic', 'underline', 'clear']],
+        ['para', ['ul', 'ol', 'paragraph']],
+        ['insert', ['link']],
+        ['view', ['codeview']]
+      ]
+    });
+  });
+</script>
+
 
 <jsp:include page="../includes/admin_footer.jsp" />
