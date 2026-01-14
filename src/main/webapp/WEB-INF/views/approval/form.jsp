@@ -39,7 +39,7 @@
         <option value="AT001" <c:if test="${draft.typeCode == 'AT001'}">selected</c:if>><span style="color:red;">*</span>지출결의서</option>
         <option value="AT002" <c:if test="${draft.typeCode == 'AT002'}">selected</c:if>><span style="color:red;">*</span>정산결재서</option>
         <option value="AT003" <c:if test="${draft.typeCode == 'AT003'}">selected</c:if>><span style="color:red;">*</span>매출결의서</option>
-        <option value="AT004" <c:if test="${draft.typeCode == 'AT004'}">selected</c:if>>재고조정요청서</option>
+        <option value="AT004" <c:if test="${draft.typeCode == 'AT004'}">selected</c:if>class=" disabled">재고조정요청서</option>
         <option value="AT005" <c:if test="${draft.typeCode == 'AT005'}">selected</c:if>><span style="color:red;">*</span>구매요청서(PR)</option>
         <option value="AT006" <c:if test="${draft.typeCode == 'AT006'}">selected</c:if>><span style="color:red;">*</span>발주서(PO)</option>
         <option value="AT007" <c:if test="${draft.typeCode == 'AT007'}">selected</c:if>>출장 신청서</option>
@@ -135,7 +135,8 @@
 
     <!-- 제목 -->
     <div class="mb-3">
-      <label class="form-label">제목</label>
+      <label class="form-label"><span style="color:red; font-weight: normal;">*</span>
+      제목</label>
       <input type="text"
              class="form-control"
              name="title"
@@ -147,7 +148,8 @@
 
     <!-- 본문 (Quill) -->
 		<div class="mb-3">
-		  <label class="form-label">내용</label>
+		  <label class="form-label"><span style="color:red; font-weight: normal;">*</span>
+		  내용</label>
 		
 		  <!-- 서버로 실제 제출될 값 -->
 		  <input type="hidden"

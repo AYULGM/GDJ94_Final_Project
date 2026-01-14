@@ -36,10 +36,10 @@
       <table class="table table-sm table-bordered align-middle" id="prTable">
         <thead class="table-light">
           <tr>
-            <th class="text-end"><span style="color:red;">*</span>품목명</th>
-            <th style="width: 110px;" class="text-end"><span style="color:red;">*</span>수량</th>
-            <th style="width: 140px;" class="text-end">예상단가</th>
-            <th style="width: 140px;" class="text-end">금액</th>
+            <th><span style="color:red; font-weight: normal;">*</span>품목명</th>
+            <th style="width: 110px;"><span style="color:red; font-weight: normal;"">*</span>수량</th>
+            <th style="width: 140px;">예상단가</th>
+            <th style="width: 140px;">금액</th>
             <th style="width: 80px;"></th>
           </tr>
         </thead>
@@ -66,7 +66,7 @@
 		      <input type="number" class="form-control form-control-sm pr-unit text-end" readonly />
 		    </td>
 		    <td>
-		      <input type="number" class="form-control form-control-sm pr-amt text-end" readonly />
+		      <input type="number" class="form-control form-control-sm pr-amt text-end bg-secondary-subtle" readonly />
 		    </td>
 		    <td class="text-center">
 		      <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
@@ -136,7 +136,7 @@
         <input type="number" class="form-control form-control-sm pr-unit text-end" readonly />
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm pr-amt text-end" readonly />
+        <input type="number" class="form-control form-control-sm pr-amt text-end bg-secondary-subtle" readonly />
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>

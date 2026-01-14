@@ -59,8 +59,9 @@ public class ApprovalController {
                             : java.util.Collections.emptyList());
         } else {
             model.addAttribute("mode", "new");
-            model.addAttribute("products", java.util.Collections.emptyList());
+            model.addAttribute("products", approvalService.getProductsByBranch(null)); // draft 사용 금지
             model.addAttribute("pageTitle", "전자작성");
+
         }
 
         return "approval/form";
