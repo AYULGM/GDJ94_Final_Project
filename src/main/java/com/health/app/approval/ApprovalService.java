@@ -25,6 +25,14 @@ public class ApprovalService {
     private final SignatureMapper signatureMapper;
     private final CalendarEventMapper calendarEventMapper;
     private final ApprovalApplyService approvalApplyService;
+    private final ApprovalUserMapper approvalUserMapper;
+    public List<HandoverCandidateDTO> getHandoverCandidates(Long loginUserId) {
+        ApprovalUserMiniDTO me = approvalUserMapper.selectMyInfo(loginUserId);
+        if (me == null || me.getBranchId() == null || me.getRoleCode() == null) {
+            return Collections.emptyList();
+        }
+        return approvalUserMapper.selectHandoverCandidates(me.getBranchId(), me.getRoleCode(), loginUserId);
+    }
     // 내가 기안한 문서 목록
     @Transactional(readOnly = true)
     public List<ApprovalMyDocRowDTO> getMyDocs(Long drafterId) {

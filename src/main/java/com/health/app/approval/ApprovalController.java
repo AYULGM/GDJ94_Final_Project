@@ -63,7 +63,7 @@ public class ApprovalController {
             model.addAttribute("pageTitle", "전자작성");
 
         }
-
+        model.addAttribute("handoverCandidates", approvalService.getHandoverCandidates(loginUser.getUserId()));
         return "approval/form";
     }
 

@@ -49,13 +49,21 @@
 
 
   <div class="col-md-6">
-    <label class="form-label mt-2"><span style="color:red; font-weight: normal;">*</span>인수인계자</label>
-    <input type="text"
-           class="form-control"
-           name="extTxt1"
-           maxlength="50"
-           value="<c:out value='${draft.extTxt1}'/>" />
-  </div>
+  <label class="form-label mt-2"><span style="color:red; font-weight: normal;">*</span>인수인계자</label>
+
+  <select class="form-select" name="extTxt1">
+    <option value="">선택</option>
+
+    <c:forEach items="${handoverCandidates}" var="u">
+      <option value="${u.userId}"
+        <c:if test="${draft.extTxt1 == u.userId}">selected</c:if>>
+        <c:out value="${u.name}"/> (<c:out value="${u.roleCode}"/>)
+      </option>
+    </c:forEach>
+
+  </select>
+</div>
+
 
   <div class="col-12">
     <label class="form-label mt-2"><span style="color:red; font-weight: normal;">*</span>휴가 사유</label>

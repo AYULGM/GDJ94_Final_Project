@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.approval.ApprovalUserMapper">
+
+  <select id="selectMyInfo" resultType="com.health.app.approval.ApprovalUserMiniDTO">
+    SELECT
+      user_id AS userId,
+      branch_id AS branchId,
+      role_code AS roleCode
+    FROM users
+    WHERE user_id = #{userId}
+      AND use_yn = 1
+    LIMIT 1
+  </select>
+
+  <select id="selectHandoverCandidates" resultType="com.health.app.approval.HandoverCandidateDTO">
+    SELECT
+      user_id  AS userId,
+      name     AS name,
+      role_code AS roleCode,
+      branch_id AS branchId
+    FROM users
+    WHERE use_yn = 1
+      AND branch_id = #{branchId}
+      AND user_id != #{excludeUserId}
+
+	AND CAST(SUBSTRING(role_code, 3) AS UNSIGNED)
+	    &gt;= CAST(SUBSTRING(#{roleCode}, 3) AS UNSIGNED)
+
+
+
+    ORDER BY CAST(SUBSTRING(role_code, 3) AS UNSIGNED) ASC, name ASC
+  </select>
+
+</mapper>

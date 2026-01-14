@@ -36,18 +36,18 @@
               <c:if test="${mode == 'edit'}">disabled</c:if>>
         <option value="">선택</option>
 
-        <option value="AT001" <c:if test="${draft.typeCode == 'AT001'}">selected</c:if>><span style="color:red;">*</span>지출결의서</option>
-        <option value="AT002" <c:if test="${draft.typeCode == 'AT002'}">selected</c:if>><span style="color:red;">*</span>정산결재서</option>
-        <option value="AT003" <c:if test="${draft.typeCode == 'AT003'}">selected</c:if>><span style="color:red;">*</span>매출결의서</option>
-        <option value="AT004" <c:if test="${draft.typeCode == 'AT004'}">selected</c:if>class=" disabled">재고조정요청서</option>
-        <option value="AT005" <c:if test="${draft.typeCode == 'AT005'}">selected</c:if>><span style="color:red;">*</span>구매요청서(PR)</option>
-        <option value="AT006" <c:if test="${draft.typeCode == 'AT006'}">selected</c:if>><span style="color:red;">*</span>발주서(PO)</option>
-        <option value="AT007" <c:if test="${draft.typeCode == 'AT007'}">selected</c:if>>출장 신청서</option>
-        <option value="AT008" <c:if test="${draft.typeCode == 'AT008'}">selected</c:if>>근태 신청서</option>
-        <option value="AT009" <c:if test="${draft.typeCode == 'AT009'}">selected</c:if>><span style="color:red;">*</span>휴가 신청서</option>
-        <option value="AT010" <c:if test="${draft.typeCode == 'AT010'}">selected</c:if>>휴직 신청서</option>
-        <option value="AT011" <c:if test="${draft.typeCode == 'AT011'}">selected</c:if>>사직서</option>
-        <option value="AT012" <c:if test="${draft.typeCode == 'AT012'}">selected</c:if>>인사 발령/변경 품의서</option>
+        <option value="AT001" <c:if test="${draft.typeCode == 'AT001'}">selected</c:if>>지출결의서</option>
+        <option value="AT002" <c:if test="${draft.typeCode == 'AT002'}">selected</c:if>>정산결재서</option>
+        <option value="AT003" <c:if test="${draft.typeCode == 'AT003'}">selected</c:if>>매출결의서</option>
+        <option value="AT005" <c:if test="${draft.typeCode == 'AT005'}">selected</c:if>>구매요청서(PR)</option>
+        <option value="AT006" <c:if test="${draft.typeCode == 'AT006'}">selected</c:if>>발주서(PO)</option>
+        <option value="AT009" <c:if test="${draft.typeCode == 'AT009'}">selected</c:if>>휴가 신청서</option>
+        <option value="AT004" <c:if test="${draft.typeCode == 'AT004'}">selected</c:if> disabled>재고조정요청서</option>
+        <option value="AT007" <c:if test="${draft.typeCode == 'AT007'}">selected</c:if> disabled>출장 신청서</option>
+        <option value="AT008" <c:if test="${draft.typeCode == 'AT008'}">selected</c:if> disabled>근태 신청서</option>
+        <option value="AT010" <c:if test="${draft.typeCode == 'AT010'}">selected</c:if> disabled>휴직 신청서</option>
+        <option value="AT011" <c:if test="${draft.typeCode == 'AT011'}">selected</c:if> disabled>사직서</option>
+        <option value="AT012" <c:if test="${draft.typeCode == 'AT012'}">selected</c:if> disabled>인사 발령/변경 품의서</option>
       </select>
 
       <!-- disabled면 값이 제출되지 않아서 hidden으로 보완 -->
