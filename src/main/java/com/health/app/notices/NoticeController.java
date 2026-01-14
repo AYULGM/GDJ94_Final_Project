@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import com.health.app.approval.ApprovalMapper;
 
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ public class NoticeController {
     private final NoticeService noticeService;
     private final BranchMapper branchMapper;
     private final CommonCodeMapper commonCodeMapper;
+    private final ApprovalMapper approvalMapper;
 
     // 관리자 여부 판단
     private boolean isAdmin(LoginUser user) {
@@ -57,13 +59,24 @@ public class NoticeController {
     public String list(@RequestParam(required = false) Long branchId,
                        @AuthenticationPrincipal LoginUser user,
                        Model model) {
-        model.addAttribute("list", noticeService.list(branchId));
-        model.addAttribute("branchId", branchId);
+
+        Long effectiveBranchId = branchId;
+
+        // 파라미터가 없으면 로그인 사용자 지점으로 보정 (approval 쿼리 재사용)
+        if (effectiveBranchId == null && user != null) {
+            effectiveBranchId = approvalMapper.selectBranchIdByUserId(user.getUserId());
+        }
+
+        model.addAttribute("list", noticeService.list(effectiveBranchId));
+        model.addAttribute("branchId", effectiveBranchId);
         model.addAttribute("isAdmin", isAdmin(user));
         model.addAttribute("pageTitle", "공지사항");
         putCodeMaps(model);
+
         return "notices/list";
     }
+
+
 
     // 관리자 목록
     @GetMapping("/admin")
