@@ -281,33 +281,112 @@
     </update>
 
     <!-- =========================================================
-     9) 감사로그(audit_log) INSERT
+     9) inventory_id 조회 (audit_log.target_id에 넣기 위함)
    ========================================================= -->
+    <select id="selectInventoryId" parameterType="map" resultType="long">
+        SELECT inventory_id
+        FROM inventory
+        WHERE use_yn = 1
+        AND branch_id = #{branchId}
+        AND product_id = #{productId}
+    </select>
+
+    <!-- =========================================================
+         10) 감사로그 INSERT (DB 컬럼명: action_type/target_type/target_id)
+       ========================================================= -->
     <insert id="insertAuditLog" parameterType="map">
         INSERT INTO audit_log
         (
         actor_user_id,
-        action,
-        entity_type,
-        branch_id,
-        product_id,
+        action_type,
+        target_type,
+        target_id,
         before_value,
         after_value,
         reason,
-        created_at
+        create_user,
+        create_date,
+        update_user,
+        update_date,
+        use_yn
         )
         VALUES
         (
         #{actorUserId},
-        #{action},
-        #{entityType},
-        #{branchId},
-        #{productId},
+        #{actionType},
+        #{targetType},
+        #{targetId},
         #{beforeValue},
         #{afterValue},
         #{reason},
-        NOW()
+        #{createUser},
+        NOW(),
+        #{createUser},
+        NOW(),
+        1
         )
     </insert>
+
+    <!-- =========================================================
+         11) 감사로그 조회 (target_id = inventory.inventory_id JOIN)
+       ========================================================= -->
+    <select id="selectAuditLogs" parameterType="map" resultType="com.health.app.inventory.AuditLogDto">
+        SELECT
+        al.audit_id       AS auditId,
+        al.actor_user_id  AS actorUserId,
+        al.action_type    AS actionType,
+        al.target_type    AS targetType,
+        al.target_id      AS targetId,
+        al.before_value   AS beforeValue,
+        al.after_value    AS afterValue,
+        al.reason         AS reason,
+        DATE_FORMAT(al.create_date, '%Y-%m-%d %H:%i:%s') AS createdAt,
+
+        i.branch_id       AS branchId,
+        b.branch_name     AS branchName,
+        i.product_id      AS productId,
+        p.product_name    AS productName
+
+        FROM audit_log al
+        LEFT JOIN inventory i ON i.inventory_id = al.target_id
+        LEFT JOIN branch b ON b.branch_id = i.branch_id
+        LEFT JOIN product p ON p.product_id = i.product_id
+
+        WHERE al.use_yn = 1
+
+        <if test="from != null and from != ''">
+            AND al.create_date &gt;= CONCAT(#{from}, ' 00:00:00')
+        </if>
+        <if test="to != null and to != ''">
+            AND al.create_date &lt;= CONCAT(#{to}, ' 23:59:59')
+        </if>
+
+        <if test="actionType != null and actionType != ''">
+            AND al.action_type = #{actionType}
+        </if>
+
+        <if test="branchId != null and branchId != 0">
+            AND i.branch_id = #{branchId}
+        </if>
+
+        <if test="productId != null and productId != 0">
+            AND i.product_id = #{productId}
+        </if>
+
+        <if test="keyword != null and keyword != ''">
+            AND (
+            al.reason LIKE CONCAT('%', #{keyword}, '%')
+            OR al.before_value LIKE CONCAT('%', #{keyword}, '%')
+            OR al.after_value LIKE CONCAT('%', #{keyword}, '%')
+            OR b.branch_name LIKE CONCAT('%', #{keyword}, '%')
+            OR p.product_name LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+
+        ORDER BY al.audit_id DESC
+        LIMIT 300
+    </select>
+
+
 
 </mapper>

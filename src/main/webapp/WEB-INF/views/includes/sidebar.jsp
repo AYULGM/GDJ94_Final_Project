@@ -92,6 +92,12 @@
                 <p>구매요청서/발주서 목록</p>
               </a>
             </li>
+            <li class="nav-item">
+              <a href="<c:url value='/audit'/>" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>감사 로그</p>
+              </a>
+            </li>
           </ul>
         </li>
 

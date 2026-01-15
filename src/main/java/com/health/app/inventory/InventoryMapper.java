@@ -54,15 +54,28 @@ public interface InventoryMapper {
             @Param("updateUser") Long updateUser
     );
 
-    //  감사로그
+    //  inventory_id 조회
+    Long selectInventoryId(@Param("branchId") Long branchId, @Param("productId") Long productId);
+
+    //  감사로그 저장 (DB 컬럼명에 맞춤)
     int insertAuditLog(
             @Param("actorUserId") Long actorUserId,
-            @Param("action") String action,
-            @Param("entityType") String entityType,
-            @Param("branchId") Long branchId,
-            @Param("productId") Long productId,
+            @Param("actionType") String actionType,
+            @Param("targetType") String targetType,
+            @Param("targetId") Long targetId,
             @Param("beforeValue") String beforeValue,
             @Param("afterValue") String afterValue,
-            @Param("reason") String reason
+            @Param("reason") String reason,
+            @Param("createUser") Long createUser
+    );
+
+    //  감사로그 조회 (branch/product 필터 포함)
+    List<AuditLogDto> selectAuditLogs(
+            @Param("from") String from,
+            @Param("to") String to,
+            @Param("actionType") String actionType,
+            @Param("branchId") Long branchId,
+            @Param("productId") Long productId,
+            @Param("keyword") String keyword
     );
 }

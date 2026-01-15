@@ -15,4 +15,7 @@ public interface InventoryService {
 
         // 기준수량(지점별) 변경
         void updateLowStockThreshold(Long branchId, Long productId, Long lowStockThreshold, Long userId);
+
+        // ✅ 감사로그 조회
+        List<AuditLogDto> getAuditLogs(String from, String to, String actionType, Long branchId, Long productId, String keyword);
 }
