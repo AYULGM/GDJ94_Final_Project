@@ -28,13 +28,14 @@ public class AuditLogController {
             @RequestParam(required = false) String keyword,
             Model model
     ) {
-        // null -> 0 처리(Mapper에서 0이면 필터 제외하도록 해둔 경우 안전)
-        if (branchId == null) branchId = 0L;
-        if (productId == null) productId = 0L;
+        // 페이지 타이틀(헤더/브레드크럼)
+        model.addAttribute("pageTitle", "감사 로그");
 
-        List<AuditLogDto> logs = inventoryService.getAuditLogs(
-                from, to, actionType, branchId, productId, keyword
-        );
+        // 드롭다운 옵션
+        model.addAttribute("branches", inventoryService.getBranchOptions());
+        model.addAttribute("products", inventoryService.getProductOptions(branchId));
+
+        List<AuditLogDto> logs = inventoryService.getAuditLogs(from, to, actionType, branchId, productId, keyword);
 
         model.addAttribute("logs", logs);
 
@@ -42,8 +43,8 @@ public class AuditLogController {
         model.addAttribute("from", from);
         model.addAttribute("to", to);
         model.addAttribute("actionType", actionType);
-        model.addAttribute("branchId", branchId == 0L ? null : branchId);
-        model.addAttribute("productId", productId == 0L ? null : productId);
+        model.addAttribute("branchId", branchId);
+        model.addAttribute("productId", productId);
         model.addAttribute("keyword", keyword);
 
         return "audit/list";

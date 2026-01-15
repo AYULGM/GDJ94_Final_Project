@@ -19,6 +19,12 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    public List<OptionDto> getProductOptions(Long branchId) {
+        // branchId가 null이면 XML에서 전체 상품을 반환하도록 되어있음
+        return inventoryMapper.selectProductOptions(branchId);
+    }
+
+    @Override
     public List<InventoryViewDto> getInventoryList(Long branchId, String keyword, Boolean onlyLowStock) {
         if (onlyLowStock == null) onlyLowStock = false;
         return inventoryMapper.selectInventoryList(branchId, keyword, onlyLowStock);
@@ -73,7 +79,7 @@ public class InventoryServiceImpl implements InventoryService {
                 "INVENTORY_ADJUST", null, userId
         );
 
-        // 3) ✅ 감사로그 적재 (DB 컬럼명 기준)
+        // 3)  감사로그 적재 (DB 컬럼명 기준)
         inventoryMapper.insertAuditLog(
                 userId,
                 "INVENTORY_ADJUST",
