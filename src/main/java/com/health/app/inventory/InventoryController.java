@@ -62,11 +62,30 @@ public class InventoryController {
             RedirectAttributes redirectAttributes
     ) {
         try {
-            // TODO: 로그인 사용자 ID 연동 시 교체
-            Long userId = 1L;
+            Long userId = 1L; // TODO: 로그인 사용자 ID 연동 시 교체
             inventoryService.adjustInventory(branchId, productId, moveTypeCode, quantity, reason, userId);
+            redirectAttributes.addFlashAttribute("adjustSuccess", "재고가 반영되었습니다.");
         } catch (IllegalArgumentException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            redirectAttributes.addFlashAttribute("adjustError", ex.getMessage());
+        }
+
+        return "redirect:/inventory/detail?branchId=" + branchId + "&productId=" + productId;
+    }
+
+    // 기준 수량 저장
+    @PostMapping("/inventory/threshold")
+    public String updateThreshold(
+            @RequestParam Long branchId,
+            @RequestParam Long productId,
+            @RequestParam(required = false) Long lowStockThreshold,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            Long userId = 1L; // TODO 로그인 연동 시 교체
+            inventoryService.updateLowStockThreshold(branchId, productId, lowStockThreshold, userId);
+            redirectAttributes.addFlashAttribute("thresholdSuccess", "기준 수량이 저장되었습니다.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("thresholdError", ex.getMessage());
         }
 
         return "redirect:/inventory/detail?branchId=" + branchId + "&productId=" + productId;

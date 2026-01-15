@@ -62,15 +62,15 @@
                 </form>
 
                 <!-- 결과 테이블 -->
-                <table class="table table-bordered table-hover">
+                <table class="table table-bordered table-hover align-middle inventory-table">
                     <thead>
                     <tr>
                         <th>지점</th>
                         <th>상품</th>
-                        <th class="text-end" style="width:120px;">현재수량</th>
-                        <th class="text-end" style="width:120px;">기준수량</th>
-                        <th style="width:120px;">부족여부</th>
-                        <th style="width:120px;">상세</th>
+                        <th class="text-end qty-col">현재수량</th>
+                        <th class="text-end qty-col">기준수량</th>
+                        <th class="text-center status-col">부족여부</th>
+                        <th class="text-center action-col">상세</th>
                     </tr>
                     </thead>
 
@@ -86,30 +86,35 @@
 
                         <c:otherwise>
                             <c:forEach var="row" items="${list}">
+                                <!-- 링크는 var로 먼저 만들고 href에는 변수만 넣는다(깨짐 방지) -->
+                                <c:url var="detailUrl" value="/inventory/detail">
+                                    <c:param name="branchId" value="${row.branchId}"/>
+                                    <c:param name="productId" value="${row.productId}"/>
+                                </c:url>
+
                                 <tr>
-                                    <td>${row.branchName}</td>
-                                    <td>${row.productName}</td>
+                                    <td class="text-truncate" style="max-width: 240px;">${row.branchName}</td>
+                                    <td class="text-truncate" style="max-width: 360px;">${row.productName}</td>
+
+                                    <!-- 숫자는 무조건 오른쪽 정렬 -->
                                     <td class="text-end">${row.quantity}</td>
                                     <td class="text-end">${row.thresholdValue}</td>
 
-                                    <td>
+                                    <!-- 상태는 가운데 정렬 -->
+                                    <td class="text-center">
                                         <c:choose>
-                                            <%-- lowStock은 1/0 숫자 --%>
                                             <c:when test="${row.lowStock == 1}">
-                                                <span class="badge bg-danger">부족</span>
+                                                <span class="badge bg-danger status-badge">부족</span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="badge bg-success">정상</span>
+                                                <span class="badge bg-success status-badge">정상</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
 
-                                    <td>
-                                        <a class="btn btn-sm btn-outline-secondary"
-                                           href="<c:url value='/inventory/detail'>
-                                                    <c:param name='branchId' value='${row.branchId}'/>
-                                                    <c:param name='productId' value='${row.productId}'/>
-                                                 </c:url>">
+                                    <!-- 버튼도 가운데 정렬 -->
+                                    <td class="text-center">
+                                        <a class="btn btn-sm btn-outline-secondary" href="${detailUrl}">
                                             보기
                                         </a>
                                     </td>
@@ -119,6 +124,21 @@
                     </c:choose>
                     </tbody>
                 </table>
+
+                <!-- 혹시 다른 CSS가 table 정렬을 덮어써도 깨지지 않게 보강 -->
+                <style>
+                    .inventory-table .qty-col { width: 110px; }
+                    .inventory-table .status-col { width: 110px; }
+                    .inventory-table .action-col { width: 110px; }
+
+                    .inventory-table th.text-end,
+                    .inventory-table td.text-end { text-align: right !important; }
+
+                    .inventory-table th.text-center,
+                    .inventory-table td.text-center { text-align: center !important; }
+
+                    .inventory-table .status-badge { min-width: 44px; display: inline-block; }
+                </style>
 
             </div>
         </div>

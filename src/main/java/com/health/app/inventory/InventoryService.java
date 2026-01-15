@@ -12,4 +12,7 @@ public interface InventoryService {
 
         // 변경(재고 조정)
         void adjustInventory(Long branchId, Long productId, String moveTypeCode, Long quantity, String reason, Long userId);
+
+        // 기준수량(지점별) 변경
+        void updateLowStockThreshold(Long branchId, Long productId, Long lowStockThreshold, Long userId);
 }
