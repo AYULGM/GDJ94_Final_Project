@@ -77,6 +77,22 @@ public class LoginUser implements UserDetails {
         return branchId;
     }
     
+    public boolean isAdminOrHigher() {
+       return roleCode != null && (
+               "RL001".equals(roleCode) ||  // GRANDMASTER
+               "RL002".equals(roleCode) ||  // MASTER
+               "RL003".equals(roleCode)     // ADMIN
+       );
+   }
+
+   public boolean isCaptain() {
+       return "RL004".equals(roleCode);
+   }
+
+   public boolean isCrew() {
+       return "RL005".equals(roleCode);
+   }
+    
     @Override
     public String getUsername() {
         return loginId;

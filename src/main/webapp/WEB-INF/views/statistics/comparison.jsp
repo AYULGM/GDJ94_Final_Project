@@ -1,7 +1,17 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
+
+<!-- 권한 정보를 JavaScript에서 사용하기 위한 숨김 필드 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userRoleCode" value="${loginUser.roleCode}"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+    <input type="hidden" id="isAdminOrHigher" value="${loginUser.adminOrHigher}"/>
+    <input type="hidden" id="isCaptain" value="${loginUser.captain}"/>
+</sec:authorize>
 
 <!-- Main content -->
 <div class="app-content-header">
@@ -133,16 +143,24 @@
 <script>
 let comparisonChart;
 
+// 권한 정보 (hidden input에서 읽어옴)
+const userPermissions = {
+    roleCode: document.getElementById('userRoleCode')?.value || '',
+    branchId: document.getElementById('userBranchId')?.value || '0',
+    isAdminOrHigher: document.getElementById('isAdminOrHigher')?.value === 'true',
+    isCaptain: document.getElementById('isCaptain')?.value === 'true'
+};
+
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // 기본 날짜 설정 (최근 6개월)
     const today = new Date();
     const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
     document.getElementById('startDate').value = formatDate(sixMonthsAgo);
     document.getElementById('endDate').value = formatDate(today);
 
-    // 지점 목록 로드
-    loadBranchOptions();
+    // 지점 목록 로드 - await로 완료 대기
+    await loadBranchOptions();
 
     // 차트 초기화
     initChart();
@@ -159,11 +177,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 지점 옵션 로드
 async function loadBranchOptions() {
+    const select = document.getElementById('branchId');
+
+    // 캡틴인 경우: 본인 지점만 선택 가능하도록 처리
+    if (userPermissions.isCaptain && userPermissions.branchId && userPermissions.branchId !== '0') {
+        try {
+            const response = await fetch('/sales/api/options/branches');
+            const branches = await response.json();
+
+            // 전체 옵션 제거
+            select.innerHTML = '';
+
+            // 본인 지점만 추가
+            const myBranch = branches.find(b => b && b.id && b.id.toString() === userPermissions.branchId);
+            if (myBranch) {
+                const option = document.createElement('option');
+                option.value = myBranch.id;
+                option.textContent = myBranch.name || '미지정';
+                option.selected = true;
+                select.appendChild(option);
+            }
+
+            // 선택 비활성화 (readonly 효과)
+            select.disabled = true;
+            select.classList.add('bg-light');
+            select.title = '본인 소속 지점만 조회 가능합니다';
+
+        } catch (error) {
+            console.error('지점 목록 로드 실패:', error);
+        }
+        return;
+    }
+
+    // 관리자 이상: 전체 지점 선택 가능
     try {
         const response = await fetch('/sales/api/options/branches');
         const branches = await response.json();
 
-        const select = document.getElementById('branchId');
         branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
             option.value = branch.id;
@@ -208,7 +258,8 @@ function initChart() {
         }],
         chart: {
             type: 'bar',
-            height: 400
+            height: 400,
+            stacked: false
         },
         colors: ['#0d6efd', '#dc3545', '#198754'],
         plotOptions: {
@@ -220,21 +271,36 @@ function initChart() {
         },
         dataLabels: { enabled: false },
         xaxis: {
-            categories: []
+            categories: [],
+            labels: {
+                rotate: -45,
+                rotateAlways: true,
+                style: {
+                    fontSize: '11px'
+                }
+            }
         },
         yaxis: {
             labels: {
                 formatter: function(val) {
+                    // 음수도 통화 형식으로 표시
                     return formatCurrency(val);
                 }
             }
         },
         tooltip: {
             y: {
-                formatter: function(val) {
+                formatter: function(val, { seriesIndex }) {
+                    // 지출(seriesIndex=1)은 절대값으로 표시
+                    if (seriesIndex === 1) {
+                        return formatCurrency(Math.abs(val));
+                    }
                     return formatCurrency(val);
                 }
             }
+        },
+        legend: {
+            position: 'top'
         }
     };
 
@@ -244,9 +310,16 @@ function initChart() {
 
 // 차트 업데이트
 function updateChart(data) {
-    const categories = data.map(item => item.periodLabel || item.period);
+    // 기간 + 지점명을 조합하여 카테고리 생성
+    const categories = data.map(item => {
+        const period = item.periodLabel || item.period;
+        const branch = item.branchName || '전체';
+        return period + ' (' + branch + ')';
+    });
+
     const salesValues = data.map(item => item.salesAmount || 0);
-    const expenseValues = data.map(item => item.expenseAmount || 0);
+    // 지출은 음수로 변환하여 아래쪽으로 표시
+    const expenseValues = data.map(item => -(item.expenseAmount || 0));
     const profitValues = data.map(item => item.profitAmount || 0);
 
     comparisonChart.updateOptions({

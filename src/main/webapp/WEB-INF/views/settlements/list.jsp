@@ -1,7 +1,15 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
+
+<!-- 권한 정보를 JavaScript에서 사용하기 위한 숨김 필드 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+    <input type="hidden" id="isCaptain" value="${loginUser.captain}"/>
+</sec:authorize>
 
 <!-- Main content -->
 <div class="app-content-header">
@@ -116,10 +124,16 @@
 let currentPage = 1;
 const pageSize = 10;
 
+// 권한 정보 (hidden input에서 읽어옴)
+const userPermissions = {
+    branchId: document.getElementById('userBranchId')?.value || '0',
+    isCaptain: document.getElementById('isCaptain')?.value === 'true'
+};
+
 // 페이지 로드
-document.addEventListener('DOMContentLoaded', function() {
-    // 지점 목록 로드
-    loadBranchOptions();
+document.addEventListener('DOMContentLoaded', async function() {
+    // 지점 목록 로드 - await로 완료 대기
+    await loadBranchOptions();
 
     // 검색 폼 이벤트
     document.getElementById('searchForm').addEventListener('submit', function(e) {
@@ -134,11 +148,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 지점 옵션 로드
 async function loadBranchOptions() {
+    const select = document.getElementById('branchId');
+    if (!select) return;
+
+    // 캡틴인 경우: 본인 지점만 선택 가능
+    if (userPermissions.isCaptain && userPermissions.branchId && userPermissions.branchId !== '0') {
+        try {
+            const response = await fetch('/sales/api/options/branches');
+            const branches = await response.json();
+
+            select.innerHTML = '';
+            const myBranch = branches.find(b => b && b.id && b.id.toString() === userPermissions.branchId);
+            if (myBranch) {
+                const option = document.createElement('option');
+                option.value = myBranch.id;
+                option.textContent = myBranch.name || '미지정';
+                option.selected = true;
+                select.appendChild(option);
+            }
+            select.disabled = true;
+            select.classList.add('bg-light');
+            select.title = '본인 소속 지점만 조회 가능합니다';
+        } catch (error) {
+            console.error('지점 목록 로드 실패:', error);
+        }
+        return;
+    }
+
+    // 관리자 이상: 전체 지점 선택 가능
     try {
         const response = await fetch('/sales/api/options/branches');
         const branches = await response.json();
 
-        const select = document.getElementById('branchId');
         branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
             option.value = branch.id;

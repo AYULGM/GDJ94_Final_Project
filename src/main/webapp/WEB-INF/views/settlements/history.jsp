@@ -129,15 +129,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 정산 이력 목록 로드
 async function loadHistoryList() {
-    // TODO: 전체 정산 이력 조회 API가 필요합니다 (GET /settlements/api/all-histories)
-    // 현재는 settlements 목록을 조회한 후 각 정산의 이력을 결합하는 방식으로 구현
-
     try {
         const tbody = document.getElementById('historyTableBody');
         tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
 
         // 정산 목록 조회
         const settlementsResponse = await fetch('/settlements/api/list?page=1&pageSize=100');
+        if (!settlementsResponse.ok) {
+            throw new Error('정산 목록 조회 실패: ' + settlementsResponse.status);
+        }
         const settlementsData = await settlementsResponse.json();
 
         if (!settlementsData.list || settlementsData.list.length === 0) {
@@ -145,17 +145,36 @@ async function loadHistoryList() {
             return;
         }
 
-        // 각 정산의 이력 조회
-        const historyPromises = settlementsData.list.map(settlement =>
-            fetch(`/settlements/api/${settlement.settlementId}/histories`)
-                .then(r => r.json())
-                .then(histories => histories.map(h => ({...h, settlementNo: settlement.settlementNo})))
-        );
+        // 각 정산의 이력 조회 (에러 처리 강화)
+        const historyPromises = settlementsData.list.map(async function(settlement) {
+            try {
+                const response = await fetch('/settlements/api/' + settlement.settlementId + '/histories');
+                if (!response.ok) {
+                    console.warn('이력 조회 실패: settlementId=' + settlement.settlementId);
+                    return [];
+                }
+                const histories = await response.json();
+                // 배열인지 확인
+                if (!Array.isArray(histories)) {
+                    console.warn('이력이 배열이 아님: settlementId=' + settlement.settlementId);
+                    return [];
+                }
+                return histories.map(function(h) {
+                    return Object.assign({}, h, { settlementNo: settlement.settlementNo });
+                });
+            } catch (e) {
+                console.warn('이력 조회 에러: settlementId=' + settlement.settlementId, e);
+                return [];
+            }
+        });
 
-        const allHistories = (await Promise.all(historyPromises)).flat();
+        const allHistoriesArrays = await Promise.all(historyPromises);
+        const allHistories = allHistoriesArrays.flat();
 
         // 날짜순 정렬 (최신순)
-        allHistories.sort((a, b) => new Date(b.actedAt) - new Date(a.actedAt));
+        allHistories.sort(function(a, b) {
+            return new Date(b.actedAt) - new Date(a.actedAt);
+        });
 
         renderHistoryTable(allHistories);
 
