@@ -5,23 +5,22 @@
 
 <mapper namespace="com.health.app.approval.ApprovalProductMapper">
 
-  <select id="selectProductsByBranch"
-          resultType="com.health.app.approval.ApprovalProductDTO">
-    SELECT
-      p.product_id   AS productId,
-      p.product_name AS productName,
-      p.product_desc AS productDesc,
-      p.price        AS price
-    FROM product p
-    <if test="branchId != null and branchId &gt; 0">
-      JOIN inventory i
-        ON i.product_id = p.product_id
-       AND i.branch_id  = #{branchId}
-       AND i.use_yn     = 1
-    </if>
-    WHERE p.use_yn = 1
-    ORDER BY p.product_name ASC
-  </select>
+<select id="selectProductsByBranch"
+        resultType="com.health.app.approval.ApprovalProductDTO">
+  SELECT
+    p.product_id   AS productId,
+    p.product_name AS productName,
+    p.product_desc AS productDesc,
+    p.price        AS price,
+    COALESCE(i.quantity, 0) AS stockQty
+  FROM product p
+  LEFT JOIN inventory i
+    ON i.product_id = p.product_id
+   AND i.branch_id  = #{branchId}
+   AND i.use_yn     = 1
+  WHERE p.use_yn = 1
+  ORDER BY p.product_name
+</select>
+
 
 </mapper>
-

@@ -23,7 +23,7 @@
         <div class="text-muted small"></div>
       </div>
 
-      <a class="btn btn-primary" href="/approval/form">결재 작성</a>
+      <a class="btn btn-primary" href="/approval/form?entry=approval">결재 작성</a>
     </div>
 
     <div class="card shadow-sm">

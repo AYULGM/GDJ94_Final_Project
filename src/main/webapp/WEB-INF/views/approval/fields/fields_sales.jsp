@@ -25,12 +25,6 @@
     <input type="number" class="form-control bg-secondary-subtle" name="extNo2" id="salesTotal" readonly />
   </div>
 
-  <!-- 비고(공통) : extTxt2 -->
-  <div class="col-12">
-    <label class="form-label">비고</label>
-    <input type="text" class="form-control" name="extTxt2" maxlength="500" />
-  </div>
-
   <!-- 매출 내역(다건) -->
   <div class="col-12">
     <div class="d-flex justify-content-between align-items-center">

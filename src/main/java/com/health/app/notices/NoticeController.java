@@ -26,7 +26,7 @@ public class NoticeController {
     private boolean isAdmin(LoginUser user) {
         if (user == null) return false;
         String role = user.getRoleCode();
-        return "RL001".equals(role) || "RL002".equals(role);
+        return "RL001".equals(role) || "RL002".equals(role) || "RL003".equals(role);
     }
 
     // 공통코드 Map 주입

@@ -34,7 +34,6 @@
           </c:when>
 
           <c:otherwise>
-            <!-- ✅ 컬럼 많으니 반응형 + table-sm 추천 -->
             <div class="table-responsive">
               <table class="table table-sm table-bordered table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -42,12 +41,12 @@
                     <th style="width:50px;" class="text-center">ID</th>
                     <th class="text-center">제목</th>
                     <th style="width:110px;" class="text-center">유형</th>
-                    <th style="width:110px;" class="text-center">작성자</th>
-                    <th style="width:130px;" class="text-center">대상</th>
+                    <th style="width:130px;" class="text-center">작성자</th>
+                    <th style="width:120px;" class="text-center">대상</th>
                     <th style="width:90px;" class="text-center">상태</th>
                     <th style="width:100px;" class="text-center">카테고리</th>
                     <th style="width:80px;" class="text-center">조회수</th>
-                    <th style="width:160px;" class="text-center">작성일</th>
+                    <th style="width:140px;" class="text-center">작성일</th>
                     <th style="width:200px;" class="text-center">게시기간</th>
                     <th style="width:120px;" class="text-center">관리</th>
                   </tr>
@@ -61,21 +60,96 @@
                       <td class="td-title">
                         <div class="d-flex align-items-center gap-2">
                           <c:if test="${n.isPinned}">
-                            <span class="badge bg-warning text-dark">고정</span>
+                            <!-- Bootstrap 기본 배지 -->
+                            <span class="badge text-bg-warning">고정</span>
                           </c:if>
 
                           <a href="<c:url value='/notices/${n.noticeId}'/>"
-                             class="text-decoration-none text-truncate ">
+                             class="text-truncate text-decoration-none"
+                             style="color:#2563eb;">
                             <c:out value="${n.title}" />
                           </a>
                         </div>
                       </td>
 
-                      <td class="text-center"><c:out value="${noticeTypeMap[n.noticeType]}" /></td>
+                      <!-- 유형 (NT001~NT003) -->
+                      <td class="text-center">
+                        <c:set var="ntClass" value="text-bg-secondary"/>
+                        <c:choose>
+                          <c:when test="${n.noticeType == 'NT001'}">
+                            <c:set var="ntClass" value="text-bg-danger"/>
+                          </c:when>
+                          <c:when test="${n.noticeType == 'NT002'}">
+                            <c:set var="ntClass" value="text-bg-primary"/>
+                          </c:when>
+                          <c:when test="${n.noticeType == 'NT003'}">
+                            <c:set var="ntClass" value="text-bg-success"/>
+                          </c:when>
+                        </c:choose>
+
+                        <span class="badge ${ntClass}">
+                          <c:out value="${noticeTypeMap[n.noticeType]}" />
+                        </span>
+                      </td>
+
                       <td class="text-center"><c:out value="${n.writerName}" /></td>
-                      <td class="text-center"><c:out value="${targetTypeMap[n.targetType]}" /></td>
-                      <td class="text-center"><c:out value="${statusMap[n.status]}" /></td>
-                      <td class="text-center"><c:out value="${categoryMap[n.categoryCode]}" /></td>
+
+                      <!-- 대상 (TT001~TT002) -->
+                      <td class="text-center">
+                        <c:set var="ttClass" value="text-bg-secondary"/>
+                        <c:choose>
+                          <c:when test="${n.targetType == 'TT001'}">
+                            <c:set var="ttClass" value="text-bg-dark"/>
+                          </c:when>
+                          <c:when test="${n.targetType == 'TT002'}">
+                            <c:set var="ttClass" value="text-bg-info"/>
+                          </c:when>
+                        </c:choose>
+
+                        <span class="badge ${ttClass}">
+                          <c:out value="${targetTypeMap[n.targetType]}" />
+                        </span>
+                      </td>
+
+                      <!-- 상태 (NS001~NS003) -->
+                      <td class="text-center">
+                        <c:set var="nsClass" value="text-bg-secondary"/>
+                        <c:choose>
+                          <c:when test="${n.status == 'NS001'}">
+                            <c:set var="nsClass" value="text-bg-success"/>
+                          </c:when>
+                          <c:when test="${n.status == 'NS002'}">
+                            <c:set var="nsClass" value="text-bg-warning"/>
+                          </c:when>
+                          <c:when test="${n.status == 'NS003'}">
+                            <c:set var="nsClass" value="text-bg-danger"/>
+                          </c:when>
+                        </c:choose>
+
+                        <span class="badge ${nsClass}">
+                          <c:out value="${statusMap[n.status]}" />
+                        </span>
+                      </td>
+
+                      <!-- 카테고리 (CAT001~CAT003) -->
+                      <td class="text-center">
+                        <c:set var="catClass" value="text-bg-secondary"/>
+                        <c:choose>
+                          <c:when test="${n.categoryCode == 'CAT001'}">
+                            <c:set var="catClass" value="text-bg-secondary"/>
+                          </c:when>
+                          <c:when test="${n.categoryCode == 'CAT002'}">
+                            <c:set var="catClass" value="text-bg-primary"/>
+                          </c:when>
+                          <c:when test="${n.categoryCode == 'CAT003'}">
+                            <c:set var="catClass" value="text-bg-success"/>
+                          </c:when>
+                        </c:choose>
+
+                        <span class="badge ${catClass}">
+                          <c:out value="${categoryMap[n.categoryCode]}" />
+                        </span>
+                      </td>
 
                       <td class="text-center"><c:out value="${n.viewCount}" /></td>
 
@@ -88,7 +162,7 @@
                         </c:choose>
                       </td>
 
-                      <!-- ✅ 게시기간: 높이 줄이기 + T 제거 -->
+                      <!-- 게시기간 -->
                       <td>
                         <c:choose>
                           <c:when test="${empty n.publishStartDate && empty n.publishEndDate}">
@@ -139,18 +213,18 @@
                         </c:choose>
                       </td>
 
-                    <td class="text-center align-middle">
-					  <div class="d-flex gap-2 justify-content-center">
-					    <a class="btn btn-outline-secondary btn-sm"
-					       href="<c:url value='/notices/${n.noticeId}/edit'/>">수정</a>
-					
-					    <form method="post"
-					          action="<c:url value='/notices/${n.noticeId}/delete'/>"
-					          onsubmit="return confirm('삭제하시겠습니까?');">
-					      <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
-					    </form>
-					  </div>
-					</td>
+                      <td class="text-center align-middle">
+                        <div class="d-flex gap-2 justify-content-center">
+                          <a class="btn btn-outline-secondary btn-sm"
+                             href="<c:url value='/notices/${n.noticeId}/edit'/>">수정</a>
+
+                          <form method="post"
+                                action="<c:url value='/notices/${n.noticeId}/delete'/>"
+                                onsubmit="return confirm('삭제하시겠습니까?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                          </form>
+                        </div>
+                      </td>
 
                     </tr>
                   </c:forEach>

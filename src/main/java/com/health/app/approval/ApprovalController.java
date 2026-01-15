@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class ApprovalController {
 
     private final ApprovalService approvalService;
+    private final ApprovalMapper approvalMapper;
 
     // 목록
     @GetMapping("list")
@@ -45,27 +46,39 @@ public class ApprovalController {
     @GetMapping("form")
     public String approvalForm(@AuthenticationPrincipal LoginUser loginUser,
                                @RequestParam(required = false) Long docVerId,
+                               @RequestParam(required = false, defaultValue = "approval") String entry,
                                Model model) {
 
+        // ★ new/edit 공통으로 항상 내려주기
+        model.addAttribute("loginUser", loginUser);
+
         model.addAttribute("branches", approvalService.getBranches());
+
         if (docVerId != null) {
             ApprovalDraftDTO draft = approvalService.getDraftForEdit(docVerId, loginUser.getUserId());
             model.addAttribute("draft", draft);
             model.addAttribute("mode", "edit");
             model.addAttribute("pageTitle", "전자수정");
+
             model.addAttribute("products",
                     draft.getBranchId() != null
                             ? approvalService.getProductsByBranch(draft.getBranchId())
                             : java.util.Collections.emptyList());
+
+            model.addAttribute("entry", "approval");
+
         } else {
             model.addAttribute("mode", "new");
-            model.addAttribute("products", approvalService.getProductsByBranch(null)); // draft 사용 금지
+            model.addAttribute("products", java.util.Collections.emptyList());
             model.addAttribute("pageTitle", "전자작성");
-
+            model.addAttribute("entry", entry);
         }
+
         model.addAttribute("handoverCandidates", approvalService.getHandoverCandidates(loginUser.getUserId()));
         return "approval/form";
     }
+
+
 
 
     // 서명 페이지
@@ -129,7 +142,7 @@ public class ApprovalController {
             ra.addFlashAttribute("msg", e.getMessage());
         }
 
-        return "redirect:/approval/list";
+        return  "redirect:/approval/detail?docVerId=" + docVerId;
 
     }
 
@@ -146,37 +159,36 @@ public class ApprovalController {
             ra.addFlashAttribute("msg", e.getMessage());
         }
 
-        return "redirect:/approval/list";
+        return  "redirect:/approval/detail?docVerId=" + docVerId;
 
     }
 
-    // 결재 요청(최초 상신)
     @PostMapping("submit")
     public String submit(@AuthenticationPrincipal LoginUser loginUser,
                          @RequestParam Long docVerId,
                          RedirectAttributes ra) {
-    	
+
+        Long userId = loginUser.getUserId();
 
         try {
-            approvalService.submit(loginUser.getUserId(), docVerId);
+            // typeCode는 단순 조회로 확보
+            String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+
+            approvalService.submit(userId, docVerId);
             ra.addFlashAttribute("msg", "결재 요청되었습니다.");
 
-            String typeCode = approvalService
-                    .getDraftForEdit(docVerId, loginUser.getUserId())
-                    .getTypeCode();
-
-            // AT009만 DETAIL, 나머지는 LIST
             if ("AT009".equals(typeCode)) {
                 return "redirect:/approval/detail?docVerId=" + docVerId;
-            } else {
-                return "redirect:/approval/list";
             }
+            return "redirect:/approval/list";
 
         } catch (Exception e) {
+            e.printStackTrace();
             ra.addFlashAttribute("msg", e.getMessage());
             return "redirect:/approval/list";
         }
     }
+
 
     // 결재선 저장(AJAX)
     @PostMapping("saveLinesForm")
@@ -225,11 +237,13 @@ public class ApprovalController {
         return approvalService.getProductsByBranch(branchId);
     }
 
+
     // 출력 뷰(휴가 양식)
     @GetMapping("view")
     public String view(@RequestParam Long docVerId, Model model) {
         model.addAttribute("doc", approvalService.getPrintData(docVerId));
         model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
+        model.addAttribute("docVerId", docVerId);
         model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_vacation.jspf");
         return "approval/print/vacation_print";
     }

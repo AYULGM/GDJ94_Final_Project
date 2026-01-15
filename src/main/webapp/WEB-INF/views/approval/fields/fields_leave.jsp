@@ -55,8 +55,8 @@
     <option value="">선택</option>
 
     <c:forEach items="${handoverCandidates}" var="u">
-      <option value="${u.userId}"
-        <c:if test="${draft.extTxt1 == u.userId}">selected</c:if>>
+      <option value="${u.name}"
+        <c:if test="${draft.extTxt1 == u.name}">selected</c:if>>
         <c:out value="${u.name}"/> (<c:out value="${u.roleCode}"/>)
       </option>
     </c:forEach>
@@ -101,9 +101,8 @@
     const e = endEl.value;
     const type = typeEl.value;
 
-    // 반차는 0.5 고정
     if (type === "반차(오전)" || type === "반차(오후)") {
-      setDays(daysEl, 0.5);
+      setDays(daysEl, 1);
       return;
     }
 

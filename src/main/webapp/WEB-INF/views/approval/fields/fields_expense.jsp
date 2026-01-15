@@ -25,11 +25,7 @@
     <input type="number" class="form-control bg-secondary-subtle" name="extNo2" id="expenseTotal" readonly />
   </div>
 
-  <!-- 지출 사유 : extTxt3 -->
-  <div class="col-12">
-    <label class="form-label"><span style="color:red;">*</span>지출 사유</label>
-    <textarea class="form-control" name="extTxt3" rows="3" required></textarea>
-  </div>
+
 
   <!-- 지출 내역(다건) -->
   <div class="col-12">
