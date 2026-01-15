@@ -236,44 +236,7 @@ public class ApprovalService {
         return approvalProductMapper.selectProductsByBranch(branchId);
     }
 
- // 결재 요청(최초 상신)
-    @Transactional
-    public void submit(Long loginUserId, Long docVerId) {
-
-        if (docVerId == null) throw new IllegalArgumentException("docVerId is required");
-
-        Long drafterId = approvalMapper.selectDrafterIdByDocVerId(docVerId);
-        if (drafterId == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
-        if (!loginUserId.equals(drafterId)) throw new IllegalStateException("기안자만 상신할 수 있습니다.");
-
-        int lineCount = approvalMapper.countLinesByDocVerId(docVerId);
-        if (lineCount <= 0) throw new IllegalStateException("결재선이 없습니다. 결재선을 먼저 설정하세요.");
-
-        String docStatus = approvalMapper.selectDocStatusByDocVerId(docVerId);
-        if (!"AS001".equals(docStatus)) throw new IllegalStateException("임시저장 문서만 결재 요청할 수 있습니다.");
-
-        String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
-        if (typeCode == null) throw new IllegalStateException("문서 타입(typeCode)을 찾을 수 없습니다.");
-
-        // 1) 일단 상신 상태로 올림(진행)
-        approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS002", loginUserId);
-        approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002", loginUserId);
-        approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
-        approvalMapper.updateFirstLineToPending(docVerId, "ALS002", loginUserId);
-
-        // 2) ✅ 휴가(AT009)는 결재 프로세스 진행만 (자동 최종승인/업무반영 절대 금지)
-        if ("AT009".equals(typeCode)) {
-            return;
-        }
-
-        // 3) ✅ 나머지는 "상신 즉시 최종승인" 확정 처리
-        approvalApplyService.applyApprovedDoc(docVerId, loginUserId);
-
-        approvalMapper.autoApproveAllLines(docVerId, loginUserId, "자동승인(상신 즉시 반영)");
-        approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS003", loginUserId);
-        approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003", loginUserId);
-    }
-
+ 
 
     // 재상신(임시/반려/회수만 가능)
     @Transactional
@@ -298,21 +261,46 @@ public class ApprovalService {
 
         // 1) 재상신도 '진행'으로 올림
         approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS002", loginUserId);
-        approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002", loginUserId);
+        approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002");
+
         approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
         approvalMapper.updateFirstLineToPending(docVerId, "ALS002", loginUserId);
 
-        // 2) ✅ 휴가(AT009)는 결재 프로세스 진행만 (자동 최종승인/업무반영 절대 금지)
-        if ("AT009".equals(typeCode)) {
-            return;
+    }
+
+    @Transactional
+    public void submit(Long loginUserId, Long docVerId) {
+
+        if (docVerId == null) throw new IllegalArgumentException("docVerId is required");
+
+        // 1) 기안자 검증
+        Long drafterId = approvalMapper.selectDrafterIdByDocVerId(docVerId);
+        if (drafterId == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+        if (!loginUserId.equals(drafterId)) throw new IllegalStateException("기안자만 상신할 수 있습니다.");
+
+        // 2) 결재선 존재 검증
+        int lineCount = approvalMapper.countLinesByDocVerId(docVerId);
+        if (lineCount <= 0) throw new IllegalStateException("결재선이 없습니다. 결재선을 먼저 설정하세요.");
+
+        // 3) 상태 검증 (임시저장만 상신 가능)
+        String docStatus = approvalMapper.selectDocStatusByDocVerId(docVerId);
+        if (!"AS001".equals(docStatus)) {
+            throw new IllegalStateException("임시저장 문서만 상신할 수 있습니다.");
         }
 
-        // 3) ✅ 나머지는 재상신이어도 즉시 최종승인 확정
-        approvalApplyService.applyApprovedDoc(docVerId, loginUserId);
+        // 4) 상태 변경
+        int uDoc = approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS002", loginUserId);
+        int uVer = approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002");
+        int uAll = approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
+        int uFirst = approvalMapper.updateFirstLineToPending(docVerId, "ALS002", loginUserId);
 
-        approvalMapper.autoApproveAllLines(docVerId, loginUserId, "자동승인(재상신 즉시 반영)");
-        approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS003", loginUserId);
-        approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003", loginUserId);
+        // 5) 최소 방어 (특히 uDoc/uVer는 반드시 확인 권장)
+        if (uDoc == 0 || uVer == 0) {
+            throw new IllegalStateException("결재 요청 처리에 실패했습니다. 다시 시도해 주세요.");
+        }
+        if (uAll == 0 || uFirst == 0) {
+            throw new IllegalStateException("결재선 활성화 처리에 실패했습니다. 결재선을 확인해 주세요.");
+        }
     }
 
 
@@ -324,7 +312,7 @@ public class ApprovalService {
         if (can <= 0) throw new IllegalStateException("상신 취소가 불가능한 상태입니다.");
 
         approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS005", loginUserId);
-        approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS001", loginUserId);
+        approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS001");
         approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
     }
 
@@ -359,7 +347,7 @@ public class ApprovalService {
                 approvalMapper.updateDocStatusByDocVerId(docVerId, "AS002");
             } else {
                 approvalMapper.updateDocStatusByDocVerId(docVerId, "AS003");
-                approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003", userId);
+                approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003");
                 createLeaveCalendarEvent(docVerId, userId);
             }
 

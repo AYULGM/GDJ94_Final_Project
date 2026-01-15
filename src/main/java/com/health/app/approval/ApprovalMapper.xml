@@ -406,12 +406,11 @@
 
 <update id="updateVersionStatusByDocVerId">
   UPDATE approval_document_versions
-  SET ver_status_code = #{verStatusCode},
-      update_user = #{updateUser},
-      update_date = NOW()
+  SET ver_status_code = #{verStatusCode}
   WHERE doc_ver_id = #{docVerId}
     AND use_yn = 1
 </update>
+
 
 
   <update id="updateAllLinesStatusByDocVerId">
@@ -690,4 +689,24 @@
   WHERE doc_ver_id = #{docVerId}
     AND use_yn = 1
 </update>
+
+<select id="existsDocVersion" resultType="int">
+  SELECT COUNT(1)
+  FROM approval_document_versions
+  WHERE doc_ver_id = #{docVerId}
+</select>
+
+<select id="existsDocumentByCurrentVer" resultType="int">
+  SELECT COUNT(1)
+  FROM approval_documents
+  WHERE current_doc_ver_id = #{docVerId}
+</select>
+<select id="selectVerStatusByDocVerId" resultType="string">
+  SELECT ver_status_code
+  FROM approval_document_versions
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+</select>
+
+
 </mapper>

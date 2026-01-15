@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class ApprovalController {
 
     private final ApprovalService approvalService;
+    private final ApprovalMapper approvalMapper;
 
     // 목록
     @GetMapping("list")
@@ -162,7 +163,6 @@ public class ApprovalController {
 
     }
 
-    // 결재 요청(최초 상신)
     @PostMapping("submit")
     public String submit(@AuthenticationPrincipal LoginUser loginUser,
                          @RequestParam Long docVerId,
@@ -170,23 +170,20 @@ public class ApprovalController {
 
         Long userId = loginUser.getUserId();
 
-        // 1) 먼저 typeCode 확보 (상신 전이므로 getDraftForEdit이 안전)
-        String typeCode = approvalService
-                .getDraftForEdit(docVerId, userId)
-                .getTypeCode();
-
         try {
-            // 2) 상신 처리
+            // typeCode는 단순 조회로 확보
+            String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+
             approvalService.submit(userId, docVerId);
             ra.addFlashAttribute("msg", "결재 요청되었습니다.");
 
-            // 3) AT009만 detail
             if ("AT009".equals(typeCode)) {
                 return "redirect:/approval/detail?docVerId=" + docVerId;
             }
             return "redirect:/approval/list";
 
         } catch (Exception e) {
+            e.printStackTrace();
             ra.addFlashAttribute("msg", e.getMessage());
             return "redirect:/approval/list";
         }
