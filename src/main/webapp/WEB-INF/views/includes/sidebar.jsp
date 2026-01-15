@@ -79,27 +79,31 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="<c:url value='/approval/form'/>?typeCode=AT003&formCode=DF005" class="nav-link">
-                <%--  서브메뉴 앞 ○(bi-circle) 제거 --%>
+               
                 <p>구매요청서/발주서 작성</p>
               </a>
             </li>
 
             <li class="nav-item">
               <a href="<c:url value='/inbound'/>" class="nav-link">
-                <%--  서브메뉴 앞 ○(bi-circle) 제거 --%>
+
                 <p>구매요청서/발주서 목록</p>
               </a>
             </li>
 
             <li class="nav-item">
               <a href="<c:url value='/audit'/>" class="nav-link">
-                <%--  FIX: 서브메뉴 앞 ○(bi-circle) 제거 --%>
+
                 <p>감사 로그</p>
               </a>
             </li>
           </ul>
         </li>
-
+        <li class="nav-item">
+          <a href="<c:url value='/audit'/>" class="nav-link">
+            <p>감사 로그</p>
+          </a>
+        </li>
 
         <!-- 일정 관리 Treeview -->
         <li class="nav-item">
