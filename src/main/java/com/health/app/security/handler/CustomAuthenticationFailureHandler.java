@@ -77,12 +77,12 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
 
     private String classifyReason(AuthenticationException e) {
 
-        if (e instanceof UsernameNotFoundException) return "USER_NOT_FOUND";
-        if (e instanceof BadCredentialsException) return "BAD_CREDENTIALS";
+        if (e instanceof UsernameNotFoundException) return "존재하지 않는 사용자";
+        if (e instanceof BadCredentialsException) return "아이디 또는 비밀번호가 틀림";
         if (e instanceof LockedException) return e.getMessage();     // "USER_LOCKED_UNTIL:..."
         if (e instanceof DisabledException) return e.getMessage();   // "USER_DISABLED" 등
-        if (e instanceof AccountExpiredException) return "ACCOUNT_EXPIRED";
-        if (e instanceof CredentialsExpiredException) return "CREDENTIALS_EXPIRED";
+        if (e instanceof AccountExpiredException) return "계정 만료";
+        if (e instanceof CredentialsExpiredException) return "비밀번호 만료";
 
         return "AUTH_FAILED";
     }
