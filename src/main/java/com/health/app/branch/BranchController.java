@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.health.app.security.model.LoginUser;
 
@@ -31,16 +32,40 @@ public class BranchController {
     }
     
     @GetMapping("/detail")
-    public String branchDetail(@RequestParam Long branchId, Model model) {
-        BranchDTO branch = branchService.getBranchDetail(branchId);
-        // 지점 상세
-        model.addAttribute("branch", branch);
-        model.addAttribute("pageTitle", "지점 상세정보 · 변경 이력");
-        //지점 변경 이력
-        model.addAttribute("historyList", branchService.getBranchHistoryList(branchId));
-        
-        return "branch/detail"; // /WEB-INF/views/branch/detail.jsp
+    public String branchDetail(
+            @RequestParam Long branchId,
+            @AuthenticationPrincipal LoginUser loginUser,
+            Model model,
+            RedirectAttributes ra) {
+
+        try {
+            BranchDTO branch =
+                branchService.getBranchDetail(branchId, loginUser);
+
+            // 지점 상세
+            model.addAttribute("branch", branch);
+            model.addAttribute("pageTitle", "지점 상세정보 · 변경 이력");
+
+            // 지점 변경 이력
+            model.addAttribute("historyList",
+                    branchService.getBranchHistoryList(branchId));
+
+            return "branch/detail";
+
+        } catch (SecurityException e) {
+
+            ra.addFlashAttribute("error",
+                    "본인 지점만 조회할 수 있습니다.");
+            return "redirect:/branch/list";
+
+        } catch (Exception e) {
+
+            ra.addFlashAttribute("error",
+                    "존재하지 않는 지점입니다.");
+            return "redirect:/branch/list";
+        }
     }
+
     
     @GetMapping("/register")
     public String branchRegisterForm(Model model) {
@@ -63,11 +88,35 @@ public class BranchController {
     
     // 수정 화면
     @GetMapping("/update")
-    public String updateForm(@RequestParam Long branchId, Model model) {
-        model.addAttribute("branch", branchService.getBranchDetail(branchId));
-        model.addAttribute("pageTitle", "지점 수정");
-        return "branch/update";
+    public String updateForm(
+            @RequestParam Long branchId,
+            @AuthenticationPrincipal LoginUser loginUser,
+            Model model,
+            RedirectAttributes ra) {
+
+        try {
+            BranchDTO branch =
+                branchService.getBranchDetail(branchId, loginUser);
+
+            model.addAttribute("branch", branch);
+            model.addAttribute("pageTitle", "지점 수정");
+
+            return "branch/update";
+
+        } catch (SecurityException e) {
+
+            ra.addFlashAttribute("error",
+                    "본인 지점만 수정할 수 있습니다.");
+            return "redirect:/branch/list";
+
+        } catch (Exception e) {
+
+            ra.addFlashAttribute("error",
+                    "존재하지 않는 지점입니다.");
+            return "redirect:/branch/list";
+        }
     }
+
 
     // 수정 처리
     @PostMapping("/update")

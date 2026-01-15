@@ -36,9 +36,31 @@ public class BranchService {
     }
     
     // 지점 상세 조회
-    public BranchDTO getBranchDetail(Long branchId) {
-        return branchMapper.selectBranchDetail(branchId);
+    public BranchDTO getBranchDetail(
+            Long branchId,
+            LoginUser loginUser) {
+
+        BranchDTO branch =
+            branchMapper.selectBranchDetail(branchId);
+
+        // 1. 없는 지점
+        if (branch == null) {
+            throw new IllegalArgumentException("존재하지 않는 지점입니다.");
+        }
+
+        // 2. ADMIN이면 본인 지점만 허용
+        if ("RL003".equals(loginUser.getRoleCode())) {
+
+            if (!branch.getBranchId()
+                    .equals(loginUser.getBranchId())) {
+
+                throw new SecurityException("접근 권한이 없습니다.");
+            }
+        }
+
+        return branch;
     }
+
     
     // 지점 이력 조회
     public List<BranchHistoryDTO> getBranchHistoryList(Long branchId) {

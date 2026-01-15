@@ -55,20 +55,29 @@ public class UserAdminController {
 
 
     
-    // 사용자 상세화면 (이력 데이터 조회 추가)
+ // 사용자 상세화면 (이력 데이터 조회 추가)
     @GetMapping("/detail")
-    public String detail(Long userId, Model model) {
+    public String detail(Long userId, @AuthenticationPrincipal LoginUser loginUser, Model model) {
 
-        UserAdminDTO user = userAdminService.getUserAdminDetail(userId);
+        try {
+            UserAdminDTO user =
+                userAdminService.getUserAdminDetail(userId, loginUser);
 
-        model.addAttribute("user", user);
-        model.addAttribute("pageTitle", "사용자 상세 · 변경 이력");
-        
-        model.addAttribute("historyList",
-                userAdminService.getUserAllHistory(userId));
+            model.addAttribute("user", user);
+            model.addAttribute("pageTitle", "사용자 상세 · 변경 이력");
 
-        return "userManagement/detail";
+            model.addAttribute("historyList",
+                    userAdminService.getUserAllHistory(userId));
+
+            return "userManagement/detail";
+
+        } catch (Exception e) {
+
+            // 잘못된 접근 (없는 ID, 탈퇴 회원)
+            return "redirect:/userManagement/list";
+        }
     }
+
 
 
     // 사용자 등록
@@ -113,14 +122,25 @@ public class UserAdminController {
     
     // 사용자 수정
     @GetMapping("/edit")
-    public String editForm(Long userId, Model model) {
+    public String editForm(
+            Long userId,
+            @AuthenticationPrincipal LoginUser loginUser,
+            Model model) {
 
-        UserAdminDTO user = userAdminService.getUserAdminDetail(userId);
-        model.addAttribute("user", user);
-        model.addAttribute("pageTitle", "사용자 수정");
+        try {
+            UserAdminDTO user =
+                userAdminService.getUserAdminDetail(userId, loginUser);
 
-        return "userManagement/edit";
+            model.addAttribute("user", user);
+            model.addAttribute("pageTitle", "사용자 수정");
+
+            return "userManagement/edit";
+
+        } catch (Exception e) {
+            return "redirect:/userManagement/list";
+        }
     }
+
     
     @PostMapping("/edit")
     public String editUser(UserAdminDTO dto, @RequestParam String reason) {

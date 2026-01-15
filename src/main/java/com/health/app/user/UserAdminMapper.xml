@@ -143,6 +143,7 @@
 	       ON cs.code_group = 'USER_STATUS'
 	      AND cs.code = u.status_code
 	WHERE u.user_id = #{userId}
+		  AND u.use_yn = TRUE
 	]]>
 	</select>
     

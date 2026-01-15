@@ -7,6 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.health.app.security.model.LoginUser;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -26,9 +28,33 @@ public class UserAdminService {
     }
 
     
-    public UserAdminDTO getUserAdminDetail(Long userId) {
-        return userAdminMapper.selectUserAdminDetail(userId);
+    // 만약 URL로 사용자 상세를 접근하려 한다면.
+    public UserAdminDTO getUserAdminDetail(Long userId, LoginUser loginUser) {
+
+        UserAdminDTO user =
+            userAdminMapper.selectUserAdminDetail(userId);
+
+        // 1. 없는 사용자
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        }
+
+        // 2. 탈퇴 사용자
+        if (!user.getUseYn()) {
+            throw new IllegalStateException("탈퇴 처리된 사용자입니다.");
+        }
+        
+        // 3. ADMIN이면 본인 지점만 허용
+        if ("RL003".equals(loginUser.getRoleCode())) { // ADMIN
+
+            if (!user.getBranchId().equals(loginUser.getBranchId())) {
+                throw new SecurityException("접근 권한이 없습니다.");
+            }
+        }
+
+        return user;
     }
+
 
     public void addUser(UserAdminDTO dto) {
 
