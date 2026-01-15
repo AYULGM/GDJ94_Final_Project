@@ -263,4 +263,51 @@
         )
     </insert>
 
+    <!-- =========================================================
+     8) 기준수량(지점별 low_stock_threshold) 업데이트
+     - null/0이면 상품 기본(reorder_point)로 fallback 되도록 설계돼 있음
+   ========================================================= -->
+    <update id="updateLowStockThreshold" parameterType="map">
+        UPDATE inventory
+        SET
+        low_stock_threshold = #{lowStockThreshold}
+        <if test="updateUser != null">
+            , update_user = #{updateUser}
+        </if>
+        , update_date = NOW()
+        WHERE use_yn = 1
+        AND branch_id  = #{branchId}
+        AND product_id = #{productId}
+    </update>
+
+    <!-- =========================================================
+     9) 감사로그(audit_log) INSERT
+   ========================================================= -->
+    <insert id="insertAuditLog" parameterType="map">
+        INSERT INTO audit_log
+        (
+        actor_user_id,
+        action,
+        entity_type,
+        branch_id,
+        product_id,
+        before_value,
+        after_value,
+        reason,
+        created_at
+        )
+        VALUES
+        (
+        #{actorUserId},
+        #{action},
+        #{entityType},
+        #{branchId},
+        #{productId},
+        #{beforeValue},
+        #{afterValue},
+        #{reason},
+        NOW()
+        )
+    </insert>
+
 </mapper>
