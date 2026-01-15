@@ -20,8 +20,6 @@
 
     <!--begin::Script-->
 
-    <!-- jQuery (Needed for some AdminLTE components and our custom script) -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
     <!-- OverlayScrollbars -->
     <script
@@ -66,40 +64,44 @@
       });
     </script>
 
-    <!-- 알림 시스템 -->
-    <script src="/js/notifications.js"></script>
-    <script>
-      // 알림 클라이언트 초기화
-      document.addEventListener('DOMContentLoaded', function() {
+	<!-- 알림 시스템 -->
+	<script src="/js/notifications.js"></script>
+	<script>
+	  // 알림 클라이언트 초기화
+	  document.addEventListener('DOMContentLoaded', function() {
+	
+	    // notificationClient가 정의되어 있는지 확인
+	    if (typeof notificationClient === 'undefined') {
+	      return;
+	    }
+	
+	    // GlobalControllerAdvice에서 전달된 실제 로그인 사용자 ID 사용
+	    const currentUserId = ${currentUserId != null ? currentUserId : 'null'};
+	    const contextPath = '${pageContext.request.contextPath}';
+	
+	    // 로그인하지 않은 경우 초기화하지 않음
+	    if (currentUserId === null) {
+	      return;
+	    }
+	
+	    // 알림 클라이언트 초기화
+	    notificationClient.init(currentUserId, contextPath);
+	
+	    // 브라우저 알림 권한 요청
+	    notificationClient.requestNotificationPermission();
+	
+	    // 새 알림 수신 시 콜백 (선택 사항)
+	    notificationClient.onNewNotification(function(notification) {
+	      // 필요시 추가 UI 업데이트 로직
+	    });
+	
+	  });
+	</script>
 
-        // notificationClient가 정의되어 있는지 확인
-        if (typeof notificationClient === 'undefined') {
-          return;
-        }
-
-
-        // GlobalControllerAdvice에서 전달된 실제 로그인 사용자 ID 사용
-        const currentUserId = ${currentUserId != null ? currentUserId : 'null'};
-        const contextPath = '${pageContext.request.contextPath}';
-
-        // 로그인하지 않은 경우 초기화하지 않음
-        if (currentUserId === null) {
-          return;
-        }
-
-        // 알림 클라이언트 초기화
-        notificationClient.init(currentUserId, contextPath);
-
-        // 브라우저 알림 권한 요청
-        notificationClient.requestNotificationPermission();
-
-        // 새 알림 수신 시 콜백 (선택 사항)
-        notificationClient.onNewNotification(function(notification) {
-          // 필요시 추가 UI 업데이트 로직
-        });
-
-      });
-    </script>
+    
+    <!-- 우편번호와 기본주소는 주소검색 없이 수동입력 불가 -->
+    <script src="/js/unable_postNo_baseAddress.js"></script>
+    
     <!--end::Script-->
   </body>
 </html>

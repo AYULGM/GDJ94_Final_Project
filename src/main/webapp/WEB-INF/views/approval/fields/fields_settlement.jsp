@@ -5,18 +5,18 @@
 
   <!-- 정산 기간 -->
   <div class="col-md-6">
-    <label class="form-label">정산 시작일</label>
+    <label class="form-label"><span style="color:red;">*</span>정산 시작일</label>
     <input type="date" class="form-control" name="extDt1" required />
   </div>
 
   <div class="col-md-6">
-    <label class="form-label">정산 종료일</label>
+    <label class="form-label"><span style="color:red;">*</span>정산 종료일</label>
     <input type="date" class="form-control" name="extDt2" required />
   </div>
 
   <!-- 지점 선택 -->
   <div class="col-md-6">
-    <label class="form-label">지점</label>
+    <label class="form-label"><span style="color:red;">*</span>지점</label>
     <select class="form-select" name="extNo4" required>
       <option value="">지점 선택</option>
       <c:forEach items="${branches}" var="b">
@@ -27,21 +27,20 @@
 
   <!-- 총 매출액 -->
   <div class="col-md-6">
-    <label class="form-label">총 매출액</label>
+    <label class="form-label"><span style="color:red;">*</span>총 매출액</label>
     <input type="number" class="form-control" name="extNo1" id="AT002_totalSales" min="0" step="1" required />
   </div>
 
   <!-- 총 지출액 -->
   <div class="col-md-6">
-    <label class="form-label">총 지출액</label>
+    <label class="form-label"><span style="color:red;">*</span>총 지출액</label>
     <input type="number" class="form-control" name="extNo2" id="AT002_totalExpense" min="0" step="1" required />
   </div>
 
   <!-- 손익 금액(자동) -->
   <div class="col-md-6">
-    <label class="form-label">손익 금액(자동)</label>
-    <input type="number" class="form-control" name="extNo3" id="AT002_profit" step="1" readonly required />
-    <div class="form-text">손익 = 총 매출액 - 총 지출액</div>
+    <label class="form-label">손익 금액</label>
+    <input type="number" class="form-control bg-secondary-subtle" name="extNo3" id="AT002_profit" step="1" readonly required />
   </div>
 
 </div> <!-- ✅ row 닫힘 꼭 필요 -->

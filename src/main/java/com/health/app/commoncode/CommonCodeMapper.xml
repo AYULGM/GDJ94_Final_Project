@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.health.app.commoncode.CommonCodeMapper">
+
+  <select id="selectByGroup" resultType="com.health.app.commoncode.CommonCodeDTO">
+    <![CDATA[
+    SELECT
+      code_group AS codeGroup,
+      code       AS code,
+      code_desc  AS codeDesc
+    FROM common_code
+    WHERE code_group = #{codeGroup}
+    ORDER BY code ASC
+    ]]>
+  </select>
+
+</mapper>

@@ -14,7 +14,7 @@
         <div class="card-body">
 
           <div class="mb-3">
-            <label class="form-label">지점명</label>
+            <label class="form-label required-label">지점명</label>
             <input type="text" name="branchName" class="form-control" required>
           </div>
 
@@ -27,15 +27,15 @@
 	        </div>
         
           <div class="mb-3">
-            <label class="form-label">우편번호</label>
+            <label class="form-label required-label">우편번호</label>
             <div class="input-group">
-              <input type="text" name="postNo" id="postNo" class="form-control" readonly>
+              <input type="text" name="postNo" id="postNo" class="form-control" required>
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label">기본 주소</label>
-            <input type="text" name="baseAddress" id="baseAddress" class="form-control" readonly>
+            <label class="form-label required-label">기본 주소</label>
+            <input type="text" name="baseAddress" id="baseAddress" class="form-control" required>
           </div>
 
           <div class="mb-3">
@@ -44,17 +44,17 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">담당자명</label>
+            <label class="form-label required-label">담당자명</label>
             <input type="text" name="managerName" class="form-control" required>
           </div>
 
           <div class="mb-3">
-            <label class="form-label">담당자 연락처</label>
+            <label class="form-label required-label">담당자 연락처</label>
             <input type="text" name="managerPhone" class="form-control" required>
           </div>
 
 			<div class="mb-3">
-			    <label class="form-label">운영시간</label>
+			    <label class="form-label required-label">운영시간</label>
 			
 			    <div class="d-flex align-items-center gap-2">
 			        <input type="time"

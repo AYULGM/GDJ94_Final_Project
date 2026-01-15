@@ -1,4 +1,5 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ page language="java"
     contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
@@ -12,7 +13,7 @@
         alt="AdminLTE Logo"
         class="brand-image opacity-75 shadow"
       />
-      <span class="brand-text fw-light">AdminLTE 4</span>
+      <span class="brand-text fw-light">Doge Company</span>
     </a>
   </div>
 
@@ -34,19 +35,23 @@
           </a>
         </li>
 
+		<sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
         <li class="nav-item">
           <a href="<c:url value='/branch/list'/>" class="nav-link">
             <i class="nav-icon bi bi-building"></i>
             <p>지점 관리</p>
           </a>
         </li>
+        </sec:authorize>
 
+		<sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
         <li class="nav-item">
           <a href="<c:url value='/userManagement/list'/>" class="nav-link">
             <i class="nav-icon bi bi-people"></i>
             <p>사용자 관리</p>
           </a>
         </li>
+		</sec:authorize>
 
         <li class="nav-item">
           <a href="<c:url value='/notices'/>" class="nav-link">
@@ -153,23 +158,13 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="/approval/form" class="nav-link">
-                <p>결재 작성</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="/approval/signature" class="nav-link">
                 <p>서명창</p>
               </a>
             </li>
-			<li class="nav-item">
-              <a href="/approval/line?docVerId=3" class="nav-link">
-                <p>결재 라인</p>
-              </a>
-            </li>
             <li class="nav-item">
               <a href="/approval/inbox" class="nav-link">
-                <p>기안함</p>
+                <p>결재함</p>
               </a>
             </li>
           </ul>

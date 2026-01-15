@@ -6,6 +6,13 @@
 <div class="content-wrapper">
     <section class="content">
         <div class="container-fluid">
+        
+        <!-- 에러메시지 출력 -->
+        <c:if test="${not empty error}">
+		    <div class="alert alert-danger text-center">
+		        ${error}
+		    </div>
+		</c:if>
 
             <form action="/userManagement/add" method="post">
                 <div class="card card-outline card-primary">
@@ -17,31 +24,30 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label>아이디</label>
+                                <label class="form-label required-label">아이디</label>
                                 <input type="text" name="loginId" class="form-control" required>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>이름</label>
+                                <label class="form-label required-label">이름</label>
                                 <input type="text" name="name" class="form-control" required>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>이메일</label>
-                                <input type="email" name="email" class="form-control">
+                                <label class="form-label required-label">이메일</label>
+                                <input type="email" name="email" class="form-control" required>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>연락처</label>
-                                <input type="text" name="phone" class="form-control">
+                                <label class="form-label required-label">연락처</label>
+                                <input type="text" name="phone" class="form-control" required>
                             </div>
 
 							<div class="col-md-6 mb-3">
-							    <label>지점 ID</label>
+							    <label class="form-label required-label">소속 지점 ID</label>
 							    <input type="number"
 							           name="branchId"
 							           class="form-control"
-							           placeholder="지점 ID 입력 (예: 1)"
 							           required>
 							</div>
 							
@@ -54,23 +60,21 @@
 					        </div>
 		        
 							<div class="col-md-6 mb-3">
-							    <label>우편번호</label>
+							    <label class="form-label required-label">우편번호</label>
 							    <input type="text"
 							           name="postNo"
 							           id="postNo"
 							           class="form-control"
-							           placeholder="우편번호(필수 입력)"
-							           required readonly>
+							           required>
 							</div>
 							
 							<div class="col-md-6 mb-3">
-							    <label>기본주소</label>
+							    <label class="form-label required-label">기본주소</label>
 							    <input type="text"
 							           name="baseAddress"
 							           id="baseAddress"
 							           class="form-control"
-							           placeholder="기본 주소(필수 입력)"
-							           required readonly>
+							           required>
 							</div>
 							
 							<div class="col-md-6 mb-3">
@@ -97,7 +101,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>권한</label>
+                                <label class="form-label required-label">권한</label>
                                 <select name="roleCode" class="form-select">
                                     <option value="RL002">MASTER</option>
                                     <option value="RL003">ADMIN</option>
@@ -122,6 +126,18 @@
 </div>
 <!-- 카카오 주소 API -->
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.getElementById("postNo")
+        .addEventListener("keydown", e => e.preventDefault());
+
+    document.getElementById("baseAddress")
+        .addEventListener("keydown", e => e.preventDefault());
+
+});
+</script>
 
 <script src="<c:url value='/js/address.js'/>"></script>
 

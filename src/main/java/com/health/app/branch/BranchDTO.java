@@ -21,7 +21,7 @@ public class BranchDTO {
     private String statusName; // BS001 - OPEN 처럼 한글표시를 위해.
     
     private Long createUser;
-    private LocalDateTime createDate;
+    private String createDate;
     
     private Long updateUser;
 }

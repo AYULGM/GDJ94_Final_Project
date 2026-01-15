@@ -39,4 +39,6 @@ public class UserAdminDTO {
 
     private String createDate;
     private String updateDate;
+    
+    private Boolean useYn; // 사용 여부 (1: 사용중, 0: 탈퇴)
 }
