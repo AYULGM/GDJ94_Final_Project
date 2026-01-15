@@ -104,9 +104,6 @@
                     <div class="inner">
                         <h3 id="netProfit">-</h3>
                         <p>추정 순이익 (세후)</p>
-                        <small class="text-white-50" style="font-size: 0.75rem;">
-                            법인세: <span id="corporateTax">-</span>
-                        </small>
                     </div>
                     <div class="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover">
                         <i class="bi bi-currency-dollar"></i>
@@ -114,6 +111,7 @@
                     </div>
                 </div>
                 <div class="card-description">
+                    법인세: <span id="corporateTax" class="text-dark">-</span><br>
                     ※ 계산기준: (매출 - 지출) - 법인세<br>
                     ※ 법인세율: 2억 이하 9%, 2억 초과 19%
                 </div>

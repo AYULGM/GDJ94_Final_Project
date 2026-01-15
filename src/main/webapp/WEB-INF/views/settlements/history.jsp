@@ -3,22 +3,7 @@
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">정산 이력 로그</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item active">정산 이력 로그</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="app-content">
     <div class="container-fluid">
