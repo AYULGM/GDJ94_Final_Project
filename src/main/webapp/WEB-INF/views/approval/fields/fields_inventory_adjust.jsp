@@ -184,21 +184,7 @@ function isAT004Page() {
       return;
     }
 
-    // ★ 저장(submit) 시 JSON이 비었으면 막기
-    //    - AT004 페이지의 폼에만 적용되도록 invItemsJson이 포함된 form 기준으로 필터링
-    document.addEventListener("submit", function (e) {
-      if (!isAT004Page()) return;
-
-      const form = el("invItemsJson")?.closest("form");
-      if (!form) return;
-      if (e.target !== form) return;
-
-      if (!jsonEl.value || !jsonEl.value.trim()) {
-        e.preventDefault();
-        alert("조정 내역을 1건 이상 추가하세요.");
-        btnAdd && btnAdd.focus();
-      }
-    }, true);
+    
 
     function getAdjustType() {
       var r = document.querySelector("input[name='extCode1']:checked");
