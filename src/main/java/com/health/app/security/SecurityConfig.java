@@ -74,7 +74,7 @@ public class SecurityConfig {
                 
                 // 🔥 사용자관리
                 .requestMatchers("/userManagement/**")
-                    .hasAnyRole("GRANDMASTER", "MASTER")
+                    .hasAnyRole("GRANDMASTER", "MASTER", "ADMIN")
 
                 // 🔥 지점관리
                 .requestMatchers("/branch/**")

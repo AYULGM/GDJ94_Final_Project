@@ -20,6 +20,12 @@ public class UserAdminService {
         return userAdminMapper.selectUserAdminList();
     }
     
+ // ADMIN용 - 본인 지점 사용자만
+    public List<UserAdminDTO> getUserAdminListByBranch(Long branchId) {
+        return userAdminMapper.selectUserAdminListByBranch(branchId);
+    }
+
+    
     public UserAdminDTO getUserAdminDetail(Long userId) {
         return userAdminMapper.selectUserAdminDetail(userId);
     }

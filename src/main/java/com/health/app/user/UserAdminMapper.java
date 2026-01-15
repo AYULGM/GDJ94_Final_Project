@@ -8,6 +8,9 @@ public interface UserAdminMapper {
 
     List<UserAdminDTO> selectUserAdminList();
     
+    // 지점별 사용자 조회 (ADMIN용)
+    List<UserAdminDTO> selectUserAdminListByBranch(Long branchId);
+
     UserAdminDTO selectUserAdminDetail(Long userId);
 
     void insertUser(UserAdminDTO dto);
