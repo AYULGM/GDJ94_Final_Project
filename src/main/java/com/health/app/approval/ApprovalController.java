@@ -129,7 +129,7 @@ public class ApprovalController {
             ra.addFlashAttribute("msg", e.getMessage());
         }
 
-        return "redirect:/approval/list";
+        return  "redirect:/approval/detail?docVerId=" + docVerId;
 
     }
 
@@ -146,7 +146,7 @@ public class ApprovalController {
             ra.addFlashAttribute("msg", e.getMessage());
         }
 
-        return "redirect:/approval/list";
+        return  "redirect:/approval/detail?docVerId=" + docVerId;
 
     }
 
@@ -155,28 +155,31 @@ public class ApprovalController {
     public String submit(@AuthenticationPrincipal LoginUser loginUser,
                          @RequestParam Long docVerId,
                          RedirectAttributes ra) {
-    	
+
+        Long userId = loginUser.getUserId();
+
+        // 1) 먼저 typeCode 확보 (상신 전이므로 getDraftForEdit이 안전)
+        String typeCode = approvalService
+                .getDraftForEdit(docVerId, userId)
+                .getTypeCode();
 
         try {
-            approvalService.submit(loginUser.getUserId(), docVerId);
+            // 2) 상신 처리
+            approvalService.submit(userId, docVerId);
             ra.addFlashAttribute("msg", "결재 요청되었습니다.");
 
-            String typeCode = approvalService
-                    .getDraftForEdit(docVerId, loginUser.getUserId())
-                    .getTypeCode();
-
-            // AT009만 DETAIL, 나머지는 LIST
+            // 3) AT009만 detail
             if ("AT009".equals(typeCode)) {
                 return "redirect:/approval/detail?docVerId=" + docVerId;
-            } else {
-                return "redirect:/approval/list";
             }
+            return "redirect:/approval/list";
 
         } catch (Exception e) {
             ra.addFlashAttribute("msg", e.getMessage());
             return "redirect:/approval/list";
         }
     }
+
 
     // 결재선 저장(AJAX)
     @PostMapping("saveLinesForm")
@@ -230,6 +233,7 @@ public class ApprovalController {
     public String view(@RequestParam Long docVerId, Model model) {
         model.addAttribute("doc", approvalService.getPrintData(docVerId));
         model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
+        model.addAttribute("docVerId", docVerId);
         model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_vacation.jspf");
         return "approval/print/vacation_print";
     }

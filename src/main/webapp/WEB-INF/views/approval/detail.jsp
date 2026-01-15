@@ -81,7 +81,7 @@
                   <c:when test="${page.doc.docStatusCode == 'AS002'}"><span class="badge text-bg-primary">결재중</span></c:when>
                   <c:when test="${page.doc.docStatusCode == 'AS003'}"><span class="badge text-bg-success">결재완료</span></c:when>
                   <c:when test="${page.doc.docStatusCode == 'AS004'}"><span class="badge text-bg-danger">반려</span></c:when>
-                  <c:otherwise><span class="badge text-bg-dark"><c:out value="${page.doc.docStatusCode}" /></span></c:otherwise>
+                  <c:otherwise><span class="badge text-bg-dark">대기</span></c:otherwise>
                 </c:choose>
               </div>
 
@@ -164,10 +164,10 @@
                         <td class="text-nowrap"><c:out value="${l.approverName}" /></td>
                         <td class="text-nowrap">
                           <c:choose>
-                            <c:when test="${l.lineStatusCode == 'ALS002'}"><span class="badge text-bg-primary">대기</span></c:when>
+                            <c:when test="${l.lineStatusCode == 'ALS002'}"><span class="badge text-bg-primary">진행</span></c:when>
                             <c:when test="${l.lineStatusCode == 'ALS003'}"><span class="badge text-bg-success">승인</span></c:when>
                             <c:when test="${l.lineStatusCode == 'ALS004'}"><span class="badge text-bg-danger">반려</span></c:when>
-                            <c:otherwise><span class="badge text-bg-secondary"><c:out value="${l.lineStatusCode}" /></span></c:otherwise>
+                            <c:otherwise><span class="badge text-bg-secondary">대기</span></c:otherwise>
                           </c:choose>
                         </td>
                       </tr>

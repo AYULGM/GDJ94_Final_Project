@@ -3,6 +3,7 @@ package com.health.app.approval;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import org.jsoup.Jsoup;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,7 +115,9 @@ public class ApprovalService {
 
         dto.setTitle(Optional.ofNullable(dto.getTitle()).orElse(""));
         dto.setBody(Optional.ofNullable(dto.getBody()).orElse(""));
-
+        String bodyHtml = dto.getBody();
+        String plain = Jsoup.parse(bodyHtml == null ? "" : bodyHtml).text(); // 태그 제거
+        dto.setExtTxt2(plain);
         approvalMapper.insertDocument(dto);
         approvalMapper.insertDocumentVersion(dto);
         approvalMapper.insertDocumentExt(dto);
