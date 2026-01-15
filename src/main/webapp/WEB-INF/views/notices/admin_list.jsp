@@ -12,43 +12,6 @@
 
   /* 게시기간 2줄을 더 얇게 */
   .period-line { font-size:.90rem; line-height:1.25; margin:0; }
-
-  /* 공통 pill 배지 */
-  .badge-pill{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:999px;
-    padding:6px 14px;
-    font-weight:700;
-    font-size:12.5px;
-    line-height:1;
-    white-space:nowrap;
-    border:1px solid transparent;
-  }
-
-  /* ===== 공지 유형 NOTICE_TYPE (NT001~NT003): 빨/초/파 ===== */
-  .nt-emergency{ background: rgba(239,68,68,.12);  border-color: rgba(239,68,68,.35);  color:#b91c1c; } /* 긴급공지 */
-  .nt-normal   { background: rgba(22,163,74,.12);  border-color: rgba(22,163,74,.35);  color:#166534; } /* 일반공지 */
-  .nt-event    { background: rgba(37,99,235,.10);  border-color: rgba(37,99,235,.35);  color:#1d4ed8; } /* 이벤트공지 */
-
-  /* ===== 공지 상태 NOTICE_STATUS (NS001~NS003): 보라/회색/주황 (유형과 안 겹치게) ===== */
-  .ns-post { background: rgba(168,85,247,.14); border-color: rgba(168,85,247,.38); color:#6d28d9; } /* 게시 */
-  .ns-draft{ background: rgba(100,116,139,.14); border-color: rgba(100,116,139,.38); color:#334155; } /* 임시저장 */
-  .ns-end  { background: rgba(249,115,22,.14); border-color: rgba(249,115,22,.38); color:#9a3412; } /* 종료 */
-
-  /* ===== 공지 대상 NOTICE_TARGET_TYPE (TT001~TT002): 청록 ===== */
-  .tt-all   { background: rgba(20,184,166,.12); border-color: rgba(20,184,166,.35); color:#0f766e; } /* 전체 대상 */
-  .tt-branch{ background: rgba(8,145,178,.12);  border-color: rgba(8,145,178,.35);  color:#0e7490; } /* 특정지점 대상 */
-
-  /* ===== 공지 카테고리 NOTICE_CATEGORY (CAT001~CAT003): 인디고/슬레이트/핑크 ===== */
-  .cat-general{ background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.35); color:#4338ca; } /* 일반 */
-  .cat-oper   { background: rgba(71,85,105,.12);  border-color: rgba(71,85,105,.35);  color:#334155; } /* 운영 */
-  .cat-event  { background: rgba(236,72,153,.12); border-color: rgba(236,72,153,.35); color:#be185d; } /* 이벤트 */
-
-  /* ===== 고정 배지: 앰버(노랑) ===== */
-  .pin-badge{ padding:5px 10px; font-size:12px; }
-  .pin-badge{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.35); color:#92400e; }
 </style>
 
 <div class="row">
@@ -97,7 +60,8 @@
                       <td class="td-title">
                         <div class="d-flex align-items-center gap-2">
                           <c:if test="${n.isPinned}">
-                            <span class="badge-pill pin-badge">고정</span>
+                            <!-- Bootstrap 기본 배지 -->
+                            <span class="badge text-bg-warning">고정</span>
                           </c:if>
 
                           <a href="<c:url value='/notices/${n.noticeId}'/>"
@@ -110,20 +74,20 @@
 
                       <!-- 유형 (NT001~NT003) -->
                       <td class="text-center">
-                        <c:set var="ntClass" value="nt-normal"/>
+                        <c:set var="ntClass" value="text-bg-secondary"/>
                         <c:choose>
                           <c:when test="${n.noticeType == 'NT001'}">
-                            <c:set var="ntClass" value="nt-emergency"/>
+                            <c:set var="ntClass" value="text-bg-danger"/>
                           </c:when>
                           <c:when test="${n.noticeType == 'NT002'}">
-                            <c:set var="ntClass" value="nt-normal"/>
+                            <c:set var="ntClass" value="text-bg-primary"/>
                           </c:when>
                           <c:when test="${n.noticeType == 'NT003'}">
-                            <c:set var="ntClass" value="nt-event"/>
+                            <c:set var="ntClass" value="text-bg-success"/>
                           </c:when>
                         </c:choose>
 
-                        <span class="badge-pill ${ntClass}">
+                        <span class="badge ${ntClass}">
                           <c:out value="${noticeTypeMap[n.noticeType]}" />
                         </span>
                       </td>
@@ -132,57 +96,57 @@
 
                       <!-- 대상 (TT001~TT002) -->
                       <td class="text-center">
-                        <c:set var="ttClass" value="tt-all"/>
+                        <c:set var="ttClass" value="text-bg-secondary"/>
                         <c:choose>
                           <c:when test="${n.targetType == 'TT001'}">
-                            <c:set var="ttClass" value="tt-all"/>
+                            <c:set var="ttClass" value="text-bg-dark"/>
                           </c:when>
                           <c:when test="${n.targetType == 'TT002'}">
-                            <c:set var="ttClass" value="tt-branch"/>
+                            <c:set var="ttClass" value="text-bg-info"/>
                           </c:when>
                         </c:choose>
 
-                        <span class="badge-pill ${ttClass}">
+                        <span class="badge ${ttClass}">
                           <c:out value="${targetTypeMap[n.targetType]}" />
                         </span>
                       </td>
 
                       <!-- 상태 (NS001~NS003) -->
                       <td class="text-center">
-                        <c:set var="nsClass" value="ns-draft"/>
+                        <c:set var="nsClass" value="text-bg-secondary"/>
                         <c:choose>
                           <c:when test="${n.status == 'NS001'}">
-                            <c:set var="nsClass" value="ns-post"/>
+                            <c:set var="nsClass" value="text-bg-success"/>
                           </c:when>
                           <c:when test="${n.status == 'NS002'}">
-                            <c:set var="nsClass" value="ns-draft"/>
+                            <c:set var="nsClass" value="text-bg-warning"/>
                           </c:when>
                           <c:when test="${n.status == 'NS003'}">
-                            <c:set var="nsClass" value="ns-end"/>
+                            <c:set var="nsClass" value="text-bg-danger"/>
                           </c:when>
                         </c:choose>
 
-                        <span class="badge-pill ${nsClass}">
+                        <span class="badge ${nsClass}">
                           <c:out value="${statusMap[n.status]}" />
                         </span>
                       </td>
 
                       <!-- 카테고리 (CAT001~CAT003) -->
                       <td class="text-center">
-                        <c:set var="catClass" value="cat-general"/>
+                        <c:set var="catClass" value="text-bg-secondary"/>
                         <c:choose>
                           <c:when test="${n.categoryCode == 'CAT001'}">
-                            <c:set var="catClass" value="cat-general"/>
+                            <c:set var="catClass" value="text-bg-secondary"/>
                           </c:when>
                           <c:when test="${n.categoryCode == 'CAT002'}">
-                            <c:set var="catClass" value="cat-oper"/>
+                            <c:set var="catClass" value="text-bg-primary"/>
                           </c:when>
                           <c:when test="${n.categoryCode == 'CAT003'}">
-                            <c:set var="catClass" value="cat-event"/>
+                            <c:set var="catClass" value="text-bg-success"/>
                           </c:when>
                         </c:choose>
 
-                        <span class="badge-pill ${catClass}">
+                        <span class="badge ${catClass}">
                           <c:out value="${categoryMap[n.categoryCode]}" />
                         </span>
                       </td>
