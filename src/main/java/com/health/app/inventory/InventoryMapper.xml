@@ -72,16 +72,27 @@
     <!-- =========================================================
          2) 지점 옵션
        ========================================================= -->
-    <select id="selectBranchOptions"
-            resultType="com.health.app.inventory.OptionDto">
+		<select id="selectBranchOptions"
+		        resultType="com.health.app.inventory.OptionDto">
+		
+		    SELECT
+		    branch_id   AS id,
+		    branch_name AS name
+		    FROM branch
+		    WHERE use_yn = 1
+		    ORDER BY
+		        CASE
+		            WHEN branch_name = '본사' THEN 0
+		            WHEN branch_name LIKE '서울%' THEN 1
+		            WHEN branch_name LIKE '경기%' THEN 2
+		            WHEN branch_name LIKE '인천%' THEN 3
+		            WHEN branch_name LIKE '부산%' THEN 4
+		            WHEN branch_name LIKE '제주%' THEN 5
+		            ELSE 99
+		        END,
+		        branch_name ASC
+		</select>
 
-        SELECT
-        branch_id   AS id,
-        branch_name AS name
-        FROM branch
-        WHERE use_yn = 1
-        ORDER BY branch_name ASC
-    </select>
 
 
     <!-- =========================================================

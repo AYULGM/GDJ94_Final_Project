@@ -13,7 +13,7 @@
               alt="AdminLTE Logo"
               class="brand-image opacity-75 shadow"
       />
-      <span class="brand-text fw-light">Doge Company</span>
+      <span class="brand-text fw-light">Health On Company</span>
     </a>
   </div>
 
