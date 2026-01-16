@@ -19,11 +19,6 @@
     <input type="number" class="form-control bg-secondary-subtle" name="extNo1" id="prTotal" readonly />
   </div>
 
-  <div class="col-12">
-    <label class="form-label mt-2"><span style="color:red;">*</span>요청 사유</label>
-    <textarea class="form-control" name="extTxt2" rows="3" maxlength="600" required></textarea>
-  </div>
-
   <div class="col-12 mt-2">
     <div class="d-flex justify-content-between align-items-center">
       <label class="form-label mb-0">구매 품목</label>

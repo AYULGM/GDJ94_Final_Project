@@ -15,6 +15,27 @@
 
 <div class="app-content">
     <div class="container-fluid">
+    
+        <style>
+            /* 요약 카드 스타일 (대시보드와 유사하게) */
+            .summary-card .small-box {
+                height: 140px;
+                margin-bottom: 1rem;
+            }
+            .summary-card .small-box .inner {
+                padding: 10px;
+            }
+            .summary-card .small-box .inner h3 {
+                font-size: 2.2rem;
+                font-weight: bold;
+            }
+            .summary-card .small-box .inner p {
+                font-size: 1rem;
+            }
+            .summary-card .small-box .inner small {
+                font-size: 0.8rem;
+            }
+        </style>
 
         <!-- 필터 영역 -->
         <div class="row mb-4">
@@ -49,36 +70,35 @@
 
         <!-- 요약 정보 -->
         <div class="row mb-4" id="summarySection" style="display: none;">
-            <div class="col-md-3">
-                <div class="card text-bg-primary">
-                    <div class="card-body">
-                        <h5 class="card-title">총 매출</h5>
+            <!-- 총 매출 -->
+            <div class="col-md-4 summary-card">
+                <div class="small-box text-bg-primary">
+                    <div class="inner">
                         <h3 id="totalSales">0원</h3>
+                        <p>총 매출</p>
                         <small id="salesCount">0건</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-bg-danger">
-                    <div class="card-body">
-                        <h5 class="card-title">총 지출</h5>
+            <!-- 총 지출 -->
+            <div class="col-md-4 summary-card">
+                <div class="small-box text-bg-danger">
+                    <div class="inner">
                         <h3 id="totalExpenses">0원</h3>
+                        <p>총 지출</p>
                         <small id="expensesCount">0건</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-bg-success">
-                    <div class="card-body">
-                        <h5 class="card-title">추정 손익</h5>
+            <!-- 추정 손익 -->
+            <div class="col-md-4 summary-card">
+                <div class="small-box text-bg-success">
+                    <div class="inner">
                         <h3 id="totalProfit">0원</h3>
+                        <p>추정 손익</p>
+                        <small style="visibility: hidden;">0건</small>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="button" class="btn btn-success w-100 btn-lg" onclick="createSettlement()">
-                    <i class="bi bi-check-circle"></i> 정산 생성
-                </button>
             </div>
         </div>
 
@@ -269,7 +289,7 @@ function updateSummary(sales, expenses) {
 
     const profitElement = document.getElementById('totalProfit');
     profitElement.textContent = formatCurrency(totalProfit);
-    profitElement.parentElement.className = totalProfit >= 0 ? 'card text-bg-success' : 'card text-bg-danger';
+    profitElement.parentElement.parentElement.className = totalProfit >= 0 ? 'small-box text-bg-success' : 'small-box text-bg-danger';
 }
 
 // 정산 생성

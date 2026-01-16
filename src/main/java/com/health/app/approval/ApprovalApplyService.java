@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,14 +106,15 @@ public class ApprovalApplyService {
         if (amount == null) {
             amount = sumExpenseAmount(lines);
         }
-
+        String bodyHtml = draft.getBody();
+        String plain = Jsoup.parse(bodyHtml == null ? "" : bodyHtml).text();
         ExpenseDto dto = ExpenseDto.builder()
                 .branchId(branchId)
                 .expenseAt(expenseAt)
                 .categoryCode("ETC")
                 .amount(amount)
                 .description(draft.getExtTxt3())
-                .memo(draft.getBody())
+                .memo(plain)
                 .settlementFlag(true)
                 .createUser(actorUserId)
                 .useYn(true)

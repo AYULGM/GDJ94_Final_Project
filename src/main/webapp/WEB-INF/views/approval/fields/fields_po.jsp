@@ -11,7 +11,7 @@
 
   <div class="col-md-4">
     <label class="form-label">담당자</label>
-    <input type="text" class="form-control" name="extTxt2" maxlength="100" placeholder="담당자명" />
+    <input type="text" class="form-control" name="extTxt4" maxlength="100" placeholder="담당자명" />
   </div>
 
   <div class="col-md-4">
@@ -83,11 +83,6 @@
       </table>
 
     </div>
-  </div>
-
-  <div class="col-12">
-    <label class="form-label mt-2">비고</label>
-    <input type="text" class="form-control" name="extTxt4" maxlength="200" />
   </div>
 </div>
 
