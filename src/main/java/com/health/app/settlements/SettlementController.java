@@ -88,8 +88,8 @@ public class SettlementController {
     public ResponseEntity<Map<String, Object>> createSettlement(
             @RequestBody CreateSettlementRequestDto requestDto,
             Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        Long settlementId = settlementService.createSettlement(requestDto, loginUser.getUserId());
+        Long currentUserId = getCurrentUserId(authentication);
+        Long settlementId = settlementService.createSettlement(requestDto, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,
@@ -108,10 +108,10 @@ public class SettlementController {
             @PathVariable Long settlementId,
             @RequestBody(required = false) Map<String, String> body,
             Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long currentUserId = getCurrentUserId(authentication);
         String reason = body != null ? body.get("reason") : null;
 
-        settlementService.confirmSettlement(settlementId, reason, loginUser.getUserId());
+        settlementService.confirmSettlement(settlementId, reason, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,
@@ -129,10 +129,10 @@ public class SettlementController {
             @PathVariable Long settlementId,
             @RequestBody(required = false) Map<String, String> body,
             Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        Long currentUserId = getCurrentUserId(authentication);
         String reason = body != null ? body.get("reason") : null;
 
-        settlementService.cancelSettlement(settlementId, reason, loginUser.getUserId());
+        settlementService.cancelSettlement(settlementId, reason, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,
@@ -149,8 +149,8 @@ public class SettlementController {
     public ResponseEntity<Map<String, Object>> deleteSettlement(
             @PathVariable Long settlementId,
             Authentication authentication) {
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        settlementService.deleteSettlement(settlementId, loginUser.getUserId());
+        Long currentUserId = getCurrentUserId(authentication);
+        settlementService.deleteSettlement(settlementId, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,
@@ -167,5 +167,16 @@ public class SettlementController {
     public ResponseEntity<List<SettlementHistoryDto>> getSettlementHistories(@PathVariable Long settlementId) {
         List<SettlementHistoryDto> histories = settlementService.getSettlementHistories(settlementId);
         return ResponseEntity.ok(histories);
+    }
+
+    /**
+     * 현재 사용자 ID 조회 (인증 없을 경우 기본값 1L 반환)
+     */
+    private Long getCurrentUserId(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
+            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            return loginUser.getUserId();
+        }
+        return 1L; // 기본 사용자 ID (개발용)
     }
 }

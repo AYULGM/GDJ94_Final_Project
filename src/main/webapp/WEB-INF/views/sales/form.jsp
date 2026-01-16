@@ -3,23 +3,6 @@
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0" id="pageTitle">매출 등록</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item"><a href="<c:url value='/sales'/>">정산 대상 매출</a></li>
-                    <li class="breadcrumb-item active" id="breadcrumbTitle">매출 등록</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="app-content">
     <div class="container-fluid">
@@ -147,10 +130,10 @@ async function loadBranchOptions() {
         const branches = await response.json();
 
         const select = document.getElementById('branchId');
-        branches.forEach(branch => {
+        branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;
+            option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
     } catch (error) {

@@ -1,27 +1,41 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">정산 확정</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item active">정산 확정</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- 권한 정보를 JavaScript에서 사용하기 위한 숨김 필드 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+    <input type="hidden" id="isCaptain" value="${loginUser.captain}"/>
+</sec:authorize>
+
+
 
 <div class="app-content">
     <div class="container-fluid">
+    
+        <style>
+            /* 요약 카드 스타일 (대시보드와 유사하게) */
+            .summary-card .small-box {
+                height: 140px;
+                margin-bottom: 1rem;
+            }
+            .summary-card .small-box .inner {
+                padding: 10px;
+            }
+            .summary-card .small-box .inner h3 {
+                font-size: 2.2rem;
+                font-weight: bold;
+            }
+            .summary-card .small-box .inner p {
+                font-size: 1rem;
+            }
+            .summary-card .small-box .inner small {
+                font-size: 0.8rem;
+            }
+        </style>
 
         <!-- 필터 영역 -->
         <div class="row mb-4">
@@ -56,36 +70,35 @@
 
         <!-- 요약 정보 -->
         <div class="row mb-4" id="summarySection" style="display: none;">
-            <div class="col-md-3">
-                <div class="card text-bg-primary">
-                    <div class="card-body">
-                        <h5 class="card-title">총 매출</h5>
+            <!-- 총 매출 -->
+            <div class="col-md-4 summary-card">
+                <div class="small-box text-bg-primary">
+                    <div class="inner">
                         <h3 id="totalSales">0원</h3>
+                        <p>총 매출</p>
                         <small id="salesCount">0건</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-bg-danger">
-                    <div class="card-body">
-                        <h5 class="card-title">총 지출</h5>
+            <!-- 총 지출 -->
+            <div class="col-md-4 summary-card">
+                <div class="small-box text-bg-danger">
+                    <div class="inner">
                         <h3 id="totalExpenses">0원</h3>
+                        <p>총 지출</p>
                         <small id="expensesCount">0건</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-bg-success">
-                    <div class="card-body">
-                        <h5 class="card-title">추정 손익</h5>
+            <!-- 추정 손익 -->
+            <div class="col-md-4 summary-card">
+                <div class="small-box text-bg-success">
+                    <div class="inner">
                         <h3 id="totalProfit">0원</h3>
+                        <p>추정 손익</p>
+                        <small style="visibility: hidden;">0건</small>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="button" class="btn btn-success w-100 btn-lg" onclick="createSettlement()">
-                    <i class="bi bi-check-circle"></i> 정산 생성
-                </button>
             </div>
         </div>
 
@@ -131,16 +144,25 @@
 let currentSalesData = [];
 let currentExpensesData = [];
 
+// 권한 정보 (hidden input에서 읽어옴)
+const userPermissions = {
+    branchId: document.getElementById('userBranchId')?.value || '0',
+    isCaptain: document.getElementById('isCaptain')?.value === 'true'
+};
+
 // 페이지 로드
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // 기본 날짜 설정 (이번 달)
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     document.getElementById('startDate').value = formatDate(firstDay);
     document.getElementById('endDate').value = formatDate(today);
 
-    // 지점 목록 로드
-    loadBranchOptions();
+    // 지점 목록 로드 - await로 완료 대기
+    await loadBranchOptions();
+
+    // 초기 데이터 로드
+    loadUnsettledSales();
 
     // 폼 제출 이벤트
     document.getElementById('filterForm').addEventListener('submit', function(e) {
@@ -151,15 +173,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 지점 옵션 로드
 async function loadBranchOptions() {
+    const select = document.getElementById('branchId');
+    if (!select) return;
+
+    // 캡틴인 경우: 본인 지점만 선택 가능
+    if (userPermissions.isCaptain && userPermissions.branchId && userPermissions.branchId !== '0') {
+        try {
+            const response = await fetch('/sales/api/options/branches');
+            const branches = await response.json();
+
+            select.innerHTML = '';
+            const myBranch = branches.find(b => b && b.id && b.id.toString() === userPermissions.branchId);
+            if (myBranch) {
+                const option = document.createElement('option');
+                option.value = myBranch.id;
+                option.textContent = myBranch.name || '미지정';
+                option.selected = true;
+                select.appendChild(option);
+            }
+            select.disabled = true;
+            select.classList.add('bg-light');
+            select.title = '본인 소속 지점만 조회 가능합니다';
+        } catch (error) {
+            console.error('지점 목록 로드 실패:', error);
+        }
+        return;
+    }
+
+    // 관리자 이상: 전체 지점 선택 가능
     try {
         const response = await fetch('/sales/api/options/branches');
         const branches = await response.json();
 
-        const select = document.getElementById('branchId');
-        branches.forEach(branch => {
+        branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;
+            option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
     } catch (error) {
@@ -204,26 +253,26 @@ function renderSalesTable(sales) {
         return;
     }
 
-    tbody.innerHTML = sales.map(sale => `
-        <tr>
-            <td>${sale.saleId}</td>
-            <td>${sale.saleNo || '-'}</td>
-            <td>${sale.branchName || '-'}</td>
-            <td>${formatDateTime(sale.soldAt)}</td>
-            <td>${getCategoryName(sale.categoryCode)}</td>
-            <td class="text-end">${formatCurrency(sale.totalAmount || 0)}</td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(sale.statusCode)}">
-                    ${getStatusName(sale.statusCode)}
-                </span>
-            </td>
-            <td>
-                <span class="badge ${sale.settled ? 'bg-secondary' : 'bg-warning'}">
-                    ${sale.settled ? '정산됨' : '미정산'}
-                </span>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = sales.map(sale =>
+        '<tr>' +
+            '<td>' + sale.saleId + '</td>' +
+            '<td>' + (sale.saleNo || '-') + '</td>' +
+            '<td>' + (sale.branchName || '-') + '</td>' +
+            '<td>' + formatDateTime(sale.soldAt) + '</td>' +
+            '<td>' + getCategoryName(sale.categoryCode) + '</td>' +
+            '<td class="text-end">' + formatCurrency(sale.totalAmount || 0) + '</td>' +
+            '<td>' +
+                '<span class="badge ' + getStatusBadgeClass(sale.statusCode) + '">' +
+                    getStatusName(sale.statusCode) +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + (sale.settled ? 'bg-secondary' : 'bg-warning') + '">' +
+                    (sale.settled ? '정산됨' : '미정산') +
+                '</span>' +
+            '</td>' +
+        '</tr>'
+    ).join('');
 }
 
 // 요약 정보 업데이트
@@ -240,7 +289,7 @@ function updateSummary(sales, expenses) {
 
     const profitElement = document.getElementById('totalProfit');
     profitElement.textContent = formatCurrency(totalProfit);
-    profitElement.parentElement.className = totalProfit >= 0 ? 'card text-bg-success' : 'card text-bg-danger';
+    profitElement.parentElement.parentElement.className = totalProfit >= 0 ? 'small-box text-bg-success' : 'small-box text-bg-danger';
 }
 
 // 정산 생성

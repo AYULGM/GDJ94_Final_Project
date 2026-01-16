@@ -1,4 +1,5 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <%@ page language="java"
     contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
@@ -6,13 +7,13 @@
 <!--begin::Sidebar-->
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
   <div class="sidebar-brand">
-    <a href="<c:url value='/'/>" class="brand-link">
+    <a href="<c:url value='/statistics'/>" class="brand-link">
       <img
         src="<c:url value='/img/doge.jpg'/>"
         alt="AdminLTE Logo"
         class="brand-image opacity-75 shadow"
       />
-      <span class="brand-text fw-light">AdminLTE 4</span>
+      <span class="brand-text fw-light">Doge Company</span>
     </a>
   </div>
 
@@ -28,25 +29,29 @@
       >
 
         <li class="nav-item">
-          <a href="<c:url value='/'/>" class="nav-link">
+          <a href="<c:url value='/statistics'/>" class="nav-link">
             <i class="nav-icon bi bi-speedometer"></i>
-            <p>Dashboard</p>
+            <p>Dash Board</p>
           </a>
         </li>
 
+		<sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
         <li class="nav-item">
           <a href="<c:url value='/branch/list'/>" class="nav-link">
             <i class="nav-icon bi bi-building"></i>
             <p>지점 관리</p>
           </a>
         </li>
+        </sec:authorize>
 
+		<sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
         <li class="nav-item">
           <a href="<c:url value='/userManagement/list'/>" class="nav-link">
             <i class="nav-icon bi bi-people"></i>
             <p>사용자 관리</p>
           </a>
         </li>
+		</sec:authorize>
 
         <li class="nav-item">
           <a href="<c:url value='/notices'/>" class="nav-link">
@@ -74,9 +79,9 @@
           </a>
 
           <ul class="nav nav-treeview">
-            <!--  문서유형은 AT005 하나만 -->
+            <!--  문서유형은 AT003 하나만 -->
             <li class="nav-item">
-              <a href="<c:url value='/approval/form'/>?typeCode=AT005" class="nav-link">
+              <a href="<c:url value='/approval/form'/>?entry=buy" class="nav-link">
                 <p>구매요청서/발주서 작성</p>
               </a>
             </li>
@@ -153,34 +158,16 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="/approval/form" class="nav-link">
-                <p>결재 작성</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="/approval/signature" class="nav-link">
                 <p>서명창</p>
               </a>
             </li>
-			<li class="nav-item">
-              <a href="/approval/line?docVerId=3" class="nav-link">
-                <p>결재 라인</p>
-              </a>
-            </li>
             <li class="nav-item">
               <a href="/approval/inbox" class="nav-link">
-                <p>기안함</p>
+                <p>결재함</p>
               </a>
             </li>
           </ul>
-        </li>
-
-        <!-- 정산·통계 대시보드 -->
-        <li class="nav-item">
-          <a href="<c:url value='/statistics'/>" class="nav-link">
-            <i class="nav-icon bi bi-speedometer2"></i>
-            <p>정산/통계</p>
-          </a>
         </li>
 
         <!-- 매출·지출 통계 Treeview -->

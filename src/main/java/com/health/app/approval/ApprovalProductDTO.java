@@ -8,4 +8,5 @@ public class ApprovalProductDTO {
     private String productName;
     private String productDesc;
     private Long price;
+    private Long stockQty;
 }

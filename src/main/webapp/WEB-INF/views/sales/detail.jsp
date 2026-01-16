@@ -3,23 +3,7 @@
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">매출 상세</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item"><a href="<c:url value='/sales'/>">정산 대상 매출</a></li>
-                    <li class="breadcrumb-item active">매출 상세</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="app-content">
     <div class="container-fluid">
@@ -171,7 +155,7 @@ async function loadSaleDetail() {
         document.getElementById('memo').textContent = sale.memo || '-';
 
         // 상태 뱃지
-        const statusBadge = `<span class="badge ${getStatusBadgeClass(sale.statusCode)}">${getStatusName(sale.statusCode)}</span>`;
+        const statusBadge = '<span class="badge ' + getStatusBadgeClass(sale.statusCode) + '">' + getStatusName(sale.statusCode) + '</span>';
         document.getElementById('statusCode').innerHTML = statusBadge;
 
         // 이력 정보
@@ -181,7 +165,7 @@ async function loadSaleDetail() {
         document.getElementById('updateDate').textContent = formatDateTime(sale.updateDate);
 
         // 수정 버튼 링크 설정
-        document.getElementById('editButton').href = `/sales/form?saleId=${sale.saleId}`;
+        document.getElementById('editButton').href = '/sales/form?saleId=' + sale.saleId;
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);

@@ -1,71 +1,47 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
-
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>전자결재 상세</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-/* 좌측 미리보기만 스크롤 */
-.preview-box{
-  height: calc(100vh - 140px);
-  overflow: auto;
-  background: #f8f9fa;
-}
-
-/* iframe 스크롤 제거 + 축소 */
-.preview-iframe{
-  width: 1250px;
-  height: 2000px;
-  border: 0;
-  overflow: hidden;
-  display: block;
-  transform: scale(0.7);
-  transform-origin: top left;
-}
-
-/* 우측 패널도 화면 높이에 맞추고 내부만 스크롤 */
-.side-sticky{
-  position: sticky;
-  top: 88px; /* 헤더 높이에 맞춰 조정 */
-}
-.side-scroll{
-  max-height: calc(100vh - 140px);
-  overflow: auto;
-}
-</style>
-
-</head>
-<body class="bg-light">
+<%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<main class="container-fluid py-3 px-3">
+<style>
+  /* 좌측 미리보기만 스크롤 */
+  .preview-box{
+    height: calc(100vh - 140px);
+    overflow: auto;
+    background: #f8f9fa;
+  }
 
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h2 class="h5 mb-1">전자결재 상세</h2>
-      <div class="text-muted small">
-        <c:out value="${page.doc.title}" />
-      </div>
-    </div>
-    <div class="text-muted small">
-      docVerId: ${docVerId}
-    </div>
-  </div>
+  /* iframe 스크롤 제거 + 축소 */
+  .preview-iframe{
+    width: 1250px;
+    height: 2000px;
+    border: 0;
+    overflow: hidden;
+    display: block;
+    transform: scale(0.7);
+    transform-origin: top left;
+  }
 
+  /* 우측 패널도 화면 높이에 맞추고 내부만 스크롤 */
+  .side-sticky{
+    position: sticky;
+    top: 88px; /* 헤더 높이에 맞춰 조정 */
+  }
+  .side-scroll{
+    max-height: calc(100vh - 140px);
+    overflow: auto;
+  }
+</style>
+
+<div class="container-fluid py-3 px-3">
   <div class="row g-3">
 
     <!-- 좌측: 미리보기 -->
     <div class="col-12 col-xl-8">
       <div class="card shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
-          <div class="fw-semibold">문서 미리보기</div>
+          <div class="fw-semibold col-8">문서 미리보기</div>
           <div class="d-flex gap-2">
             <a class="btn btn-sm btn-outline-dark" href="/approval/view?docVerId=${docVerId}">출력/미리보기</a>
             <a class="btn btn-sm btn-outline-secondary" href="/approval/list">목록</a>
@@ -73,26 +49,22 @@
         </div>
         <div class="card-body p-0">
           <div class="preview-box">
-			<iframe
-			  src="/approval/view?docVerId=${docVerId}"
+            <iframe
+			  src="/approval/view?docVerId=${docVerId}&preview=1"
 			  class="preview-iframe"
 			  scrolling="no"
-			  title="문서 미리보기"
-			  onload="console.log('iframe loaded:', this.src)"></iframe>
-
+			  title="문서 미리보기"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 우측: 정보 + 라인 + 코멘트 + 작업 -->
+    <!-- 우측: 정보 -->
     <div class="col-12 col-xl-4">
       <div class="side-sticky">
         <div class="card shadow-sm side-scroll">
-
           <div class="card-body">
 
-            <!-- 메시지(최상단 고정 느낌) -->
             <c:if test="${not empty msg}">
               <div class="alert alert-warning alert-dismissible fade show" role="alert">
                 <c:out value="${msg}" />
@@ -109,7 +81,7 @@
                   <c:when test="${page.doc.docStatusCode == 'AS002'}"><span class="badge text-bg-primary">결재중</span></c:when>
                   <c:when test="${page.doc.docStatusCode == 'AS003'}"><span class="badge text-bg-success">결재완료</span></c:when>
                   <c:when test="${page.doc.docStatusCode == 'AS004'}"><span class="badge text-bg-danger">반려</span></c:when>
-                  <c:otherwise><span class="badge text-bg-dark"><c:out value="${page.doc.docStatusCode}" /></span></c:otherwise>
+                  <c:otherwise><span class="badge text-bg-dark">대기</span></c:otherwise>
                 </c:choose>
               </div>
 
@@ -150,12 +122,23 @@
 
                 <div class="col-6">
                   <div class="text-muted small">작성일</div>
-                  <div class="text-nowrap">${page.doc.createDate}</div>
+                  <div class="text-nowrap">
+                    <c:out value="${fn:replace(page.doc.createDate, 'T', ' ')}" />
+                  </div>
                 </div>
 
                 <div class="col-6">
                   <div class="text-muted small">수정일</div>
-                  <div class="text-nowrap">${page.doc.updateDate}</div>
+                  <div class="text-nowrap">
+                    <c:choose>
+                      <c:when test="${empty page.doc.updateDate}">
+                        <span class="text-muted">-</span>
+                      </c:when>
+                      <c:otherwise>
+                        <c:out value="${fn:replace(page.doc.updateDate, 'T', ' ')}" />
+                      </c:otherwise>
+                    </c:choose>
+                  </div>
                 </div>
               </div>
             </div>
@@ -181,10 +164,10 @@
                         <td class="text-nowrap"><c:out value="${l.approverName}" /></td>
                         <td class="text-nowrap">
                           <c:choose>
-                            <c:when test="${l.lineStatusCode == 'ALS002'}"><span class="badge text-bg-primary">대기</span></c:when>
+                            <c:when test="${l.lineStatusCode == 'ALS002'}"><span class="badge text-bg-primary">진행</span></c:when>
                             <c:when test="${l.lineStatusCode == 'ALS003'}"><span class="badge text-bg-success">승인</span></c:when>
                             <c:when test="${l.lineStatusCode == 'ALS004'}"><span class="badge text-bg-danger">반려</span></c:when>
-                            <c:otherwise><span class="badge text-bg-secondary"><c:out value="${l.lineStatusCode}" /></span></c:otherwise>
+                            <c:otherwise><span class="badge text-bg-secondary">대기</span></c:otherwise>
                           </c:choose>
                         </td>
                       </tr>
@@ -284,17 +267,12 @@
               * “상신 취소”는 1차 결재자가 승인/반려하기 전까지만 가능합니다.
             </div>
 
-          </div>
+           </div>
         </div>
       </div>
     </div>
 
   </div>
-
-</main>
+</div>
 
 <jsp:include page="../includes/admin_footer.jsp" />
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>

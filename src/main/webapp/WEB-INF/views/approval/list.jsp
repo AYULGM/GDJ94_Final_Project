@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -19,11 +20,10 @@
 
     <div class="d-flex align-items-center justify-content-between mb-3">
       <div>
-        <h2 class="h4 mb-1">전자결재 목록</h2>
-        <div class="text-muted small">기안한 문서의 진행 상태를 확인할 수 있습니다.</div>
+        <div class="text-muted small"></div>
       </div>
 
-      <a class="btn btn-primary" href="/approval/form">결재 작성</a>
+      <a class="btn btn-primary" href="/approval/form?entry=approval">결재 작성</a>
     </div>
 
     <div class="card shadow-sm">
@@ -137,7 +137,10 @@
                     </c:choose>
                   </td>
 
-                  <td class="text-nowrap">${row.createDate}</td>
+                  <td class="text-nowrap">
+					  <c:out value="${fn:replace(row.createDate, 'T', ' ')}" />
+					</td>
+
                 </tr>
               </c:forEach>
 

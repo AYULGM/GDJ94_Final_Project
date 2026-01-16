@@ -101,20 +101,19 @@
     function addRow() {
         const tbody = document.getElementById("itemsTbody");
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-      <td>
-        <select class="form-select" name="items[${rowIndex}].productId" required>
-          <option value="">상품 선택</option>
-          ${buildProductOptions()}
-        </select>
-      </td>
-      <td><input type="number" class="form-control" name="items[${rowIndex}].quantity" min="1" step="1" required/></td>
-      <td><input type="number" class="form-control" name="items[${rowIndex}].unitPrice" min="0" step="1"/></td>
-      <td><input type="text" class="form-control" name="items[${rowIndex}].lineMemo" maxlength="255"/></td>
-      <td class="text-center">
-        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">X</button>
-      </td>
-    `;
+        tr.innerHTML =
+            '<td>' +
+                '<select class="form-select" name="items[' + rowIndex + '].productId" required>' +
+                    '<option value="">상품 선택</option>' +
+                    buildProductOptions() +
+                '</select>' +
+            '</td>' +
+            '<td><input type="number" class="form-control" name="items[' + rowIndex + '].quantity" min="1" step="1" required/></td>' +
+            '<td><input type="number" class="form-control" name="items[' + rowIndex + '].unitPrice" min="0" step="1"/></td>' +
+            '<td><input type="text" class="form-control" name="items[' + rowIndex + '].lineMemo" maxlength="255"/></td>' +
+            '<td class="text-center">' +
+                '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">X</button>' +
+            '</td>';
         tbody.appendChild(tr);
         rowIndex++;
     }

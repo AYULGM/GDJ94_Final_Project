@@ -1,7 +1,15 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
+
+<!-- 권한 정보를 JavaScript에서 사용하기 위한 숨김 필드 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+    <input type="hidden" id="isCaptain" value="${loginUser.captain}"/>
+</sec:authorize>
 
 <!-- Main content -->
 <div class="app-content-header">
@@ -152,17 +160,23 @@
 const activeTab = '${activeTab}';
 let expensesChart;
 
+// 권한 정보 (hidden input에서 읽어옴)
+const userPermissions = {
+    branchId: document.getElementById('userBranchId')?.value || '0',
+    isCaptain: document.getElementById('isCaptain')?.value === 'true'
+};
+
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    // 기본 날짜 설정 (이번 달)
+document.addEventListener('DOMContentLoaded', async function() {
+    // 기본 날짜 설정 (최근 6개월)
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById('startDate').value = formatDate(firstDay);
+    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+    document.getElementById('startDate').value = formatDate(sixMonthsAgo);
     document.getElementById('endDate').value = formatDate(today);
 
-    // 지점 목록 로드 (지점별이 아닌 경우)
+    // 지점 목록 로드 (지점별이 아닌 경우) - await로 완료 대기
     if (activeTab !== 'branch') {
-        loadBranchOptions();
+        await loadBranchOptions();
     }
 
     // 차트 초기화
@@ -183,15 +197,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 지점 옵션 로드
 async function loadBranchOptions() {
+    const select = document.getElementById('branchId');
+    if (!select) return;
+
+    // 캡틴인 경우: 본인 지점만 선택 가능
+    if (userPermissions.isCaptain && userPermissions.branchId && userPermissions.branchId !== '0') {
+        try {
+            const response = await fetch('/expenses/api/options/branches');
+            const branches = await response.json();
+
+            select.innerHTML = '';
+            const myBranch = branches.find(b => b && b.id && b.id.toString() === userPermissions.branchId);
+            if (myBranch) {
+                const option = document.createElement('option');
+                option.value = myBranch.id;
+                option.textContent = myBranch.name || '미지정';
+                option.selected = true;
+                select.appendChild(option);
+            }
+            select.disabled = true;
+            select.classList.add('bg-light');
+            select.title = '본인 소속 지점만 조회 가능합니다';
+        } catch (error) {
+            console.error('지점 목록 로드 실패:', error);
+        }
+        return;
+    }
+
+    // 관리자 이상: 전체 지점 선택 가능
     try {
         const response = await fetch('/expenses/api/options/branches');
         const branches = await response.json();
 
-        const select = document.getElementById('branchId');
-        branches.forEach(branch => {
+        branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;
+            option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
     } catch (error) {
@@ -316,13 +357,11 @@ function setupTableHeader() {
             break;
     }
 
-    headerHtml += `
-        <th class="text-end">지출 건수</th>
-        <th class="text-end">총 지출 금액</th>
-        <th class="text-end">평균 지출 금액</th>
-        <th class="text-end">평균 대비 차이</th>
-        <th class="text-end">비율</th>
-    </tr>`;
+    headerHtml += '<th class="text-end">지출 건수</th>' +
+        '<th class="text-end">총 지출 금액</th>' +
+        '<th class="text-end">평균 지출 금액</th>' +
+        '<th class="text-end">지출 비중</th>' +
+    '</tr>';
 
     document.getElementById('tableHead').innerHTML = headerHtml;
 }
@@ -332,7 +371,7 @@ function updateTable(data) {
     const tbody = document.getElementById('tableBody');
 
     if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">데이터가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">데이터가 없습니다.</td></tr>';
         document.getElementById('tableFoot').innerHTML = '';
         return;
     }
@@ -352,18 +391,13 @@ function updateTable(data) {
                 break;
         }
 
-        const diffClass = (item.diffPercent || 0) >= 0 ? 'text-danger' : 'text-success';
-
-        return `
-            <tr>
-                <td>${firstColumn}</td>
-                <td class="text-end">${formatNumber(item.expenseCount || 0)}</td>
-                <td class="text-end">${formatCurrency(item.totalAmount || 0)}</td>
-                <td class="text-end">${formatCurrency(item.avgAmount || 0)}</td>
-                <td class="text-end ${diffClass}">${formatCurrency(item.diffAmount || 0)}</td>
-                <td class="text-end ${diffClass}">${(item.diffPercent || 0).toFixed(1)}%</td>
-            </tr>
-        `;
+        return '<tr>' +
+            '<td>' + firstColumn + '</td>' +
+            '<td class="text-end">' + formatNumber(item.expenseCount || 0) + '</td>' +
+            '<td class="text-end">' + formatCurrency(item.totalAmount || 0) + '</td>' +
+            '<td class="text-end">' + formatCurrency(item.avgAmount || 0) + '</td>' +
+            '<td class="text-end">' + (item.percentage || 0).toFixed(1) + '%</td>' +
+            '</tr>';
     }).join('');
 
     // 합계 행
@@ -371,16 +405,14 @@ function updateTable(data) {
     const totalCount = data.reduce((sum, item) => sum + (item.expenseCount || 0), 0);
     const avgAmount = totalCount > 0 ? totalAmount / totalCount : 0;
 
-    document.getElementById('tableFoot').innerHTML = `
-        <tr class="table-active fw-bold">
-            <td>합계</td>
-            <td class="text-end">${formatNumber(totalCount)}</td>
-            <td class="text-end">${formatCurrency(totalAmount)}</td>
-            <td class="text-end">${formatCurrency(avgAmount)}</td>
-            <td class="text-end">-</td>
-            <td class="text-end">-</td>
-        </tr>
-    `;
+    document.getElementById('tableFoot').innerHTML =
+        '<tr class="table-active fw-bold">' +
+            '<td>합계</td>' +
+            '<td class="text-end">' + formatNumber(totalCount) + '</td>' +
+            '<td class="text-end">' + formatCurrency(totalAmount) + '</td>' +
+            '<td class="text-end">' + formatCurrency(avgAmount) + '</td>' +
+            '<td class="text-end">100%</td>' +
+        '</tr>';
 }
 
 // 유틸리티 함수

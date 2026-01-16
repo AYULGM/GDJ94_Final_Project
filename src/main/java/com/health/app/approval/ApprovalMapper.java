@@ -70,8 +70,8 @@ public interface ApprovalMapper {
 
     // 버전 상태 변경
     int updateVersionStatusByDocVerId(@Param("docVerId") Long docVerId,
-                                      @Param("verStatusCode") String verStatusCode,
-                                      @Param("updateUser") Long updateUser);
+            @Param("verStatusCode") String verStatusCode);
+
 
     // 결재선 상태 일괄 변경
     int updateAllLinesStatusByDocVerId(@Param("docVerId") Long docVerId,
@@ -129,4 +129,21 @@ public interface ApprovalMapper {
 
     // 사용자 조직 정보
     Map<String, Object> selectUserOrg(@Param("userId") Long userId);
+    
+    String selectTypeCodeByDocVerId(@Param("docVerId") Long docVerId);
+    
+    int autoApproveAllLines(@Param("docVerId") Long docVerId,
+            @Param("updateUser") Long updateUser,
+            @Param("comment") String comment);
+    
+    
+    
+    
+ // 존재 확인
+    int existsDocVersion(@org.apache.ibatis.annotations.Param("docVerId") Long docVerId);
+    int existsDocumentByCurrentVer(@org.apache.ibatis.annotations.Param("docVerId") Long docVerId);
+
+    String selectVerStatusByDocVerId(@Param("docVerId") Long docVerId);
+
+    
 }

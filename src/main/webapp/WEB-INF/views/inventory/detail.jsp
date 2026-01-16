@@ -13,16 +13,13 @@
 
       <div class="card-body">
 
-        <!-- 상세 없음 -->
         <c:if test="${detail == null}">
           <div class="alert alert-warning">
             상세 정보를 찾을 수 없습니다.
           </div>
-          <a class="btn btn-secondary"
-             href="<c:url value='/inventory'/>">목록으로</a>
+          <a class="btn btn-secondary" href="<c:url value='/inventory'/>">목록으로</a>
         </c:if>
 
-        <!-- 상세 있음 -->
         <c:if test="${detail != null}">
 
           <!-- 기본 정보 -->
@@ -60,13 +57,55 @@
             </tbody>
           </table>
 
-          <div class="text-muted mb-3">
-            low_stock_threshold: ${detail.lowStockThreshold},
-            reorder_point: ${detail.reorderPoint}
-          </div>
+          <a class="btn btn-secondary mb-4" href="<c:url value='/inventory'/>">목록으로</a>
 
-          <a class="btn btn-secondary mb-4"
-             href="<c:url value='/inventory'/>">목록으로</a>
+          <!-- 기준 수량 설정 -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h4 class="card-title mb-0">기준 수량 설정</h4>
+            </div>
+            <div class="card-body">
+
+              <c:if test="${not empty thresholdSuccess}">
+                <div class="alert alert-success">${thresholdSuccess}</div>
+              </c:if>
+              <c:if test="${not empty thresholdError}">
+                <div class="alert alert-danger">${thresholdError}</div>
+              </c:if>
+
+              <form method="post" action="<c:url value='/inventory/threshold'/>" class="row g-3">
+                <input type="hidden" name="branchId" value="${detail.branchId}"/>
+                <input type="hidden" name="productId" value="${detail.productId}"/>
+
+                <div class="col-md-4">
+                  <label class="form-label">지점 기준 수량 (0이면 상품 기본값 사용)</label>
+                  <input type="number" name="lowStockThreshold" min="0"
+                         class="form-control"
+                         value="<c:out value='${detail.lowStockThreshold}'/>"
+                         placeholder="예: 10 (0이면 기본값)"/>
+                </div>
+
+                <div class="col-md-8 d-flex align-items-end">
+                  <div class="text-muted">
+                    현재 적용 기준:
+                    <strong>${detail.standardQuantity}</strong>
+                    <c:choose>
+                      <c:when test="${detail.lowStockThreshold != null and detail.lowStockThreshold > 0}">
+                        (지점별 기준)
+                      </c:when>
+                      <c:otherwise>
+                        (상품 기본 reorder_point)
+                      </c:otherwise>
+                    </c:choose>
+                  </div>
+                </div>
+
+                <div class="col-12 text-end">
+                  <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+              </form>
+            </div>
+          </div>
 
           <!-- 재고 조정 -->
           <div class="card mb-4">
@@ -75,10 +114,11 @@
             </div>
             <div class="card-body">
 
-              <c:if test="${not empty error}">
-                <div class="alert alert-danger">
-                    ${error}
-                </div>
+              <c:if test="${not empty adjustSuccess}">
+                <div class="alert alert-success">${adjustSuccess}</div>
+              </c:if>
+              <c:if test="${not empty adjustError}">
+                <div class="alert alert-danger">${adjustError}</div>
               </c:if>
 
               <form method="post" action="<c:url value='/inventory/adjust'/>" class="row g-3">
@@ -96,14 +136,12 @@
 
                 <div class="col-md-3">
                   <label class="form-label">수량</label>
-                  <input type="number" name="quantity" min="1"
-                         class="form-control" required/>
+                  <input type="number" name="quantity" min="1" class="form-control" required/>
                 </div>
 
                 <div class="col-md-6">
                   <label class="form-label">사유</label>
-                  <input type="text" name="reason" maxlength="200"
-                         class="form-control" required/>
+                  <input type="text" name="reason" maxlength="200" class="form-control" required/>
                 </div>
 
                 <div class="col-12 text-end">
@@ -135,9 +173,7 @@
                 <tbody>
                 <c:if test="${empty history}">
                   <tr>
-                    <td colspan="7" class="text-center text-muted">
-                      이력이 없습니다.
-                    </td>
+                    <td colspan="7" class="text-center text-muted">이력이 없습니다.</td>
                   </tr>
                 </c:if>
 

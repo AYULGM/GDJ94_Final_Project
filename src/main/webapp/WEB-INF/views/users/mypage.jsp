@@ -22,10 +22,6 @@
          ====================== -->
     <div class="content-wrapper p-4">
 
-        <!-- 페이지 제목 -->
-        <section class="content-header">
-            <h1>마이페이지</h1>
-        </section>
 
         <!-- ======================
              사용자 정보 카드
@@ -77,7 +73,8 @@
 					                    부서 없음
 					                </c:when>
 					                <c:otherwise>
-					                    ${user.departmentCode} - ${user.departmentName}
+<%-- 					                    ${user.departmentCode} - ${user.departmentName}--%>					
+                    						${user.departmentName}
 					                </c:otherwise>
 					            </c:choose>
 					        </td>
@@ -109,7 +106,9 @@
 					
 					    <tr>
 					        <th>권한</th>
-					        <td>${user.roleCode} - ${user.roleName}</td>
+					        <%-- <td>${user.roleCode} - ${user.roleName}</td> --%>
+					        <td>${user.roleName}</td>
+					        
 					    </tr>
 					
 					    <tr>
@@ -128,6 +127,8 @@
 						    <i class="bi bi-shield-lock"></i> 비밀번호 변경
 						</a>
 						
+					<%-- 					
+						마이페이지에서 회원 탈퇴기능 없으면 좋겠다 하셔서 주석처리
 						<form action="<c:url value='/users/withdraw'/>"
 						      method="post"
 						      onsubmit="return confirm('정말로 회원 탈퇴하시겠습니까?\n탈퇴 후에는 로그인이 불가능합니다.');"
@@ -135,7 +136,8 @@
 						    <button type="submit" class="btn btn-outline-danger ms-2">
 						        <i class="bi bi-person-x"></i> 회원 탈퇴
 						    </button>
-						</form>
+						</form> 
+					--%>
 						
                         <a href="<c:url value='/logout'/>" class="btn btn-danger ms-2">
                             <i class="bi bi-box-arrow-right"></i> 로그아웃
@@ -151,7 +153,5 @@
 
 <jsp:include page="../includes/admin_footer.jsp" />
 
-<!-- AdminLTE JS -->
-<script src="<c:url value='/js/adminlte.js'/>"></script>
 </body>
 </html>

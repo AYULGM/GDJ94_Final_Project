@@ -25,26 +25,24 @@ public class StatisticsController {
      */
     @GetMapping
     public String statisticsViewPage(Model model) {
-        model.addAttribute("pageTitle", "통계 대시보드");
+        model.addAttribute("pageTitle", "Dash Board");
         return "statistics/view";
     }
 
     /**
-     * 매출 통계 페이지
+     * 매출 통계 페이지 - 기본 탭(지점별)으로 리다이렉트
      */
     @GetMapping("/sales")
-    public String salesStatisticsPage(Model model) {
-        model.addAttribute("pageTitle", "매출 통계");
-        return "statistics/sales";
+    public String salesStatisticsPage() {
+        return "redirect:/statistics/sales/by-branch";
     }
 
     /**
-     * 지출 통계 페이지
+     * 지출 통계 페이지 - 기본 탭(지점별)으로 리다이렉트
      */
     @GetMapping("/expenses")
-    public String expensesStatisticsPage(Model model) {
-        model.addAttribute("pageTitle", "지출 통계");
-        return "statistics/expenses";
+    public String expensesStatisticsPage() {
+        return "redirect:/statistics/expenses/by-branch";
     }
 
     /**

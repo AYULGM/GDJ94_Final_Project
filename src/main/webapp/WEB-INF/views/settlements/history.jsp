@@ -3,22 +3,7 @@
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">정산 이력 로그</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item active">정산 이력 로그</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="app-content">
     <div class="container-fluid">
@@ -129,15 +114,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 정산 이력 목록 로드
 async function loadHistoryList() {
-    // TODO: 전체 정산 이력 조회 API가 필요합니다 (GET /settlements/api/all-histories)
-    // 현재는 settlements 목록을 조회한 후 각 정산의 이력을 결합하는 방식으로 구현
-
     try {
         const tbody = document.getElementById('historyTableBody');
         tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
 
         // 정산 목록 조회
         const settlementsResponse = await fetch('/settlements/api/list?page=1&pageSize=100');
+        if (!settlementsResponse.ok) {
+            throw new Error('정산 목록 조회 실패: ' + settlementsResponse.status);
+        }
         const settlementsData = await settlementsResponse.json();
 
         if (!settlementsData.list || settlementsData.list.length === 0) {
@@ -145,17 +130,36 @@ async function loadHistoryList() {
             return;
         }
 
-        // 각 정산의 이력 조회
-        const historyPromises = settlementsData.list.map(settlement =>
-            fetch(`/settlements/api/${settlement.settlementId}/histories`)
-                .then(r => r.json())
-                .then(histories => histories.map(h => ({...h, settlementNo: settlement.settlementNo})))
-        );
+        // 각 정산의 이력 조회 (에러 처리 강화)
+        const historyPromises = settlementsData.list.map(async function(settlement) {
+            try {
+                const response = await fetch('/settlements/api/' + settlement.settlementId + '/histories');
+                if (!response.ok) {
+                    console.warn('이력 조회 실패: settlementId=' + settlement.settlementId);
+                    return [];
+                }
+                const histories = await response.json();
+                // 배열인지 확인
+                if (!Array.isArray(histories)) {
+                    console.warn('이력이 배열이 아님: settlementId=' + settlement.settlementId);
+                    return [];
+                }
+                return histories.map(function(h) {
+                    return Object.assign({}, h, { settlementNo: settlement.settlementNo });
+                });
+            } catch (e) {
+                console.warn('이력 조회 에러: settlementId=' + settlement.settlementId, e);
+                return [];
+            }
+        });
 
-        const allHistories = (await Promise.all(historyPromises)).flat();
+        const allHistoriesArrays = await Promise.all(historyPromises);
+        const allHistories = allHistoriesArrays.flat();
 
         // 날짜순 정렬 (최신순)
-        allHistories.sort((a, b) => new Date(b.actedAt) - new Date(a.actedAt));
+        allHistories.sort(function(a, b) {
+            return new Date(b.actedAt) - new Date(a.actedAt);
+        });
 
         renderHistoryTable(allHistories);
 
@@ -205,34 +209,34 @@ function renderHistoryTable(histories) {
     const end = start + pageSize;
     const paged = filtered.slice(start, end);
 
-    tbody.innerHTML = paged.map(history => `
-        <tr>
-            <td>${history.logId || '-'}</td>
-            <td>
-                <a href="/settlements/${history.settlementId}">
-                    ${history.settlementId} ${history.settlementNo ? '(' + history.settlementNo + ')' : ''}
-                </a>
-            </td>
-            <td>
-                <span class="badge ${getActionBadgeClass(history.actionType)}">
-                    ${getActionName(history.actionType)}
-                </span>
-            </td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(history.beforeStatus)}">
-                    ${getStatusName(history.beforeStatus)}
-                </span>
-            </td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(history.afterStatus)}">
-                    ${getStatusName(history.afterStatus)}
-                </span>
-            </td>
-            <td>${history.actorUserName || '-'}</td>
-            <td>${formatDateTime(history.actedAt)}</td>
-            <td>${history.reason || '-'}</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = paged.map(history =>
+        '<tr>' +
+            '<td>' + (history.logId || '-') + '</td>' +
+            '<td>' +
+                '<a href="/settlements/' + history.settlementId + '">' +
+                    history.settlementId + ' ' + (history.settlementNo ? '(' + history.settlementNo + ')' : '') +
+                '</a>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + getActionBadgeClass(history.actionType) + '">' +
+                    getActionName(history.actionType) +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + getStatusBadgeClass(history.beforeStatus) + '">' +
+                    getStatusName(history.beforeStatus) +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<span class="badge ' + getStatusBadgeClass(history.afterStatus) + '">' +
+                    getStatusName(history.afterStatus) +
+                '</span>' +
+            '</td>' +
+            '<td>' + (history.actorUserName || '-') + '</td>' +
+            '<td>' + formatDateTime(history.actedAt) + '</td>' +
+            '<td>' + (history.reason || '-') + '</td>' +
+        '</tr>'
+    ).join('');
 
     // 페이징
     const totalPages = Math.ceil(filtered.length / pageSize);
@@ -251,20 +255,20 @@ function renderPagination(current, total) {
     let html = '';
 
     if (current > 1) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${current - 1}); return false;">«</a></li>`;
+        html += '<li class="page-item"><a class="page-link" href="#" onclick="goToPage(' + (current - 1) + '); return false;">«</a></li>';
     }
 
     const startPage = Math.max(1, current - 2);
     const endPage = Math.min(total, current + 2);
 
     for (let i = startPage; i <= endPage; i++) {
-        html += `<li class="page-item ${i === current ? 'active' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>
-        </li>`;
+        html += '<li class="page-item ' + (i === current ? 'active' : '') + '">' +
+            '<a class="page-link" href="#" onclick="goToPage(' + i + '); return false;">' + i + '</a>' +
+        '</li>';
     }
 
     if (current < total) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${current + 1}); return false;">»</a></li>`;
+        html += '<li class="page-item"><a class="page-link" href="#" onclick="goToPage(' + (current + 1) + '); return false;">»</a></li>';
     }
 
     pagination.innerHTML = html;

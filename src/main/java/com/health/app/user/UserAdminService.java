@@ -7,6 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.health.app.security.model.LoginUser;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,9 +22,39 @@ public class UserAdminService {
         return userAdminMapper.selectUserAdminList();
     }
     
-    public UserAdminDTO getUserAdminDetail(Long userId) {
-        return userAdminMapper.selectUserAdminDetail(userId);
+ // ADMIN용 - 본인 지점 사용자만
+    public List<UserAdminDTO> getUserAdminListByBranch(Long branchId) {
+        return userAdminMapper.selectUserAdminListByBranch(branchId);
     }
+
+    
+    // 만약 URL로 사용자 상세를 접근하려 한다면.
+    public UserAdminDTO getUserAdminDetail(Long userId, LoginUser loginUser) {
+
+        UserAdminDTO user =
+            userAdminMapper.selectUserAdminDetail(userId);
+
+        // 1. 없는 사용자
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        }
+
+        // 2. 탈퇴 사용자
+        if (!user.getUseYn()) {
+            throw new IllegalStateException("탈퇴 처리된 사용자입니다.");
+        }
+        
+        // 3. ADMIN이면 본인 지점만 허용
+        if ("RL003".equals(loginUser.getRoleCode())) { // ADMIN
+
+            if (!user.getBranchId().equals(loginUser.getBranchId())) {
+                throw new SecurityException("접근 권한이 없습니다.");
+            }
+        }
+
+        return user;
+    }
+
 
     public void addUser(UserAdminDTO dto) {
 
@@ -41,51 +73,84 @@ public class UserAdminService {
     }
     
     @Transactional
-    public void updateUser(UserAdminDTO dto) {
+    public void updateUser(UserAdminDTO dto, String reason) {
 
-        // 1. 수정 전 데이터
-        UserAdminDTO before = userAdminMapper.selectUserAdminDetail(dto.getUserId());
+        UserAdminDTO before =
+            userAdminMapper.selectUserAdminDetail(dto.getUserId());
 
-        // 2. 지점 변경
+        // 1. 지점 변경
         if (!Objects.equals(before.getBranchId(), dto.getBranchId())) {
-            userAdminMapper.insertUserBranchLog(
-                dto.getUserId(),
-                before.getBranchId(),
-                dto.getBranchId(),
-                dto.getUpdateUser(),
-                "관리자에 의한 지점 변경"
-            );
+        	// 혹시라도 변경전 branchId가 없을경우
+            if (before.getBranchId() == null) {
+
+                userAdminMapper.insertUserBranchLog(
+                    dto.getUserId(),
+                    0L,
+                    dto.getBranchId(),
+                    dto.getUpdateUser(),
+                    "관리자에 의한 최초 지점 배정"
+                );
+
+            } else {
+
+                userAdminMapper.insertUserBranchLog(
+                    dto.getUserId(),
+                    before.getBranchId(),
+                    dto.getBranchId(),
+                    dto.getUpdateUser(),
+                    reason
+                );
+            }
         }
 
-        // 3. 권한 변경
+        // 2. 권한 변경
         if (!Objects.equals(before.getRoleCode(), dto.getRoleCode())) {
             userAdminMapper.insertRoleChangeLog(
                 dto.getUserId(),
                 before.getRoleCode(),
                 dto.getRoleCode(),
                 dto.getUpdateUser(),
-                "관리자에 의한 권한 변경"
+                reason
             );
         }
 
-        // 4. 일반 정보 변경 (name/email/phone/address/department)
-        insertUserHistoryIfChanged("name", before.getName(), dto.getName(), dto);
-        insertUserHistoryIfChanged("email", before.getEmail(), dto.getEmail(), dto);
-        insertUserHistoryIfChanged("phone", before.getPhone(), dto.getPhone(), dto);
-        insertUserHistoryIfChanged("post_no", before.getPostNo(), dto.getPostNo(), dto);
-        insertUserHistoryIfChanged("base_address", before.getBaseAddress(), dto.getBaseAddress(), dto);
-        insertUserHistoryIfChanged("detail_address", before.getDetailAddress(), dto.getDetailAddress(), dto);
-        insertUserHistoryIfChanged("department_code", before.getDepartmentCode(), dto.getDepartmentCode(), dto);
+        // 3. 일반 정보 변경 (change_type 한글로 저장)
+        insertUserHistoryIfChanged("이름",
+            before.getName(), dto.getName(), dto, reason);
 
-        // 5. users 테이블 업데이트
+        insertUserHistoryIfChanged("이메일",
+            before.getEmail(), dto.getEmail(), dto, reason);
+
+        insertUserHistoryIfChanged("핸드폰 번호",
+            before.getPhone(), dto.getPhone(), dto, reason);
+
+        insertUserHistoryIfChanged("우편번호",
+            before.getPostNo(), dto.getPostNo(), dto, reason);
+
+        insertUserHistoryIfChanged("기본주소",
+            before.getBaseAddress(), dto.getBaseAddress(), dto, reason);
+
+        insertUserHistoryIfChanged("상세주소",
+            before.getDetailAddress(), dto.getDetailAddress(), dto, reason);
+
+//        insertUserHistoryIfChanged("부서",
+//            before.getDepartmentCode(), dto.getDepartmentCode(), dto, reason);
+//
+//        insertUserHistoryIfChanged("사용자 상태",
+//            before.getUserStatusCode(), dto.getUserStatusCode(), dto, reason);
+
+        // 4. 실제 UPDATE
         userAdminMapper.updateUser(dto);
     }
+
+
 
     private void insertUserHistoryIfChanged(
             String changeType,
             String beforeValue,
             String afterValue,
-            UserAdminDTO dto) {
+            UserAdminDTO dto,
+            String reason) {
 
         if (!Objects.equals(beforeValue, afterValue)) {
             userAdminMapper.insertUserHistory(
@@ -93,7 +158,7 @@ public class UserAdminService {
                 changeType,
                 beforeValue,
                 afterValue,
-                "관리자 수정",
+                reason,
                 dto.getUpdateUser()
             );
         }
@@ -145,7 +210,7 @@ public class UserAdminService {
         // 4. 이력 기록
         userAdminMapper.insertUserHistory(
             userId,
-            "password",
+            "비밀번호",
             "********",
             "RESET",
             "관리자에 의한 비밀번호 초기화",
@@ -153,19 +218,35 @@ public class UserAdminService {
         );
     }
 
-    // 이력조회 메서드
-    public List<UserHistoryDTO> getUserHistory(Long userId) {
-        return userAdminMapper.selectUserHistory(userId);
+    public List<UserBranchLogDTO> getUserAllHistory(Long userId) {
+        return userAdminMapper.selectUserAllHistory(userId);
     }
     
-	 // 이력조회 메서드
-    public List<UserBranchLogDTO> getUserBranchLogs(Long userId) {
-        return userAdminMapper.selectUserBranchLogs(userId);
+    // 회원탈퇴 기능
+    @Transactional
+    public void withdrawUser(Long userId,
+                             Long adminId,
+                             String reason) {
+
+        UserAdminDTO before =
+            userAdminMapper.selectUserAdminDetail(userId);
+
+        // 이미 탈퇴면 종료
+        if (!before.getUseYn()) return;
+
+        // 1. 실제 탈퇴 처리
+        userAdminMapper.updateUseYn(userId, adminId);
+
+        // 2. 이력 저장
+        userAdminMapper.insertUserHistory(
+            userId,
+            "회원 탈퇴",
+            "사용중",
+            "탈퇴",
+            reason,      // 🔥 모달 입력 사유
+            adminId
+        );
     }
-    
-	 // 이력조회 메서드
-    public List<RoleChangeLogDTO> getRoleChangeLogs(Long userId) {
-        return userAdminMapper.selectRoleChangeLogs(userId);
-    }
+
 
 }

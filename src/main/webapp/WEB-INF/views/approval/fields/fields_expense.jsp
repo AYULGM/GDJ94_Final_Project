@@ -8,7 +8,7 @@
 
   <!-- 지점 -->
   <div class="col-md-6">
-    <label class="form-label">지점</label>
+    <label class="form-label"><span style="color:red;">*</span>지점</label>
     <select class="form-select" name="extNo1" id="branchId" required>
       <option value="">지점 선택</option>
       <c:forEach var="b" items="${branches}">
@@ -17,21 +17,15 @@
         </option>
       </c:forEach>
     </select>
-    <div class="form-text">extNo1 = branchId</div>
   </div>
 
   <!-- 합계금액(자동) : extNo2 사용 -->
   <div class="col-md-6">
-    <label class="form-label">합계금액(자동)</label>
-    <input type="number" class="form-control" name="extNo2" id="expenseTotal" readonly />
-    <div class="form-text">extNo2 = totalAmount</div>
+    <label class="form-label">합계금액</label>
+    <input type="number" class="form-control bg-secondary-subtle" name="extNo2" id="expenseTotal" readonly />
   </div>
 
-  <!-- 지출 사유 : extTxt3 -->
-  <div class="col-12">
-    <label class="form-label">지출 사유</label>
-    <textarea class="form-control" name="extTxt3" rows="3" required></textarea>
-  </div>
+
 
   <!-- 지출 내역(다건) -->
   <div class="col-12">
@@ -44,10 +38,10 @@
       <table class="table table-sm table-bordered align-middle" id="expenseTable">
         <thead class="table-light">
           <tr>
-            <th>지출 항목</th>
-            <th style="width: 140px;" class="text-end">지출금액</th>
-            <th style="width: 150px;">지출 일자</th>
-            <th>비고(선택)</th>
+            <th><span style="color:red;">*</span>지출 항목</th>
+            <th style="width: 140px;"><span style="color:red;">*</span>지출금액</th>
+            <th style="width: 150px;"><span style="color:red;">*</span>지출 일자</th>
+            <th>비고</th>
             <th style="width: 80px;"></th>
           </tr>
         </thead>
@@ -65,9 +59,7 @@
         </tbody>
       </table>
 
-      <div class="form-text">
-        여러 건의 지출 내역은 저장 시 extTxt6(JSON)로 저장되며, 합계는 extNo2에 자동 반영됩니다.
-      </div>
+      
     </div>
   </div>
 

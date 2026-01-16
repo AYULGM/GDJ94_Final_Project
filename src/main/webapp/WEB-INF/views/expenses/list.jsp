@@ -1,24 +1,17 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">지출 관리</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item active">지출 관리</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- 권한 정보를 JavaScript에서 사용하기 위한 숨김 필드 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+    <input type="hidden" id="isCaptain" value="${loginUser.captain}"/>
+</sec:authorize>
+
+
 
 <div class="app-content">
     <div class="container-fluid">
@@ -131,10 +124,16 @@
 let currentPage = 1;
 const pageSize = 10;
 
+// 권한 정보 (hidden input에서 읽어옴)
+const userPermissions = {
+    branchId: document.getElementById('userBranchId')?.value || '0',
+    isCaptain: document.getElementById('isCaptain')?.value === 'true'
+};
+
 // 페이지 로드
-document.addEventListener('DOMContentLoaded', function() {
-    // 지점 목록 로드
-    loadBranchOptions();
+document.addEventListener('DOMContentLoaded', async function() {
+    // 지점 목록 로드 - await로 완료 대기
+    await loadBranchOptions();
 
     // 검색 폼 이벤트
     document.getElementById('searchForm').addEventListener('submit', function(e) {
@@ -149,15 +148,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 지점 옵션 로드
 async function loadBranchOptions() {
+    const select = document.getElementById('branchId');
+    if (!select) return;
+
+    // 캡틴인 경우: 본인 지점만 선택 가능
+    if (userPermissions.isCaptain && userPermissions.branchId && userPermissions.branchId !== '0') {
+        try {
+            const response = await fetch('/expenses/api/options/branches');
+            const branches = await response.json();
+
+            select.innerHTML = '';
+            const myBranch = branches.find(b => b && b.id && b.id.toString() === userPermissions.branchId);
+            if (myBranch) {
+                const option = document.createElement('option');
+                option.value = myBranch.id;
+                option.textContent = myBranch.name || '미지정';
+                option.selected = true;
+                select.appendChild(option);
+            }
+            select.disabled = true;
+            select.classList.add('bg-light');
+            select.title = '본인 소속 지점만 조회 가능합니다';
+        } catch (error) {
+            console.error('지점 목록 로드 실패:', error);
+        }
+        return;
+    }
+
+    // 관리자 이상: 전체 지점 선택 가능
     try {
         const response = await fetch('/expenses/api/options/branches');
         const branches = await response.json();
 
-        const select = document.getElementById('branchId');
-        branches.forEach(branch => {
+        branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
-            option.value = branch.value;
-            option.textContent = branch.label;
+            option.value = branch.id;
+            option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
     } catch (error) {
@@ -194,27 +220,27 @@ function renderExpenseTable(list) {
         return;
     }
 
-    tbody.innerHTML = list.map(expense => `
-        <tr>
-            <td>${expense.expenseId}</td>
-            <td>${expense.branchName || '-'}</td>
-            <td>${formatDate(expense.expenseAt)}</td>
-            <td>${getCategoryName(expense.categoryCode)}</td>
-            <td class="text-end">${formatCurrency(expense.amount)}</td>
-            <td>${expense.description || '-'}</td>
-            <td>${expense.handledByName || '-'}</td>
-            <td>
-                <span class="badge ${expense.settlementFlag ? 'bg-success' : 'bg-warning'}">
-                    ${expense.settlementFlag ? '정산됨' : '미정산'}
-                </span>
-            </td>
-            <td>
-                <a href="/expenses/${expense.expenseId}" class="btn btn-sm btn-info">
-                    <i class="bi bi-eye"></i>
-                </a>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = list.map(expense =>
+        '<tr>' +
+            '<td>' + expense.expenseId + '</td>' +
+            '<td>' + (expense.branchName || '-') + '</td>' +
+            '<td>' + formatDate(expense.expenseAt) + '</td>' +
+            '<td>' + getCategoryName(expense.categoryCode) + '</td>' +
+            '<td class="text-end">' + formatCurrency(expense.amount) + '</td>' +
+            '<td>' + (expense.description || '-') + '</td>' +
+            '<td>' + (expense.handledByName || '-') + '</td>' +
+            '<td>' +
+                '<span class="badge ' + (expense.settlementFlag ? 'bg-success' : 'bg-warning') + '">' +
+                    (expense.settlementFlag ? '정산됨' : '미정산') +
+                '</span>' +
+            '</td>' +
+            '<td>' +
+                '<a href="/expenses/' + expense.expenseId + '" class="btn btn-sm btn-info">' +
+                    '<i class="bi bi-eye"></i>' +
+                '</a>' +
+            '</td>' +
+        '</tr>'
+    ).join('');
 }
 
 // 페이징 렌더링
@@ -230,7 +256,7 @@ function renderPagination(current, total) {
 
     // 이전 버튼
     if (current > 1) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${current - 1}); return false;">«</a></li>`;
+        html += '<li class="page-item"><a class="page-link" href="#" onclick="goToPage(' + (current - 1) + '); return false;">«</a></li>';
     }
 
     // 페이지 번호
@@ -238,14 +264,14 @@ function renderPagination(current, total) {
     const endPage = Math.min(total, current + 2);
 
     for (let i = startPage; i <= endPage; i++) {
-        html += `<li class="page-item ${i === current ? 'active' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>
-        </li>`;
+        html += '<li class="page-item ' + (i === current ? 'active' : '') + '">' +
+            '<a class="page-link" href="#" onclick="goToPage(' + i + '); return false;">' + i + '</a>' +
+        '</li>';
     }
 
     // 다음 버튼
     if (current < total) {
-        html += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${current + 1}); return false;">»</a></li>`;
+        html += '<li class="page-item"><a class="page-link" href="#" onclick="goToPage(' + (current + 1) + '); return false;">»</a></li>';
     }
 
     pagination.innerHTML = html;

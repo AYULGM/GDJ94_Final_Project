@@ -40,27 +40,27 @@ class NotificationClient {
         const host = window.location.host;
         const wsUrl = `${protocol}//${host}${this.contextPath}/ws/notifications?userId=${this.userId}`;
 
-        console.log('WebSocket 연결 시도:', wsUrl);
+        //console.log('WebSocket 연결 시도:', wsUrl);
 
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-            console.log('WebSocket 연결 성공');
+            //console.log('WebSocket 연결 성공');
             this.reconnectAttempts = 0; // 연결 성공 시 재연결 카운터 리셋
         };
 
         this.ws.onmessage = (event) => {
-            console.log('알림 수신:', event.data);
+            //console.log('알림 수신:', event.data);
             const notification = JSON.parse(event.data);
             this.handleNewNotification(notification);
         };
 
         this.ws.onerror = (error) => {
-            console.error('WebSocket 에러:', error);
+            //console.error('WebSocket 에러:', error);
         };
 
         this.ws.onclose = () => {
-            console.log('WebSocket 연결 종료');
+            //console.log('WebSocket 연결 종료');
             this.attemptReconnect();
         };
     }
@@ -71,7 +71,7 @@ class NotificationClient {
     attemptReconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`WebSocket 재연결 시도 중... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+            //console.log(`WebSocket 재연결 시도 중... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
             setTimeout(() => this.connect(), this.reconnectInterval);
         } else {
             console.error('WebSocket 재연결 최대 시도 횟수 초과');

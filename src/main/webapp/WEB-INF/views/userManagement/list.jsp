@@ -9,12 +9,12 @@
     <section class="content">
         <div class="container-fluid">
 
-            <div class="card card-outline card-primary">
+            <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">사용자 목록</h3>
 
                     <div class="card-tools">
-                        <a href="./add" class="btn btn-sm btn-primary">
+                        <a href="./add" class="btn btn-primary">
                             <i class="fas fa-user-plus"></i> 사용자 등록
                         </a>
                     </div>

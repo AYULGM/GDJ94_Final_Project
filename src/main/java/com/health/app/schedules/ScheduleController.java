@@ -34,11 +34,13 @@ public class ScheduleController {
 
     private final ScheduleService scheduleService;
     private final AttendeeSearchMapper attendeeSearchMapper;
+    private final com.health.app.schedules.helper.ScheduleUserMapper scheduleUserMapper;
 
     @Autowired
-    public ScheduleController(ScheduleService scheduleService, AttendeeSearchMapper attendeeSearchMapper) {
+    public ScheduleController(ScheduleService scheduleService, AttendeeSearchMapper attendeeSearchMapper, com.health.app.schedules.helper.ScheduleUserMapper scheduleUserMapper) {
         this.scheduleService = scheduleService;
         this.attendeeSearchMapper = attendeeSearchMapper;
+        this.scheduleUserMapper = scheduleUserMapper;
     }
 
     @GetMapping
@@ -52,16 +54,43 @@ public class ScheduleController {
     public List<CalendarEventDto> getEvents(
             @RequestParam String start,
             @RequestParam String end,
-            @RequestParam(value = "scope", required = false) String scope) {
-        
+            @RequestParam(value = "scope", required = false) String scope,
+            Authentication authentication) {
+
         Map<String, Object> params = new HashMap<>();
         params.put("start", start);
         params.put("end", end);
-        
-        if (scope != null && !scope.equalsIgnoreCase("all")) {
-            params.put("scope", scope);
+
+        // 항상 현재 로그인한 사용자의 정보를 가져와 쿼리 파라미터에 추가
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        params.put("currentUserId", loginUser.getUserId());
+        String departmentCode = scheduleUserMapper.selectDepartmentCodeByUserId(loginUser.getUserId());
+        if (departmentCode != null) {
+            params.put("currentUserDepartmentCode", departmentCode);
+        } else {
+            params.put("currentUserDepartmentCode", "NO_DEPARTMENT");
         }
-        
+
+        if (scope != null && !scope.equalsIgnoreCase("all")) {
+            // '내 일정' 필터링
+            if ("my".equalsIgnoreCase(scope)) {
+                params.put("scope", "PERSONAL");
+                // ownerUserId는 currentUserId를 사용하므로 별도 설정 불필요
+            }
+            // '부서 일정' 필터링
+            else if ("department".equalsIgnoreCase(scope)) {
+                params.put("scope", "DEPARTMENT");
+                // currentUserDepartmentCode가 이미 설정되어 있으므로 별도 설정 불필요
+            }
+            // '전사 일정' 등 다른 scope 값들은 DB에 저장된 값과 일치해야 함
+            else {
+                params.put("scope", scope.toUpperCase());
+            }
+        }
+        // scope가 'all'이거나 null인 경우, scope 파라미터를 설정하지 않음
+        // -> 매퍼에서 이 경우를 처리하여 기본 권한을 적용
+
+
         return scheduleService.getCalendarEvents(params);
     }
 
@@ -77,9 +106,17 @@ public class ScheduleController {
             objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
             CalendarEventDto calendarEvent = objectMapper.readValue(eventJson, CalendarEventDto.class);
 
-            // 로그인한 사용자 ID 설정
+            // 로그인한 사용자 정보 설정
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
             calendarEvent.setCreateUser(loginUser.getUserId());
+
+            // 부서 일정인 경우 부서 코드 설정
+            if (calendarEvent.getScope() == ScheduleType.DEPARTMENT) {
+                String departmentCode = scheduleUserMapper.selectDepartmentCodeByUserId(loginUser.getUserId());
+                if (departmentCode != null) {
+                    calendarEvent.setDepartmentCode(departmentCode);
+                }
+            }
 
             CalendarEventDto createdEvent = scheduleService.createCalendarEvent(calendarEvent, files);
             return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
@@ -101,13 +138,26 @@ public class ScheduleController {
     public ResponseEntity<?> updateEvent(
             @RequestPart("event") String eventJson,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
-            @RequestParam(value = "filesToDelete", required = false) List<Long> filesToDelete) {
+            @RequestParam(value = "filesToDelete", required = false) List<Long> filesToDelete,
+            Authentication authentication) {
 
         try {
             // JSON 문자열을 수동으로 파싱
             com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
             objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
             CalendarEventDto calendarEvent = objectMapper.readValue(eventJson, CalendarEventDto.class);
+
+            // 로그인한 사용자 정보 설정
+            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            calendarEvent.setUpdateUser(loginUser.getUserId());
+
+            // 부서 일정인 경우 부서 코드 설정
+            if (calendarEvent.getScope() == ScheduleType.DEPARTMENT) {
+                String departmentCode = scheduleUserMapper.selectDepartmentCodeByUserId(loginUser.getUserId());
+                if (departmentCode != null) {
+                    calendarEvent.setDepartmentCode(departmentCode);
+                }
+            }
 
             CalendarEventDto updatedEvent = scheduleService.updateCalendarEvent(calendarEvent, files, filesToDelete);
             return new ResponseEntity<>(updatedEvent, HttpStatus.OK);

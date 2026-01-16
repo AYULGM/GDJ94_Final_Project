@@ -27,7 +27,6 @@ public class SalesStatisticsDto {
     private Long saleCount;          // 매출 건수
     private BigDecimal avgAmount;    // 평균 매출 금액
 
-    // 비교 데이터
-    private BigDecimal diffAmount;   // 평균 대비 차이 금액
-    private Double diffPercent;      // 평균 대비 차이 비율 (%)
+    // 비중 데이터
+    private Double percentage;       // 매출 비중 (%)
 }

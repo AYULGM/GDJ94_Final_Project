@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class BranchHistoryDTO {
 
-    private LocalDateTime createDate;   // 변경일시
+    private String createDate;   // 변경일시
     private String historyType;          // STATUS_CHANGE / UPDATE
     private String changeField;          // 변경 항목
     private String beforeValue;          // 변경 전

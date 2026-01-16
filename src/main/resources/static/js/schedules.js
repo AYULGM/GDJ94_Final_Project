@@ -283,9 +283,8 @@ function initEventModalLogic() {
             description: document.getElementById('eventDescription').value,
             attendeeIds: attendeeIds,
             repeating: document.getElementById('eventRepeating').checked,
-            useYn: true,
-            createUser: isEditMode ? null : 1,  // 신규 등록 시에만 설정
-            updateUser: isEditMode ? 1 : null   // 수정 시에만 설정
+            useYn: true
+            // createUser와 updateUser는 서버에서 자동 설정
         };
 
         console.log('eventData:', eventData);
@@ -554,6 +553,10 @@ function showEventDetail(eventId) {
             } else {
                 attendeesContainer.innerHTML = '<span class="text-muted">참석자가 없습니다.</span>';
             }
+
+            // 등록자 표시
+            const creatorContainer = document.getElementById('detailEventCreator');
+            creatorContainer.textContent = event.createUserName || '-';
 
             // 첨부파일 표시 (참고 파일)
             const attachmentsContainer = document.getElementById('detailEventAttachments');

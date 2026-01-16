@@ -7,10 +7,7 @@
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0">
-      <c:choose>
-        <c:when test="${mode == 'edit'}">전자결재 문서 수정</c:when>
-        <c:otherwise>전자결재 문서 작성</c:otherwise>
-      </c:choose>
+      
     </h3>
     <a class="btn btn-outline-secondary" href="<c:url value='/approval/list'/>">목록</a>
   </div>
@@ -33,25 +30,38 @@
       <label class="form-label">문서 유형</label>
 
       <select class="form-select"
-              name="typeCode"
-              id="approvalTypeCode"
-              required
-              <c:if test="${mode == 'edit'}">disabled</c:if>>
-        <option value="">선택</option>
+		        name="typeCode"
+		        id="approvalTypeCode"
+		        required
+		        <c:if test="${mode == 'edit'}">disabled</c:if>>
+		
+		  <option value="">선택</option>
+		
+		  <c:choose>
+		    <c:when test="${entry == 'buy'}">
+		      <option value="AT005" <c:if test="${draft.typeCode == 'AT005'}">selected</c:if>>구매요청서(PR)</option>
+		      <option value="AT006" <c:if test="${draft.typeCode == 'AT006'}">selected</c:if>>발주서(PO)</option>
+		      <option value="AT004" <c:if test="${draft.typeCode == 'AT004'}">selected</c:if>>재고조정요청서</option>
+		    </c:when>
+		
+		    <c:otherwise>
+		      <option value="AT001" <c:if test="${draft.typeCode == 'AT001'}">selected</c:if>>지출결의서</option>
+		      <option value="AT002" <c:if test="${draft.typeCode == 'AT002'}">selected</c:if>>정산결재서</option>
+		      <option value="AT003" <c:if test="${draft.typeCode == 'AT003'}">selected</c:if>>매출결의서</option>
+		      <option value="AT009" <c:if test="${draft.typeCode == 'AT009'}">selected</c:if>>휴가 신청서</option>
+			  <option value="AT005" <c:if test="${draft.typeCode == 'AT005'}">selected</c:if>>구매요청서(PR)</option>
+		      <option value="AT006" <c:if test="${draft.typeCode == 'AT006'}">selected</c:if>>발주서(PO)</option>
+		      <option value="AT004" <c:if test="${draft.typeCode == 'AT004'}">selected</c:if>>재고조정요청서</option>
+		      <option value="AT007" <c:if test="${draft.typeCode == 'AT007'}">selected</c:if> disabled>출장 신청서</option>
+		      <option value="AT008" <c:if test="${draft.typeCode == 'AT008'}">selected</c:if> disabled>근태 신청서</option>
+		      <option value="AT010" <c:if test="${draft.typeCode == 'AT010'}">selected</c:if> disabled>휴직 신청서</option>
+		      <option value="AT011" <c:if test="${draft.typeCode == 'AT011'}">selected</c:if> disabled>사직서</option>
+		      <option value="AT012" <c:if test="${draft.typeCode == 'AT012'}">selected</c:if> disabled>인사 발령/변경 품의서</option>
+		    </c:otherwise>
+		  </c:choose>
+		
+		</select>
 
-        <option value="AT001" <c:if test="${draft.typeCode == 'AT001'}">selected</c:if>>지출결의서</option>
-        <option value="AT002" <c:if test="${draft.typeCode == 'AT002'}">selected</c:if>>정산결재서</option>
-        <option value="AT003" <c:if test="${draft.typeCode == 'AT003'}">selected</c:if>>매출결의서</option>
-        <option value="AT004" <c:if test="${draft.typeCode == 'AT004'}">selected</c:if>>재고조정요청서</option>
-        <option value="AT005" <c:if test="${draft.typeCode == 'AT005'}">selected</c:if>>구매요청서(PR)</option>
-        <option value="AT006" <c:if test="${draft.typeCode == 'AT006'}">selected</c:if>>발주서(PO)</option>
-        <option value="AT007" <c:if test="${draft.typeCode == 'AT007'}">selected</c:if>>출장 신청서</option>
-        <option value="AT008" <c:if test="${draft.typeCode == 'AT008'}">selected</c:if>>근태 신청서</option>
-        <option value="AT009" <c:if test="${draft.typeCode == 'AT009'}">selected</c:if>>휴가 신청서</option>
-        <option value="AT010" <c:if test="${draft.typeCode == 'AT010'}">selected</c:if>>휴직 신청서</option>
-        <option value="AT011" <c:if test="${draft.typeCode == 'AT011'}">selected</c:if>>사직서</option>
-        <option value="AT012" <c:if test="${draft.typeCode == 'AT012'}">selected</c:if>>인사 발령/변경 품의서</option>
-      </select>
 
       <!-- disabled면 값이 제출되지 않아서 hidden으로 보완 -->
       <c:if test="${mode == 'edit'}">
@@ -138,7 +148,8 @@
 
     <!-- 제목 -->
     <div class="mb-3">
-      <label class="form-label">제목</label>
+      <label class="form-label"><span style="color:red; font-weight: normal;">*</span>
+      제목</label>
       <input type="text"
              class="form-control"
              name="title"
@@ -148,15 +159,23 @@
              value="<c:out value='${empty draft ? "" : draft.title}'/>" />
     </div>
 
-    <!-- 본문 -->
-    <div class="mb-3">
-      <label class="form-label">내용</label>
-      <textarea class="form-control"
-                name="body"
-                id="body"
-                rows="10"
-                required><c:out value='${empty draft ? "" : draft.body}'/></textarea>
-    </div>
+    <!-- 본문 (Quill) -->
+		<div class="mb-3">
+		  <label class="form-label"><span style="color:red; font-weight: normal;">*</span>
+		  내용</label>
+		
+		  <!-- 서버로 실제 제출될 값 -->
+		  <input type="hidden"
+		         name="body"
+		         id="bodyHidden"
+		         value="${empty draft ? '' : draft.body}" />
+		
+		  <!-- Quill이 붙을 영역 -->
+		  <div id="quillEditor" style="height:300px;">
+		    ${empty draft ? '' : draft.body}
+		  </div>
+		</div>
+
 
       <button type="submit" class="btn btn-primary">
         <c:choose>
@@ -175,6 +194,9 @@
 </div>
 
 <script src="/approval/js/formChange.js"></script>
+<!-- Quill -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 
 <script>
   function submitTemp() {
@@ -182,24 +204,59 @@
     document.getElementById("approvalForm").submit();
   }
 
-  // 수정/작성 공통: 로드시 현재 typeCode에 맞게 doc-extra 열기
-  // (formChange.js가 change 이벤트 기반이면 트리거만 해주면 됨)
   document.addEventListener("DOMContentLoaded", function () {
+    // 1) 문서유형별 extra 영역 토글 (기존 로직 유지)
     const typeSel = document.getElementById("approvalTypeCode");
-    if (!typeSel) return;
-
-    // edit 모드에서는 select가 disabled라 change 이벤트가 안 먹는 구현이 있을 수 있어
-    // 그래서 강제로 한 번 토글 로직을 실행해주는 안전장치
-    try {
-      typeSel.dispatchEvent(new Event("change"));
-    } catch (e) {}
-
-    // 신규 작성인데 formCode가 비어있으면, formChange.js 매핑이 세팅하도록 change 한번 더
-    const formCode = document.getElementById("formCode");
-    if (formCode && !formCode.value) {
+    if (typeSel) {
       try { typeSel.dispatchEvent(new Event("change")); } catch (e) {}
+
+      const formCode = document.getElementById("formCode");
+      if (formCode && !formCode.value) {
+        try { typeSel.dispatchEvent(new Event("change")); } catch (e) {}
+      }
     }
+
+    // 2) Quill 초기화
+    const editorEl = document.getElementById("quillEditor");
+    if (!editorEl) return;
+
+    const quill = new Quill("#quillEditor", {
+      theme: "snow",
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, 3, false] }],
+          ["bold", "italic", "underline", "strike"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["blockquote", "code-block"],
+          ["link"],
+          ["clean"]
+        ]
+      }
+    });
+
+    // 3) submit 직전에 HTML을 hidden input에 담아서 전송
+    const form = document.getElementById("approvalForm");
+    const hidden = document.getElementById("bodyHidden");
+
+    form.addEventListener("submit", function () {
+      const html = quill.root.innerHTML;
+
+      // 빈 값 처리(Quill은 빈 편집기여도 <p><br></p>가 들어갈 수 있음)
+      const normalized = (html === "<p><br></p>") ? "" : html;
+
+      hidden.value = normalized;
+
+      // required 대체 검증(원하면 유지)
+      if (!hidden.value || hidden.value.trim() === "") {
+        alert("내용을 입력해주세요.");
+        hidden.focus();
+        event.preventDefault();
+        return false;
+      }
+    });
   });
 </script>
 
+
 <jsp:include page="../includes/admin_footer.jsp" />
+

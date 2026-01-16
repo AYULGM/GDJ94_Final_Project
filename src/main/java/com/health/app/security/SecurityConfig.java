@@ -71,6 +71,14 @@ public class SecurityConfig {
                         "/users/password/findProc",
                         "/error"
                     ).permitAll()
+                
+                // 🔥 사용자관리
+                .requestMatchers("/userManagement/**")
+                    .hasAnyRole("GRANDMASTER", "MASTER", "ADMIN")
+
+                // 🔥 지점관리
+                .requestMatchers("/branch/**")
+                    .hasAnyRole("GRANDMASTER", "MASTER", "ADMIN")
 
                 // 나머지는 인증 필요
                 .anyRequest().authenticated()

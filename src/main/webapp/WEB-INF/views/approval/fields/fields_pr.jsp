@@ -1,26 +1,22 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <input type="hidden" name="extTxt6" id="prItemsJson" />
 
 <div class="row g-2">
   <div class="col-md-4">
-    <label class="form-label">희망 납기일(선택)</label>
+    <label class="form-label"><span style="color:red;">*</span>희망 납기일</label>
     <input type="date" class="form-control" name="extDt1" />
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">거래처(선택)</label>
+    <label class="form-label">거래처</label>
     <input type="text" class="form-control" name="extTxt1" maxlength="100" />
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">예상 합계(자동)</label>
-    <input type="number" class="form-control" name="extNo1" id="prTotal" readonly />
-  </div>
-
-  <div class="col-12">
-    <label class="form-label mt-2">요청 사유</label>
-    <textarea class="form-control" name="extTxt2" rows="3" maxlength="600" required></textarea>
+    <label class="form-label">예상 합계</label>
+    <input type="number" class="form-control bg-secondary-subtle" name="extNo1" id="prTotal" readonly />
   </div>
 
   <div class="col-12 mt-2">
@@ -29,81 +25,136 @@
       <button type="button" class="btn btn-outline-secondary btn-sm" id="btnAddPrRow">+ 행 추가</button>
     </div>
 
+
+
     <div class="table-responsive mt-2">
       <table class="table table-sm table-bordered align-middle" id="prTable">
         <thead class="table-light">
           <tr>
-            <th>품목명</th>
-            <th style="width: 110px;" class="text-end">수량</th>
-            <th style="width: 140px;" class="text-end">예상단가</th>
-            <th style="width: 140px;" class="text-end">금액(자동)</th>
+            <th><span style="color:red; font-weight: normal;">*</span>품목명</th>
+            <th style="width: 110px;"><span style="color:red; font-weight: normal;"">*</span>수량</th>
+            <th style="width: 140px;">예상단가</th>
+            <th style="width: 140px;">금액</th>
             <th style="width: 80px;"></th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td><input type="text" class="form-control form-control-sm pr-name" maxlength="120" /></td>
-            <td><input type="number" class="form-control form-control-sm pr-qty text-end" min="1" step="1" value="1" /></td>
-            <td><input type="number" class="form-control form-control-sm pr-unit text-end" min="0" step="1" /></td>
-            <td><input type="number" class="form-control form-control-sm pr-amt text-end" readonly /></td>
-            <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
-          </tr>
-        </tbody>
+        
+		  <tr>
+		    <td>
+		      <select class="form-select form-select-sm pr-product">
+		        <option value="">상품 선택</option>
+		        <c:forEach items="${products}" var="p">
+		          <option value="${p.productId}"
+		                  data-name="${p.productName}"
+		                  data-price="${p.price}">
+		            ${p.productName}
+		          </option>
+		        </c:forEach>
+		      </select>
+		    </td>
+		    <td>
+		      <input type="number" class="form-control form-control-sm pr-qty text-end"
+		             min="1" step="1" value="1" />
+		    </td>
+		    <td>
+		      <input type="number" class="form-control form-control-sm pr-unit text-end" readonly />
+		    </td>
+		    <td>
+		      <input type="number" class="form-control form-control-sm pr-amt text-end bg-secondary-subtle" readonly />
+		    </td>
+		    <td class="text-center">
+		      <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
+		    </td>
+		  </tr>
+		</tbody>
+
       </table>
-      <div class="form-text">저장 시 품목은 extTxt6(JSON)로 저장됩니다.</div>
     </div>
   </div>
 
   <div class="col-12">
-    <label class="form-label mt-2">비고(선택)</label>
+    <label class="form-label mt-2">비고</label>
     <input type="text" class="form-control" name="extTxt3" maxlength="200" />
   </div>
 </div>
-
 <script>
-(function() {
+(function () {
   const tbody = document.querySelector("#prTable tbody");
   const btnAdd = document.getElementById("btnAddPrRow");
   const totalEl = document.getElementById("prTotal");
-  const jsonEl = document.getElementById("prItemsJson");
+  const jsonEl  = document.getElementById("prItemsJson");
 
   function recalc() {
-    const rows = [...tbody.querySelectorAll("tr")];
     let total = 0;
-    const items = rows.map(r => {
-      const name = r.querySelector(".pr-name").value || "";
+    const items = [];
+
+    tbody.querySelectorAll("tr").forEach(r => {
+      const sel = r.querySelector(".pr-product");
+      if (!sel || !sel.value) return;
+
+      const opt = sel.selectedOptions[0];
       const qty = Number(r.querySelector(".pr-qty").value || 0);
-      const unit = Number(r.querySelector(".pr-unit").value || 0);
-      const amt = qty * unit;
-      r.querySelector(".pr-amt").value = amt;
+      const unitPrice = Number(opt.dataset.price || 0);
+      const amt = qty * unitPrice;
+
+      r.querySelector(".pr-unit").value = unitPrice;
+      r.querySelector(".pr-amt").value  = amt;
+
       total += amt;
-      return { name, qty, unit, amt };
+
+      items.push({
+        productId: Number(sel.value),
+        productName: opt.dataset.name,
+        qty,
+        unitPrice,
+        amount: amt
+      });
     });
+
     totalEl.value = total;
-    jsonEl.value = JSON.stringify(items);
+    jsonEl.value  = JSON.stringify(items);
   }
 
+  // ✅ 핵심 수정 포인트
   btnAdd.addEventListener("click", () => {
+    const firstSelect = tbody.querySelector(".pr-product");
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><input type="text" class="form-control form-control-sm pr-name" maxlength="120" /></td>
-      <td><input type="number" class="form-control form-control-sm pr-qty text-end" min="1" step="1" value="1" /></td>
-      <td><input type="number" class="form-control form-control-sm pr-unit text-end" min="0" step="1" /></td>
-      <td><input type="number" class="form-control form-control-sm pr-amt text-end" readonly /></td>
-      <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
+      <td></td>
+      <td>
+        <input type="number" class="form-control form-control-sm pr-qty text-end"
+               min="1" step="1" value="1" />
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm pr-unit text-end" readonly />
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm pr-amt text-end bg-secondary-subtle" readonly />
+      </td>
+      <td class="text-center">
+        <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
+      </td>
     `;
+
+    // 🔑 최초 행의 select를 그대로 복제
+    const clonedSelect = firstSelect.cloneNode(true);
+    clonedSelect.value = ""; // 선택 초기화
+    tr.querySelector("td").appendChild(clonedSelect);
+
     tbody.appendChild(tr);
-    recalc();
   });
 
+  tbody.addEventListener("change", recalc);
   tbody.addEventListener("input", recalc);
-  tbody.addEventListener("click", (e) => {
+
+  tbody.addEventListener("click", e => {
     if (e.target.classList.contains("btnDelRow")) {
       e.target.closest("tr").remove();
       recalc();
     }
   });
 
-  recalc();
 })();
 </script>

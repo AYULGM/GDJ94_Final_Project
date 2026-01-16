@@ -27,7 +27,6 @@ public class ExpenseStatisticsDto {
     private Long expenseCount;       // 지출 건수
     private BigDecimal avgAmount;    // 평균 지출 금액
 
-    // 비교 데이터
-    private BigDecimal diffAmount;   // 평균 대비 차이 금액
-    private Double diffPercent;      // 평균 대비 차이 비율 (%)
+    // 비중 데이터
+    private Double percentage;       // 지출 비중 (%)
 }

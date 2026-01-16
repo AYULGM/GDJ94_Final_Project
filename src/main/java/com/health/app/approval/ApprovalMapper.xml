@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.health.app.approval.ApprovalMapper">
 
@@ -406,12 +406,14 @@
     WHERE v.doc_ver_id = #{docVerId}
   </update>
 
-  <update id="updateVersionStatusByDocVerId">
-    UPDATE approval_document_versions
-    SET ver_status_code = #{verStatusCode}
-    WHERE doc_ver_id = #{docVerId}
-      AND use_yn = 1
-  </update>
+<update id="updateVersionStatusByDocVerId">
+  UPDATE approval_document_versions
+  SET ver_status_code = #{verStatusCode}
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+</update>
+
+
 
   <update id="updateAllLinesStatusByDocVerId">
     UPDATE approval_lines
@@ -668,5 +670,45 @@
       AND doc_ver_id = #{docVerId}
       AND status_code = 'ALS002'
   </select>
+<select id="selectTypeCodeByDocVerId" resultType="string">
+  SELECT d.type_code
+  FROM approval_document_versions v
+  JOIN approval_documents d
+    ON d.doc_id = v.doc_id
+   AND d.use_yn = 1
+  WHERE v.doc_ver_id = #{docVerId}
+    AND v.use_yn = 1
+</select>
+
+<update id="autoApproveAllLines">
+  UPDATE approval_lines
+  SET status_code       = 'ALS003',
+      acted_at          = NOW(),
+      comment           = #{comment},
+      signature_file_id = NULL,
+      update_user       = #{updateUser},
+      update_date       = NOW()
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+</update>
+
+<select id="existsDocVersion" resultType="int">
+  SELECT COUNT(1)
+  FROM approval_document_versions
+  WHERE doc_ver_id = #{docVerId}
+</select>
+
+<select id="existsDocumentByCurrentVer" resultType="int">
+  SELECT COUNT(1)
+  FROM approval_documents
+  WHERE current_doc_ver_id = #{docVerId}
+</select>
+<select id="selectVerStatusByDocVerId" resultType="string">
+  SELECT ver_status_code
+  FROM approval_document_versions
+  WHERE doc_ver_id = #{docVerId}
+    AND use_yn = 1
+</select>
+
 
 </mapper>

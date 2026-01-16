@@ -1,0 +1,28 @@
+/* required 속성 가진 input속성 안의 placeholder는 빨간색 */
+input[required]::placeholder {
+    color: red;
+}
+
+/* required-lable이 붙은 것들도 빨간색 * 이 붙음 */
+.required-label::after {
+    content: " *";
+    color: red;
+}
+
+/* input 속성 안의 required 속성이 붙은 것에 포커스가 가해진 경우 박스에 빨간색 테두리 */
+input[required]:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.15rem rgba(220,53,69,.25);
+}
+
+/* readonly가 되어있으면 회색배경에 커서모양(금지모양) 바뀜 */
+.form-control[readonly] {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.form-control[readonly]:focus {
+  border-color: #ced4da;
+  box-shadow: none;
+}

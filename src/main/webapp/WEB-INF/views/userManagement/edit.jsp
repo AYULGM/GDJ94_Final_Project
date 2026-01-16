@@ -21,15 +21,15 @@
 
                             <!-- 아이디 (수정 불가) -->
                             <div class="col-md-6 mb-3">
-                                <label>아이디</label>
+                                <label class="form-label required-label">아이디</label>
                                 <input type="text"
                                        class="form-control"
                                        value="${user.loginId}"
-                                       readonly>
+                                       required readonly>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>이름</label>
+                                <label class="form-label required-label">이름</label>
                                 <input type="text"
                                        name="name"
                                        class="form-control"
@@ -38,24 +38,26 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>이메일</label>
+                                <label class="form-label required-label">이메일</label>
                                 <input type="email"
                                        name="email"
                                        class="form-control"
-                                       value="${user.email}">
+                                       value="${user.email}"
+                                       required>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>연락처</label>
+                                <label class="form-label required-label">연락처</label>
                                 <input type="text"
                                        name="phone"
                                        class="form-control"
-                                       value="${user.phone}">
+                                       value="${user.phone}"
+                                       required>
                             </div>
 
-                            <!-- 지점 ID -->
+                            <!-- 소속 지점 ID -->
                             <div class="col-md-6 mb-3">
-                                <label>지점 ID</label>
+                                <label class="form-label required-label">소속 지점 ID</label>
                                 <input type="number"
                                        name="branchId"
                                        class="form-control"
@@ -73,7 +75,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>우편번호</label>
+                                <label class="form-label required-label">우편번호</label>
                                 <input type="text"
                                        name="postNo"
                                        id="postNo"
@@ -83,7 +85,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label>기본주소</label>
+                                <label class="form-label required-label">기본주소</label>
                                 <input type="text"
                                        name="baseAddress"
                                        id="baseAddress"
@@ -120,12 +122,22 @@
                             <div class="col-md-6 mb-3">
                                 <label>권한</label>
                                 <select name="roleCode" class="form-select">
-                                    <option value="RL002" ${user.roleCode=='RL002'?'selected':''}>MASTER</option>
-                                    <option value="RL003" ${user.roleCode=='RL003'?'selected':''}>ADMIN</option>
-                                    <option value="RL004" ${user.roleCode=='RL004'?'selected':''}>CAPTAIN</option>
-                                    <option value="RL005" ${user.roleCode=='RL005'?'selected':''}>CREW</option>
+                                    <option value="RL002" ${user.roleCode=='RL002'?'selected':''}>본사인사팀</option>
+                                    <option value="RL003" ${user.roleCode=='RL003'?'selected':''}>본사관리자</option>
+                                    <option value="RL004" ${user.roleCode=='RL004'?'selected':''}>지점관리자</option>
+                                    <option value="RL005" ${user.roleCode=='RL005'?'selected':''}>직원</option>
                                 </select>
                             </div>
+                            
+                            <!-- 수정 사유 -->
+							<div class="mb-3">
+							    <label class="form-label required-label"">수정 사유</label>
+							    <textarea name="reason"
+							              class="form-control"
+							              rows="3"
+							              required>
+							    </textarea>
+							</div>
 
                         </div>
                     </div>

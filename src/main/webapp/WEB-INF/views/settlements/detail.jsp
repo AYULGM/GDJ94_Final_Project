@@ -3,23 +3,7 @@
 
 <jsp:include page="../includes/admin_header.jsp" />
 
-<!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">정산 상세</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item"><a href="<c:url value='/settlements'/>">정산 내역 조회</a></li>
-                    <li class="breadcrumb-item active">정산 상세</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="app-content">
     <div class="container-fluid">
@@ -214,7 +198,7 @@ async function loadSettlementDetail() {
         document.getElementById('settlementNo').textContent = settlement.settlementNo || '-';
         document.getElementById('branchName').textContent = settlement.branchName || '-';
         document.getElementById('settlementPeriod').textContent =
-            `${formatDate(settlement.fromDate)} ~ ${formatDate(settlement.toDate)}`;
+            formatDate(settlement.fromDate) + ' ~ ' + formatDate(settlement.toDate);
 
         document.getElementById('salesCount').textContent = formatNumber(settlement.salesCount || 0) + ' 건';
         document.getElementById('salesAmount').textContent = formatCurrency(settlement.salesAmount || 0);
@@ -230,7 +214,7 @@ async function loadSettlementDetail() {
         document.getElementById('settledAt').textContent = formatDateTime(settlement.settledAt);
 
         // 상태 뱃지
-        const statusBadge = `<span class="badge ${getStatusBadgeClass(settlement.statusCode)}">${getStatusName(settlement.statusCode)}</span>`;
+        const statusBadge = '<span class="badge ' + getStatusBadgeClass(settlement.statusCode) + '">' + getStatusName(settlement.statusCode) + '</span>';
         document.getElementById('statusCode').innerHTML = statusBadge;
 
         // 이력 정보
@@ -262,18 +246,18 @@ async function loadSettlementHistories() {
             return;
         }
 
-        tbody.innerHTML = histories.map(history => `
-            <tr>
-                <td>${formatDateTime(history.historyDate)}</td>
-                <td>
-                    <span class="badge ${getStatusBadgeClass(history.statusCode)}">
-                        ${getStatusName(history.statusCode)}
-                    </span>
-                </td>
-                <td>${history.handledByName || '-'}</td>
-                <td>${history.reason || '-'}</td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = histories.map(history =>
+            '<tr>' +
+                '<td>' + formatDateTime(history.historyDate) + '</td>' +
+                '<td>' +
+                    '<span class="badge ' + getStatusBadgeClass(history.statusCode) + '">' +
+                        getStatusName(history.statusCode) +
+                    '</span>' +
+                '</td>' +
+                '<td>' + (history.handledByName || '-') + '</td>' +
+                '<td>' + (history.reason || '-') + '</td>' +
+            '</tr>'
+        ).join('');
 
     } catch (error) {
         console.error('이력 로드 실패:', error);

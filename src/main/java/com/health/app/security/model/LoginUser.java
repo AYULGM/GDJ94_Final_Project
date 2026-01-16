@@ -23,6 +23,8 @@ public class LoginUser implements UserDetails {
     private final Integer failCount;
     private final LocalDateTime lockUntil;
     private final Boolean useYn;
+    
+    private final Long branchId; // 지점관리에서 ADMIN은 본인 지점만 보이게하기위한 코드
 
     public LoginUser(
             Long userId,
@@ -34,7 +36,8 @@ public class LoginUser implements UserDetails {
             String lockStatusCode,
             Integer failCount,
             LocalDateTime lockUntil,
-            Boolean useYn
+            Boolean useYn,
+            Long branchId
     ) {
         this.userId = userId;
         this.loginId = loginId;
@@ -46,6 +49,7 @@ public class LoginUser implements UserDetails {
         this.failCount = failCount;
         this.lockUntil = lockUntil;
         this.useYn = useYn;
+        this.branchId = branchId;
     }
 
     @Override
@@ -69,6 +73,26 @@ public class LoginUser implements UserDetails {
         };
     }
 
+    public Long getBranchId() {
+        return branchId;
+    }
+    
+    public boolean isAdminOrHigher() {
+       return roleCode != null && (
+               "RL001".equals(roleCode) ||  // GRANDMASTER
+               "RL002".equals(roleCode) ||  // MASTER
+               "RL003".equals(roleCode)     // ADMIN
+       );
+   }
+
+   public boolean isCaptain() {
+       return "RL004".equals(roleCode);
+   }
+
+   public boolean isCrew() {
+       return "RL005".equals(roleCode);
+   }
+    
     @Override
     public String getUsername() {
         return loginId;

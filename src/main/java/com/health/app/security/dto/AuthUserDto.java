@@ -22,4 +22,7 @@ public class AuthUserDto {
     private LocalDateTime lockUntil;
 
     private Boolean useYn;
+    
+    private Long branchId;
+
 }

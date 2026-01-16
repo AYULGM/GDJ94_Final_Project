@@ -211,23 +211,29 @@
         INSERT INTO inventory_history (
         branch_id,
         product_id,
-        move_type,
+        move_type_code,
         quantity,
         reason,
+        ref_type,
+        ref_id,
         create_user,
         create_date,
-        ref_type,
-        ref_id
+        update_user,
+        update_date,
+        use_yn
         ) VALUES (
         #{branchId},
         #{productId},
         'IN',
         #{qty},
         #{reason},
+        #{refType},
+        #{refId},
         #{userId},
         NOW(),
-        #{refType},
-        #{refId}
+        #{userId},
+        NOW(),
+        1
         )
     </insert>
 
