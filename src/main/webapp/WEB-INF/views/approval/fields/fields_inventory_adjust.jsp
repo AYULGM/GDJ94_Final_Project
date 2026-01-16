@@ -8,7 +8,7 @@
 
 <div class="row g-2">
   <div class="col-md-8">
-    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>지점</label>
+    <label class="form-label required-label">지점</label>
     <select class="form-select" name="extNo1" id="branchId" required>
       <option value="">지점 선택</option>
       <c:forEach var="b" items="${branches}">
@@ -18,12 +18,12 @@
   </div>
 
   <div class="col-md-4">
-    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>작성일</label>
+    <label class="form-label required-label">작성일</label>
     <input type="date" class="form-control" name="extDt1" required />
   </div>
 
   <div class="col-md-8">
-    <label class="form-label mt-2"><span style="color:red; font-weight: normal;">*</span>상품</label>
+    <label class="form-label mt-2 required-label">상품</label>
 
     <!-- ★ 행 추가용 입력이므로 required 제거 -->
     <select class="form-select" name="extNo2" id="productId">
@@ -47,7 +47,7 @@
   </div>
 
   <div class="col-md-4">
-    <label class="form-label mt-2"><span style="color:red; font-weight: normal;">*</span>조정 유형</label>
+    <label class="form-label mt-2 required-label">조정 유형</label>
     <div class="d-flex gap-3 align-items-center" style="height: 38px;">
       <label class="form-check mb-0">
         <input class="form-check-input" type="radio" name="extCode1" value="INCREASE" checked>
@@ -61,7 +61,7 @@
   </div>
 
   <div class="col-md-4">
-    <label class="form-label mt-2">조정 수량(절대값)</label>
+    <label class="form-label mt-2 required-label">조정 수량(절대값)</label>
 
     <!-- ★ 행 추가용 입력이므로 required 제거 -->
     <input type="number" class="form-control" name="extNo3" id="adjustQty" min="1" step="1" />

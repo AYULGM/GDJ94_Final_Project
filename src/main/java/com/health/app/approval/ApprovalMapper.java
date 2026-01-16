@@ -67,6 +67,7 @@ public interface ApprovalMapper {
 
     // 출력(프린트)
     VacationPrintDTO selectVacationPrint(@Param("docVerId") Long docVerId);
+    ApprovalExtPrintDTO selectExtPrint(@Param("docVerId") Long docVerId);
     List<ApprovalPrintLineDTO> selectPrintLines(@Param("docVerId") Long docVerId);
 
     // 상세 페이지

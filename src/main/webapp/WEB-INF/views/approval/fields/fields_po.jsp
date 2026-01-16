@@ -5,7 +5,7 @@
 
 <div class="row g-2">
   <div class="col-md-4">
-    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>거래처명</label>
+    <label class="form-label required-label">거래처명</label>
     <input type="text" class="form-control" name="extTxt1" maxlength="100" required />
   </div>
 
@@ -15,7 +15,7 @@
   </div>
 
   <div class="col-md-4">
-    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>납기일</label>
+    <label class="form-label required-label">납기일</label>
     <input type="date" class="form-control" name="extDt1" required />
   </div>
 
@@ -40,8 +40,8 @@
       <table class="table table-sm table-bordered align-middle" id="poTable">
         <thead class="table-light">
           <tr>
-            <th><span style="color:red; font-weight: normal;">*</span>품목명</th>
-            <th style="width: 110px;"><span style="color:red; font-weight: normal;">*</span>수량</th>
+            <th class="required-label">품목명</th>
+            <th style="width: 110px;" class="required-label">수량</th>
             <th style="width: 140px;">예상단가</th>
             <th style="width: 140px;">금액</th>
             <th style="width: 80px;"></th>

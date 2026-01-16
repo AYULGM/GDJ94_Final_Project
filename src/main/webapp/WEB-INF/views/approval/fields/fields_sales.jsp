@@ -8,7 +8,7 @@
 
   <!-- 지점 : extNo1 = branchId -->
   <div class="col-md-6">
-    <label class="form-label"><span style="color:red;">*</span>지점</label>
+    <label class="form-label required-label">지점</label>
     <select class="form-select" name="extNo1" id="salesBranchId" required>
       <option value="">지점 선택</option>
       <c:forEach var="b" items="${branches}">
@@ -36,9 +36,9 @@
       <table class="table table-sm table-bordered align-middle" id="salesTable">
         <thead class="table-light">
           <tr>
-            <th style="width: 180px;"><span style="color:red;">*</span>매출 항목</th>
-            <th style="width: 140px;"><span style="color:red;">*</span>매출 금액</th>
-            <th style="width: 150px;"><span style="color:red;">*</span>판매일자</th>
+            <th style="width: 180px;" class="required-label">매출 항목</th>
+            <th style="width: 140px;" class="required-label">매출 금액</th>
+            <th style="width: 150px;" class="required-label">판매일자</th>
             <th>비고</th>
             <th style="width: 80px;"></th>
           </tr>

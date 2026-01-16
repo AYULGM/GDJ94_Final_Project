@@ -4,7 +4,7 @@
 
 <div class="row g-2">
   <div class="col-md-3">
-    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>휴가 시작일</label>
+    <label class="form-label required-label">휴가 시작일</label>
     <input type="date"
            class="form-control"
            name="extDt1"
@@ -13,7 +13,7 @@
   </div>
 
   <div class="col-md-3">
-    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>휴가 종료일</label>
+    <label class="form-label required-label">휴가 종료일</label>
     <input type="date"
            class="form-control"
            name="extDt2"
@@ -22,7 +22,7 @@
   </div>
 
   <div class="col-md-3">
-    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>휴가 구분</label>
+    <label class="form-label required-label">휴가 구분</label>
     <select class="form-select" name="extCode1" required>
       <option value="">선택</option>
       <option value="연차"      <c:if test="${draft.extCode1 == '연차'}">selected</c:if>>연차</option>
@@ -49,7 +49,7 @@
 
 
   <div class="col-md-6">
-  <label class="form-label mt-2"><span style="color:red; font-weight: normal;">*</span>인수인계자</label>
+  <label class="form-label mt-2 required-label">인수인계자</label>
 
   <select class="form-select" name="extTxt1">
     <option value="">선택</option>
