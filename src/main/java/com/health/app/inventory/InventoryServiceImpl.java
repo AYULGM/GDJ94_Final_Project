@@ -19,6 +19,12 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    public List<OptionDto> getProductOptions(Long branchId) {
+        // branchId가 null이면 XML에서 전체 상품을 반환하도록 되어있음
+        return inventoryMapper.selectProductOptions(branchId);
+    }
+
+    @Override
     public List<InventoryViewDto> getInventoryList(Long branchId, String keyword, Boolean onlyLowStock) {
         if (onlyLowStock == null) onlyLowStock = false;
         return inventoryMapper.selectInventoryList(branchId, keyword, onlyLowStock);
@@ -60,6 +66,10 @@ public class InventoryServiceImpl implements InventoryService {
             default -> throw new IllegalArgumentException("유효하지 않은 유형입니다. (IN/OUT/ADJUST)");
         }
 
+        //  inventory_id 조회 (audit target_id로 넣기 위함)
+        Long inventoryId = inventoryMapper.selectInventoryId(branchId, productId);
+        if (inventoryId == null) throw new IllegalArgumentException("inventory_id를 찾을 수 없습니다. (branchId/productId 확인)");
+
         // 1) 재고 업데이트
         inventoryMapper.updateInventoryQuantity(branchId, productId, afterQty, null, userId);
 
@@ -69,16 +79,16 @@ public class InventoryServiceImpl implements InventoryService {
                 "INVENTORY_ADJUST", null, userId
         );
 
-        // 3)  감사로그 적재
+        // 3)  감사로그 적재 (DB 컬럼명 기준)
         inventoryMapper.insertAuditLog(
                 userId,
                 "INVENTORY_ADJUST",
                 "inventory",
-                branchId,
-                productId,
+                inventoryId,
                 String.valueOf(beforeQty),
                 String.valueOf(afterQty),
-                reason
+                reason,
+                userId
         );
     }
 
@@ -94,19 +104,27 @@ public class InventoryServiceImpl implements InventoryService {
         if (current == null) throw new IllegalArgumentException("재고 데이터가 존재하지 않습니다. (branchId/productId 확인)");
 
         Long before = current.getLowStockThreshold(); // null 가능
+
         int updated = inventoryMapper.updateLowStockThreshold(branchId, productId, lowStockThreshold, userId);
         if (updated == 0) throw new IllegalArgumentException("기준 수량 저장에 실패했습니다. (대상 재고 없음 또는 use_yn=0)");
 
-        //  감사로그 적재
+        Long inventoryId = inventoryMapper.selectInventoryId(branchId, productId);
+        if (inventoryId == null) throw new IllegalArgumentException("inventory_id를 찾을 수 없습니다. (branchId/productId 확인)");
+
         inventoryMapper.insertAuditLog(
                 userId,
                 "THRESHOLD_UPDATE",
                 "inventory",
-                branchId,
-                productId,
+                inventoryId,
                 String.valueOf(before),
                 String.valueOf(lowStockThreshold),
-                "low_stock_threshold 변경"
+                "low_stock_threshold 변경",
+                userId
         );
+    }
+
+    @Override
+    public List<AuditLogDto> getAuditLogs(String from, String to, String actionType, Long branchId, Long productId, String keyword) {
+        return inventoryMapper.selectAuditLogs(from, to, actionType, branchId, productId, keyword);
     }
 }
