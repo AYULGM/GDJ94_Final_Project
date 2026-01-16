@@ -99,11 +99,7 @@
             </li>
           </ul>
         </li>
-        <li class="nav-item">
-          <a href="<c:url value='/audit'/>" class="nav-link">
-            <p>감사 로그</p>
-          </a>
-        </li>
+
 
         <!-- 일정 관리 Treeview -->
         <li class="nav-item">
