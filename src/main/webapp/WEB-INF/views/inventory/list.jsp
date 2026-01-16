@@ -25,12 +25,25 @@
                         <select name="branchId" class="form-select">
                             <option value="">전체</option>
 
-                            <c:forEach var="branch" items="${branches}">
-                                <option value="${branch.id}"
-                                        <c:if test="${not empty branchId and branchId == branch.id}">selected</c:if>>
-                                        ${branch.name}
-                                </option>
-                            </c:forEach>
+							    <!-- 1. 본사 먼저 -->
+							    <c:forEach var="branch" items="${branches}">
+							        <c:if test="${branch.id == 1}">
+							            <option value="${branch.id}"
+							                <c:if test="${not empty branchId and branchId == branch.id}">selected</c:if>>
+							                ${branch.name}
+							            </option>
+							        </c:if>
+							    </c:forEach>
+							
+							    <!-- 2. 나머지 지점 -->
+							    <c:forEach var="branch" items="${branches}">
+							        <c:if test="${branch.id != 1}">
+							            <option value="${branch.id}"
+							                <c:if test="${not empty branchId and branchId == branch.id}">selected</c:if>>
+							                ${branch.name}
+							            </option>
+							        </c:if>
+							    </c:forEach>
 
                         </select>
                     </div>
