@@ -148,7 +148,7 @@
 
     <!-- 제목 -->
     <div class="mb-3">
-      <label class="form-label"><span style="color:red; font-weight: normal;">*</span>
+      <label class="form-label required-label">
       제목</label>
       <input type="text"
              class="form-control"
@@ -161,7 +161,7 @@
 
     <!-- 본문 (Quill) -->
 		<div class="mb-3">
-		  <label class="form-label"><span style="color:red; font-weight: normal;">*</span>
+		  <label class="form-label required-label">
 		  내용</label>
 		
 		  <!-- 서버로 실제 제출될 값 -->

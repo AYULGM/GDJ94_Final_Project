@@ -282,6 +282,10 @@ public class ApprovalService {
         int lineCount = approvalMapper.countLinesByDocVerId(docVerId);
         if (lineCount <= 0) throw new IllegalStateException("결재선이 없습니다. 결재선을 먼저 설정하세요.");
 
+        // 2-1) 문서 타입 확보 (AT004는 상신 즉시 최종 승인 처리)
+        String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+        if (typeCode == null) throw new IllegalStateException("문서 타입(typeCode)을 찾을 수 없습니다.");
+
         // 3) 상태 검증 (임시저장만 상신 가능)
         String docStatus = approvalMapper.selectDocStatusByDocVerId(docVerId);
         if (!"AS001".equals(docStatus)) {
@@ -289,6 +293,25 @@ public class ApprovalService {
         }
 
         // 4) 상태 변경
+        // AT004(재고 조정)는 "결재요청" 즉시 최종 승인 완료 처리
+        if ("AT004".equals(typeCode)) {
+            int uDoc = approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS003", loginUserId);
+            int uVer = approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003");
+            int uAll = approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS003", loginUserId);
+
+            if (uDoc == 0 || uVer == 0) {
+                throw new IllegalStateException("결재 요청 처리에 실패했습니다. 다시 시도해 주세요.");
+            }
+            if (uAll == 0) {
+                throw new IllegalStateException("결재선 완료 처리에 실패했습니다. 결재선을 확인해 주세요.");
+            }
+
+            // ✅ 최종 승인 확정 시점에 업무 테이블 반영
+            approvalApplyService.applyApprovedDoc(docVerId, loginUserId);
+            return;
+        }
+
+        // 일반 문서: 결재 진행 상태로 전환
         int uDoc = approvalMapper.updateDocumentStatusByDocVerId(docVerId, "AS002", loginUserId);
         int uVer = approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS002");
         int uAll = approvalMapper.updateAllLinesStatusByDocVerId(docVerId, "ALS001", loginUserId);
@@ -320,10 +343,38 @@ public class ApprovalService {
     @Transactional(readOnly = true)
     public ApprovalPrintDTO getPrintData(Long docVerId) {
 
-        VacationPrintDTO doc = approvalMapper.selectVacationPrint(docVerId);
-        if (doc == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+        String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+        if (typeCode == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+
+        // 휴가(AT009)는 기존 출력 DTO/서식 유지
+        if ("AT009".equals(typeCode)) {
+            VacationPrintDTO doc = approvalMapper.selectVacationPrint(docVerId);
+            if (doc == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+            doc.setLines(approvalMapper.selectPrintLines(docVerId));
+            return doc;
+        }
+
+        // 그 외(AT001~AT006 등)는 확장 출력 DTO로 처리
+        ApprovalExtPrintDTO ext = approvalMapper.selectExtPrint(docVerId);
+        if (ext == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+
+        ApprovalPrintDTO doc = new ApprovalPrintDTO();
+        doc.setDocId(ext.getDocId());
+        doc.setDocVerId(ext.getDocVerId());
+        doc.setDocNo(ext.getDocNo());
+        doc.setTypeCode(ext.getTypeCode());
+        doc.setFormCode(ext.getFormCode());
+        doc.setStatusCode(ext.getStatusCode());
+
+        doc.setDrafterUserId(ext.getDrafterUserId());
+        doc.setDrafterName(ext.getDrafterName());
+        doc.setDrafterDeptName(ext.getDepartmentName());
+        doc.setDrafterPosition(ext.getPositionName());
+        doc.setDrafterBranchName(ext.getDrafterBranchName());
+        doc.setDraftDate(ext.getDraftDate());
 
         doc.setLines(approvalMapper.selectPrintLines(docVerId));
+        doc.setForm(ext);
         return doc;
     }
 
@@ -348,7 +399,15 @@ public class ApprovalService {
             } else {
                 approvalMapper.updateDocStatusByDocVerId(docVerId, "AS003");
                 approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003");
-                createLeaveCalendarEvent(docVerId, userId);
+
+                // ✅ 최종 승인 확정 시점에 업무 테이블 반영(AT001~AT006)
+                approvalApplyService.applyApprovedDoc(docVerId, userId);
+
+                // ✅ 휴가(AT009)는 캘린더 일정 생성
+                String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+                if ("AT009".equals(typeCode)) {
+                    createLeaveCalendarEvent(docVerId, userId);
+                }
             }
 
         } else if ("REJECT".equals(action)) {

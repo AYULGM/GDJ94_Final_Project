@@ -95,13 +95,13 @@
           </c:if>
 
           <div class="mb-3">
-            <label class="form-label">제목</label>
+            <label class="form-label required-label">제목</label>
             <input type="text" name="title" class="form-control" required
                    value="<c:out value='${notice.title}'/>" />
           </div>
 
           <div class="mb-3">
-            <label class="form-label">내용</label>
+            <label class="form-label required-label">내용</label>
             <textarea id="content" name="content" class="form-control" rows="10"><c:out value="${notice.content}" /></textarea>
 
           </div>
