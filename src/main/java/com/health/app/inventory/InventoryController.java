@@ -27,8 +27,8 @@ public class InventoryController {
         for (GrantedAuthority ga : auth.getAuthorities()) {
             String role = ga.getAuthority();
             if ("ROLE_MASTER".equals(role)
-                    || "ROLE_HQ_ADMIN".equals(role)
-                    || "ROLE_ADMIN".equals(role)) {
+                    || "ROLE_ADMIN".equals(role)
+                    || "ROLE_captain".equals(role)) {
                 return true;
             }
         }
