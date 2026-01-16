@@ -320,10 +320,38 @@ public class ApprovalService {
     @Transactional(readOnly = true)
     public ApprovalPrintDTO getPrintData(Long docVerId) {
 
-        VacationPrintDTO doc = approvalMapper.selectVacationPrint(docVerId);
-        if (doc == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+        String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+        if (typeCode == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+
+        // 휴가(AT009)는 기존 출력 DTO/서식 유지
+        if ("AT009".equals(typeCode)) {
+            VacationPrintDTO doc = approvalMapper.selectVacationPrint(docVerId);
+            if (doc == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+            doc.setLines(approvalMapper.selectPrintLines(docVerId));
+            return doc;
+        }
+
+        // 그 외(AT001~AT006 등)는 확장 출력 DTO로 처리
+        ApprovalExtPrintDTO ext = approvalMapper.selectExtPrint(docVerId);
+        if (ext == null) throw new IllegalStateException("문서를 찾을 수 없습니다.");
+
+        ApprovalPrintDTO doc = new ApprovalPrintDTO();
+        doc.setDocId(ext.getDocId());
+        doc.setDocVerId(ext.getDocVerId());
+        doc.setDocNo(ext.getDocNo());
+        doc.setTypeCode(ext.getTypeCode());
+        doc.setFormCode(ext.getFormCode());
+        doc.setStatusCode(ext.getStatusCode());
+
+        doc.setDrafterUserId(ext.getDrafterUserId());
+        doc.setDrafterName(ext.getDrafterName());
+        doc.setDrafterDeptName(ext.getDepartmentName());
+        doc.setDrafterPosition(ext.getPositionName());
+        doc.setDrafterBranchName(ext.getDrafterBranchName());
+        doc.setDraftDate(ext.getDraftDate());
 
         doc.setLines(approvalMapper.selectPrintLines(docVerId));
+        doc.setForm(ext);
         return doc;
     }
 
@@ -348,7 +376,15 @@ public class ApprovalService {
             } else {
                 approvalMapper.updateDocStatusByDocVerId(docVerId, "AS003");
                 approvalMapper.updateVersionStatusByDocVerId(docVerId, "AVS003");
-                createLeaveCalendarEvent(docVerId, userId);
+
+                // ✅ 최종 승인 확정 시점에 업무 테이블 반영(AT001~AT006)
+                approvalApplyService.applyApprovedDoc(docVerId, userId);
+
+                // ✅ 휴가(AT009)는 캘린더 일정 생성
+                String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
+                if ("AT009".equals(typeCode)) {
+                    createLeaveCalendarEvent(docVerId, userId);
+                }
             }
 
         } else if ("REJECT".equals(action)) {

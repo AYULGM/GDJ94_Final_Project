@@ -48,14 +48,30 @@
         <tbody>
           <!-- 기본 1행 -->
           <tr>
-            <td><input type="text" class="form-control form-control-sm ex-item" maxlength="200" required /></td>
-            <td><input type="number" class="form-control form-control-sm ex-amt text-end" min="0" step="1" required /></td>
-            <td><input type="date" class="form-control form-control-sm ex-date" required /></td>
-            <td><input type="text" class="form-control form-control-sm ex-memo" maxlength="200" /></td>
-            <td class="text-center">
-              <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
-            </td>
-          </tr>
+            <tr>
+			  <td>
+			    <select class="form-select form-select-sm ex-item" required>
+			      <option value="">선택</option>
+			      <option value="SALARY">급여</option>
+			      <option value="RENT">임대료</option>
+			      <option value="UTILITY">공과금</option>
+			      <option value="SUPPLIES">비품</option>
+			      <option value="ETC">기타</option>
+			    </select>
+			
+			    <!-- 기타 선택 시만 입력 활성화 -->
+			    <input type="text" class="form-control form-control-sm ex-item-etc mt-1 d-none"
+			           maxlength="200" placeholder="기타 항목 입력" />
+			  </td>
+			
+			  <td><input type="number" class="form-control form-control-sm ex-amt text-end" min="0" step="1" required /></td>
+			  <td><input type="date" class="form-control form-control-sm ex-date" required /></td>
+			  <td><input type="text" class="form-control form-control-sm ex-memo" maxlength="200" /></td>
+			  <td class="text-center">
+			    <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
+			  </td>
+			</tr>
+
         </tbody>
       </table>
 
@@ -73,32 +89,86 @@
   const jsonEl  = document.getElementById("expenseItemsJson");
 
   function recalc() {
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    let total = 0;
+	  const rows = Array.from(tbody.querySelectorAll("tr"));
+	  let total = 0;
 
-    const items = rows.map(r => {
-      const item  = (r.querySelector(".ex-item").value || "").trim();
-      const amount = Number(r.querySelector(".ex-amt").value || 0);
-      const date  = r.querySelector(".ex-date").value || "";
-      const memo  = (r.querySelector(".ex-memo").value || "").trim();
+	  const items = rows.map(r => {
+	    const itemCode = (r.querySelector(".ex-item").value || "").trim();
+	    const etcEl = r.querySelector(".ex-item-etc");
+	    const itemEtc = (etcEl?.value || "").trim();
 
-      total += amount;
-      return { item, amount, date, memo };
-    });
+	    // 표시용 이름(원하시면 서버에서 코드로 처리해도 됨)
+	    const itemNameMap = {
+	      SALARY: "급여",
+	      RENT: "임대료",
+	      UTILITY: "공과금",
+	      SUPPLIES: "비품",
+	      ETC: "기타"
+	    };
+	    function toggleEtcInput(tr) {
+	    	  const sel = tr.querySelector(".ex-item");
+	    	  const etc = tr.querySelector(".ex-item-etc");
+	    	  if (!sel || !etc) return;
 
-    totalEl.value = total;
-    jsonEl.value = JSON.stringify(items);
-  }
+	    	  if (sel.value === "ETC") {
+	    	    etc.classList.remove("d-none");
+	    	  } else {
+	    	    etc.value = "";
+	    	    etc.classList.add("d-none");
+	    	  }
+	    	}
+
+	    	tbody.addEventListener("change", (e) => {
+	    	  const tr = e.target.closest("tr");
+	    	  if (!tr) return;
+
+	    	  if (e.target.classList.contains("ex-item")) {
+	    	    toggleEtcInput(tr);
+	    	  }
+	    	  recalc();
+	    	});
+	    	
+
+	    const amount = Number(r.querySelector(".ex-amt").value || 0);
+	    const date  = r.querySelector(".ex-date").value || "";
+	    const memo  = (r.querySelector(".ex-memo").value || "").trim();
+
+	    total += amount;
+
+	    return {
+	      itemCode,                               // 코드 저장(추천)
+	      itemName: itemNameMap[itemCode] || "",  // 라벨 저장(선택)
+	      itemEtc: itemCode === "ETC" ? itemEtc : "",
+	      amount, date, memo
+	    };
+	  });
+
+	  totalEl.value = total;
+	  jsonEl.value = JSON.stringify(items);
+	}
+
 
   btnAdd.addEventListener("click", () => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><input type="text" class="form-control form-control-sm ex-item" maxlength="200" required /></td>
-      <td><input type="number" class="form-control form-control-sm ex-amt text-end" min="0" step="1" required /></td>
-      <td><input type="date" class="form-control form-control-sm ex-date" required /></td>
-      <td><input type="text" class="form-control form-control-sm ex-memo" maxlength="200" /></td>
-      <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
-    `;
+    	  <td>
+    	    <select class="form-select form-select-sm ex-item" required>
+    	      <option value="">선택</option>
+    	      <option value="SALARY">급여</option>
+    	      <option value="RENT">임대료</option>
+    	      <option value="UTILITY">공과금</option>
+    	      <option value="SUPPLIES">비품</option>
+    	      <option value="ETC">기타</option>
+    	    </select>
+    	    <input type="text" class="form-control form-control-sm ex-item-etc mt-1 d-none"
+    	           maxlength="200" placeholder="기타 항목 입력" />
+    	  </td>
+    	  <td><input type="number" class="form-control form-control-sm ex-amt text-end" min="0" step="1" required /></td>
+    	  <td><input type="date" class="form-control form-control-sm ex-date" required /></td>
+    	  <td><input type="text" class="form-control form-control-sm ex-memo" maxlength="200" /></td>
+    	  <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
+    	`;
+
     tbody.appendChild(tr);
     recalc();
   });

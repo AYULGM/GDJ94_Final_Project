@@ -79,6 +79,9 @@
       d.status_code     AS statusCode,
       d.drafter_user_id AS drafterUserId,
 
+      /* 휴가와 동일: 기안/작성일 */
+      v.create_date     AS draftDate,
+
       /* 기안자 서명(휴가와 동일 방식) */
       (
         SELECT us.file_id
@@ -92,8 +95,10 @@
 
       /* 공통 출력(기안자 인적사항) */
       u.name       AS employeeName,
+      u.name       AS drafterName,
       cd.code_desc AS departmentName,
       cr.code_desc AS positionName,
+      b.branch_name AS drafterBranchName,
 
       /* 확장 필드 */
       e.ext_dt1    AS extDt1,
@@ -126,6 +131,8 @@
   LEFT JOIN common_code cr
     ON cr.code_group = 'ROLE'
    AND cr.code = u.role_code
+  LEFT JOIN branch b
+    ON b.branch_id = d.drafter_branch_id
   WHERE v.doc_ver_id = #{docVerId}
     AND v.use_yn = 1
 </select>
