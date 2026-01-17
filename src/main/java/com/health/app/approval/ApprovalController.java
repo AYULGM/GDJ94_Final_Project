@@ -255,10 +255,17 @@ public class ApprovalController {
     // 출력 뷰(보고서 이미지 오버레이)
     @GetMapping("view")
     public String view(@RequestParam Long docVerId, Model model) {
-        model.addAttribute("doc", approvalService.getPrintData(docVerId));
-        model.addAttribute("docVerId", docVerId);
-        return "approval/print/overlay_print";
+        try {
+            model.addAttribute("doc", approvalService.getPrintData(docVerId));
+            model.addAttribute("docVerId", docVerId);
+            return "approval/print/overlay_print";
+        } catch (Exception e) {
+            model.addAttribute("docVerId", docVerId);
+            model.addAttribute("errMsg", e.getMessage());
+            return "approval/print/preview_error";
+        }
     }
+
     // 결재 처리 화면(GET)
     @GetMapping("handle")
     public String handle(@RequestParam Long docVerId, Model model) {

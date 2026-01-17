@@ -2,6 +2,8 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 
+<c:set var="ctx" value="${pageContext.request.contextPath}" />
+
 <jsp:include page="../includes/admin_header.jsp" />
 
 <style>
@@ -43,14 +45,14 @@
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
           <div class="fw-semibold col-8">문서 미리보기</div>
           <div class="d-flex gap-2">
-            <a class="btn btn-sm btn-outline-dark" href="/approval/view?docVerId=${docVerId}">출력/미리보기</a>
-            <a class="btn btn-sm btn-outline-secondary" href="/approval/list">목록</a>
+            <a class="btn btn-sm btn-outline-dark" href="${ctx}/approval/view?docVerId=${docVerId}">출력/미리보기</a>
+            <a class="btn btn-sm btn-outline-secondary" href="${ctx}/approval/list">목록</a>
           </div>
         </div>
         <div class="card-body p-0">
           <div class="preview-box">
             <iframe
-			  src="/approval/view?docVerId=${docVerId}&preview=1"
+			  src="${ctx}/approval/view?docVerId=${docVerId}&preview=1"
 			  class="preview-iframe"
 			  scrolling="no"
 			  title="문서 미리보기"></iframe>
@@ -239,7 +241,7 @@
             <div class="d-grid gap-2">
 
               <c:if test="${page.canRecall}">
-                <form method="post" action="/approval/recall">
+                <form method="post" action="${ctx}/approval/recall">
                   <input type="hidden" name="docVerId" value="${docVerId}" />
                   <c:if test="${not empty _csrf}">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
@@ -249,10 +251,10 @@
               </c:if>
 
               <c:if test="${page.canEdit}">
-                <a class="btn btn-secondary" href="/approval/form?docVerId=${docVerId}">수정</a>
-                <a class="btn btn-outline-secondary" href="/approval/line?docVerId=${docVerId}">결재선 수정</a>
+                <a class="btn btn-secondary" href="${ctx}/approval/form?docVerId=${docVerId}">수정</a>
+                <a class="btn btn-outline-secondary" href="${ctx}/approval/line?docVerId=${docVerId}">결재선 수정</a>
 
-                <form method="post" action="/approval/resubmit">
+                <form method="post" action="${ctx}/approval/resubmit">
                   <input type="hidden" name="docVerId" value="${docVerId}" />
                   <c:if test="${not empty _csrf}">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />

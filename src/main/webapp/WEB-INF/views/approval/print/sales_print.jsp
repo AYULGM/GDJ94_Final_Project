@@ -4,7 +4,7 @@
 <c:set var="doc" value="${print}" />
 
 <jsp:include page="_print_base.jspf">
-  <jsp:param name="bg" value="/approval/formPng/sales.jpg"/>
+  <jsp:param name="bg" value="${pageContext.request.contextPath}/approval/formPng/sales.jpg"/>
 </jsp:include>
 
 <jsp:include page="_fields_common.jspf"/>

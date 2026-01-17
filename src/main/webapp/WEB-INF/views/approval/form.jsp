@@ -193,7 +193,7 @@
   </form>
 </div>
 
-<script src="/approval/js/formChange.js"></script>
+<script src="<c:url value='/approval/js/formChange.js'/>"></script>
 <!-- Quill -->
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>

@@ -28,7 +28,7 @@
 
   <c:if test="${param.preview ne '1'}">
     <div class="d-flex justify-content-end mb-3">
-      <a class="btn btn-outline-secondary" href="/approval/detail?docVerId=${docVerId}">돌아가기</a>
+      <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/approval/detail?docVerId=${docVerId}">돌아가기</a>
     </div>
   </c:if>
 

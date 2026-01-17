@@ -54,7 +54,7 @@
                 <td><span class="badge text-bg-secondary"><c:out value="${row.mySeq}"/></span></td>
                 <td><c:out value="${row.submittedAt}"/></td>
                 <td class="text-end">
-                  <a class="btn btn-sm btn-primary" href="/approval/handle?docVerId=${row.docVerId}">
+                  <a class="btn btn-sm btn-primary" href="${pageContext.request.contextPath}/approval/handle?docVerId=${row.docVerId}">
                     결재하기
                   </a>
                 </td>

@@ -1,0 +1,31 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<c:set var="t" value="${doc.typeCode}" />
+
+<c:choose>
+  <c:when test="${t eq 'AT001'}">
+    <%@ include file="_fields_expense.jspf" %>
+  </c:when>
+  <c:when test="${t eq 'AT002'}">
+    <%@ include file="_fields_settlement.jspf" %>
+  </c:when>
+  <c:when test="${t eq 'AT003'}">
+    <%@ include file="_fields_sales.jspf" %>
+  </c:when>
+  <c:when test="${t eq 'AT004'}">
+    <%@ include file="_fields_inventory.jspf" %>
+  </c:when>
+  <c:when test="${t eq 'AT005'}">
+    <%@ include file="_fields_purchase.jspf" %>
+  </c:when>
+  <c:when test="${t eq 'AT006'}">
+    <%@ include file="_fields_order.jspf" %>
+  </c:when>
+  <c:when test="${t eq 'AT009'}">
+    <%@ include file="_fields_vacation.jspf" %>
+  </c:when>
+  <c:otherwise>
+    <%@ include file="_fields_common.jspf" %>
+  </c:otherwise>
+</c:choose>
