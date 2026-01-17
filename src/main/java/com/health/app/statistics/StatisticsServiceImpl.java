@@ -88,6 +88,14 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Override
     @Cacheable(value = "statistics",
+               key = "'unsettledExpenses:' + #searchDto.startDate + ':' + #searchDto.endDate + ':' + (#searchDto.branchId != null ? #searchDto.branchId : 'all')")
+    public List<UnsettledExpenseDto> getUnsettledExpenses(StatisticsSearchDto searchDto) {
+        validateSearchDto(searchDto);
+        return statisticsMapper.selectUnsettledExpenses(searchDto);
+    }
+
+    @Override
+    @Cacheable(value = "statistics",
                key = "'profitComparison:' + #searchDto.startDate + ':' + #searchDto.endDate + ':' + (#searchDto.branchId != null ? #searchDto.branchId : 'all') + ':' + (#searchDto.groupBy != null ? #searchDto.groupBy : 'monthly')")
     public List<ProfitComparisonDto> getProfitComparison(StatisticsSearchDto searchDto) {
         validateSearchDto(searchDto);

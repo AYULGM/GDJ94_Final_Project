@@ -191,6 +191,16 @@ public class StatisticsController {
     }
 
     /**
+     * ST-007-2: 정산 대상 지출 조회 API
+     */
+    @GetMapping("/api/unsettled-expenses")
+    @ResponseBody
+    public ResponseEntity<List<UnsettledExpenseDto>> getUnsettledExpenses(StatisticsSearchDto searchDto) {
+        List<UnsettledExpenseDto> result = statisticsService.getUnsettledExpenses(searchDto);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
      * ST-008: 매출 대비 지출 비교 API (손익 분석)
      */
     @GetMapping("/api/comparison")

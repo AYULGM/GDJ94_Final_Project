@@ -266,35 +266,59 @@
     </select>
 
     <!-- =========================================================
-         ST-007: 정산 대상 매출 조회 (전자결재 매출결의서 기준)
+         ST-007: 정산 대상 매출 조회 (sales 테이블 기준)
        ========================================================= -->
     <select id="selectUnsettledSales" parameterType="com.health.app.statistics.StatisticsSearchDto"
             resultType="com.health.app.statistics.UnsettledSaleDto">
         SELECT
-            ad.doc_id AS saleId,
-            ad.doc_no AS saleNo,
-            ade.ext_no1 AS branchId,
+            s.sale_id AS saleId,
+            s.sale_no AS saleNo,
+            s.branch_id AS branchId,
             b.branch_name AS branchName,
-            ad.completed_at AS soldAt,
-            'SALES_DOC' AS categoryCode,
-            ade.ext_no2 AS totalAmount,
-            ad.status_code AS statusCode,
-            FALSE AS settled,
-            NULL AS settlementId
-        FROM approval_documents ad
-        JOIN approval_document_versions adv
-            ON adv.doc_ver_id = ad.current_doc_ver_id AND adv.use_yn = 1
-        LEFT JOIN approval_document_ext ade
-            ON ade.doc_ver_id = adv.doc_ver_id AND ade.use_yn = 1
-        LEFT JOIN branch b ON b.branch_id = ade.ext_no1
-        WHERE ad.use_yn = 1
-          AND ad.form_code = 'DF003'
-          AND ad.status_code = 'AS003'
-          AND DATE(ad.completed_at) BETWEEN #{startDate} AND #{endDate}
+            s.sold_at AS soldAt,
+            s.category_code AS categoryCode,
+            s.total_amount AS totalAmount,
+            s.status_code AS statusCode,
+            CASE WHEN ssm.settlement_id IS NOT NULL THEN TRUE ELSE FALSE END AS settled,
+            ssm.settlement_id AS settlementId
+        FROM sales s
+        LEFT JOIN branch b ON b.branch_id = s.branch_id
+        LEFT JOIN settlement_sale_map ssm ON ssm.sale_id = s.sale_id AND ssm.use_yn = 1
+        WHERE s.use_yn = 1
+          AND s.status_code = 'COMPLETED'
+          AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
         <if test="branchId != null and branchId != 0">
-          AND ade.ext_no1 = #{branchId}
+          AND s.branch_id = #{branchId}
         </if>
-        ORDER BY ad.completed_at DESC, ad.doc_id DESC
+        ORDER BY s.sold_at DESC, s.sale_id DESC
+    </select>
+
+    <!-- =========================================================
+         ST-007-2: 정산 대상 지출 조회 (expenses 테이블 기준)
+       ========================================================= -->
+    <select id="selectUnsettledExpenses" parameterType="com.health.app.statistics.StatisticsSearchDto"
+            resultType="com.health.app.statistics.UnsettledExpenseDto">
+        SELECT
+            e.expense_id AS expenseId,
+            e.branch_id AS branchId,
+            b.branch_name AS branchName,
+            e.expense_at AS expenseAt,
+            e.category_code AS categoryCode,
+            e.amount AS amount,
+            e.description AS description,
+            e.settlement_flag AS settlementFlag,
+            CASE WHEN sem.settlement_id IS NOT NULL THEN TRUE ELSE FALSE END AS settled,
+            sem.settlement_id AS settlementId
+        FROM expenses e
+        LEFT JOIN branch b ON b.branch_id = e.branch_id
+        LEFT JOIN settlement_expense_map sem ON sem.expense_id = e.expense_id AND sem.use_yn = 1
+        WHERE e.use_yn = 1
+          AND e.settlement_flag = TRUE
+          AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+        <if test="branchId != null and branchId != 0">
+          AND e.branch_id = #{branchId}
+        </if>
+        ORDER BY e.expense_at DESC, e.expense_id DESC
     </select>
 
     <!-- =========================================================

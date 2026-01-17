@@ -115,14 +115,11 @@
             st.settled_at       AS settledAt,
             st.settled_by       AS settledBy,
             sb.name             AS settledByName,
-            (SELECT COUNT(*) FROM approval_documents ad
-                JOIN approval_document_versions adv ON adv.doc_ver_id = ad.current_doc_ver_id AND adv.use_yn = 1
-                LEFT JOIN approval_document_ext ade ON ade.doc_ver_id = adv.doc_ver_id AND ade.use_yn = 1
-                WHERE ad.use_yn = 1
-                AND ad.form_code = 'DF003'
-                AND ad.status_code = 'AS003'
-                AND DATE(ad.completed_at) BETWEEN st.from_date AND st.to_date
-                AND (st.branch_id IS NULL OR ade.ext_no1 = st.branch_id)) AS salesCount,
+            (SELECT COUNT(*) FROM sales s
+                WHERE s.use_yn = 1
+                AND s.status_code = 'COMPLETED'
+                AND DATE(s.sold_at) BETWEEN st.from_date AND st.to_date
+                AND (st.branch_id IS NULL OR s.branch_id = st.branch_id)) AS salesCount,
             (SELECT COUNT(*) FROM expenses e WHERE e.use_yn = 1 AND e.settlement_flag = TRUE
                 AND DATE(e.expense_at) BETWEEN st.from_date AND st.to_date
                 AND (st.branch_id IS NULL OR e.branch_id = st.branch_id)) AS expenseCount,
@@ -197,7 +194,7 @@
     </update>
 
     <!-- =========================================================
-         7) 기간별 매출 합계 조회
+         7) 기간별 매출 합계 조회 (sales 테이블 기준)
        ========================================================= -->
     <select id="selectSalesTotalAmount" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(s.total_amount), 0)
