@@ -115,8 +115,14 @@
             st.settled_at       AS settledAt,
             st.settled_by       AS settledBy,
             sb.name             AS settledByName,
-            (SELECT COUNT(*) FROM sales s WHERE s.use_yn = 1 AND s.status_code = 'COMPLETED' AND DATE(s.sold_at) BETWEEN st.from_date AND st.to_date AND (st.branch_id IS NULL OR s.branch_id = st.branch_id)) AS salesCount,
-            (SELECT COUNT(*) FROM expenses e WHERE e.use_yn = 1 AND e.settlement_flag = TRUE AND DATE(e.expense_at) BETWEEN st.from_date AND st.to_date AND (st.branch_id IS NULL OR e.branch_id = st.branch_id)) AS expenseCount,
+            (SELECT COUNT(*) FROM sales s
+                WHERE s.use_yn = 1
+                AND s.status_code = 'COMPLETED'
+                AND DATE(s.sold_at) BETWEEN st.from_date AND st.to_date
+                AND (st.branch_id IS NULL OR s.branch_id = st.branch_id)) AS salesCount,
+            (SELECT COUNT(*) FROM expenses e WHERE e.use_yn = 1 AND e.settlement_flag = TRUE
+                AND DATE(e.expense_at) BETWEEN st.from_date AND st.to_date
+                AND (st.branch_id IS NULL OR e.branch_id = st.branch_id)) AS expenseCount,
             st.create_user      AS createUser,
             cu.name             AS createUserName,
             st.create_date      AS createDate,
@@ -188,7 +194,7 @@
     </update>
 
     <!-- =========================================================
-         7) 기간별 매출 합계 조회
+         7) 기간별 매출 합계 조회 (sales 테이블 기준)
        ========================================================= -->
     <select id="selectSalesTotalAmount" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(s.total_amount), 0)

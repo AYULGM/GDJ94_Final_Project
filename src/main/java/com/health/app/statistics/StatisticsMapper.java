@@ -54,6 +54,11 @@ public interface StatisticsMapper {
     List<UnsettledSaleDto> selectUnsettledSales(StatisticsSearchDto searchDto);
 
     /**
+     * ST-007-2: 정산 대상 지출 조회
+     */
+    List<UnsettledExpenseDto> selectUnsettledExpenses(StatisticsSearchDto searchDto);
+
+    /**
      * ST-008: 매출 대비 지출 비교 (손익 분석)
      */
     List<ProfitComparisonDto> selectProfitComparison(StatisticsSearchDto searchDto);
