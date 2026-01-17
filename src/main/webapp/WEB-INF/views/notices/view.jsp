@@ -213,7 +213,6 @@
             </div>
           </div>
         </c:if>
-
         <!-- 내용 (슬림 헤더 + 본문 영역만 넉넉히) -->
         <div class="section-card">
           <div class="section-head">
@@ -229,7 +228,32 @@
             </div>
           </div>
         </div>
-
+		<!-- 첨부파일 -->
+		        <c:if test="${not empty attachments}">
+		          <div class="section-card mb-3">
+		            <div class="section-head">
+		              <div class="section-title">첨부파일</div>
+		              <span class="badge text-bg-light border pill" style="padding:.25rem .55rem; font-size:.75rem;">
+		                <i class="bi bi-paperclip me-1"></i> 파일
+		              </span>
+		            </div>
+		            <div class="section-body">
+		              <ul class="mb-0">
+		                <c:forEach items="${attachments}" var="f">
+		                  <li class="mb-1">
+		                    <a href="<c:url value='/files/download/${f.fileId}'/>">
+		                      <c:out value="${f.originalName}"/>
+		                    </a>
+		                    <c:if test="${not empty f.contentType && fn:startsWith(f.contentType, 'image/')}">
+		                      <span class="meta">&nbsp;|&nbsp;</span>
+		                      <a class="meta" target="_blank" href="<c:url value='/files/preview/${f.fileId}'/>">미리보기</a>
+		                    </c:if>
+		                  </li>
+		                </c:forEach>
+		              </ul>
+		            </div>
+		          </div>
+		        </c:if>
       </div>
     </div>
 

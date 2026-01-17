@@ -3,6 +3,7 @@ package com.health.app.notices;
 import com.health.app.security.model.LoginUser;
 import com.health.app.branch.BranchMapper;
 import com.health.app.commoncode.CommonCodeMapper;
+import com.health.app.attachments.Attachment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -10,7 +11,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import com.health.app.approval.ApprovalMapper;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.stream.Collectors;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -133,6 +137,9 @@ public class NoticeController {
                        Model model) {
         NoticeDTO notice = noticeService.view(noticeId);
         model.addAttribute("notice", notice);
+        // 첨부파일
+        List<Attachment> attachments = noticeService.getAttachments(noticeId);
+        model.addAttribute("attachments", attachments);
         model.addAttribute("isAdmin", isAdmin(user));
         model.addAttribute("pageTitle", "공지사항");
         putCodeMaps(model);
@@ -156,12 +163,13 @@ public class NoticeController {
     // 등록 저장
     @PostMapping
     public String create(NoticeDTO dto,
+                         @RequestParam(value = "files", required = false) List<MultipartFile> files,
                          @RequestParam(required = false) String reason,
                          @AuthenticationPrincipal LoginUser user, Model model) {
         if (!isAdmin(user)) return "redirect:/notices";
         Long actorUserId = user.getUserId();
         dto.setWriterId(actorUserId);
-        noticeService.create(dto, actorUserId, reason);
+        noticeService.create(dto, files, actorUserId, reason);
         model.addAttribute("pageTitle", "공지사항");
         return "redirect:/notices/admin";
     }
@@ -173,6 +181,7 @@ public class NoticeController {
                        Model model) {
         if (!isAdmin(user)) return "redirect:/notices";
         model.addAttribute("notice", noticeService.getForEdit(noticeId));
+        model.addAttribute("attachments", noticeService.getAttachments(noticeId));
         model.addAttribute("isAdmin", true);
         model.addAttribute("pageTitle", "공지사항");
         putFormLists(model);
@@ -183,12 +192,13 @@ public class NoticeController {
     @PostMapping("/{noticeId}/edit")
     public String update(@PathVariable Long noticeId,
                          NoticeDTO dto,
+                         @RequestParam(value = "files", required = false) List<MultipartFile> files,
                          @RequestParam(required = false) String reason,
                          @AuthenticationPrincipal LoginUser user, Model model) {
         if (!isAdmin(user)) return "redirect:/notices";
         dto.setNoticeId(noticeId);
         Long actorUserId = user.getUserId();
-        noticeService.update(dto, actorUserId, reason);
+        noticeService.update(dto, files, actorUserId, reason);
         model.addAttribute("pageTitle", "공지사항");
         return "redirect:/notices/admin";
     }
