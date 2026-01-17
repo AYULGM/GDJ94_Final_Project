@@ -5,28 +5,28 @@
 
 <div class="row g-2">
   <div class="col-md-4">
-    <label class="form-label">거래처명(필수)</label>
+    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>거래처명</label>
     <input type="text" class="form-control" name="extTxt1" maxlength="100" required />
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">담당자/연락처(선택)</label>
-    <input type="text" class="form-control" name="extTxt2" maxlength="100" placeholder="담당자명 / 연락처" />
+    <label class="form-label">담당자</label>
+    <input type="text" class="form-control" name="extTxt2" maxlength="100" placeholder="담당자명" />
   </div>
 
   <div class="col-md-4">
-    <label class="form-label">납기일(필수)</label>
+    <label class="form-label"><span style="color:red; font-weight: normal;">*</span>납기일</label>
     <input type="date" class="form-control" name="extDt1" required />
   </div>
 
   <div class="col-md-8">
-    <label class="form-label mt-2">결제조건(선택)</label>
+    <label class="form-label mt-2">결제조건</label>
     <input type="text" class="form-control" name="extTxt3" maxlength="200" placeholder="예: 납품 후 30일 이내" />
   </div>
 
   <div class="col-md-4">
-    <label class="form-label mt-2">총액(자동)</label>
-    <input type="number" class="form-control" name="extNo1" id="poTotal" readonly />
+    <label class="form-label mt-2">총액</label>
+    <input type="number" class="form-control bg-secondary-subtle" name="extNo1" id="poTotal" readonly />
   </div>
 
   <div class="col-12 mt-2">
@@ -40,10 +40,10 @@
       <table class="table table-sm table-bordered align-middle" id="poTable">
         <thead class="table-light">
           <tr>
-            <th>품목명</th>
-            <th style="width: 110px;" class="text-end">수량</th>
-            <th style="width: 140px;" class="text-end">예상단가</th>
-            <th style="width: 140px;" class="text-end">금액(자동)</th>
+            <th><span style="color:red; font-weight: normal;">*</span>품목명</th>
+            <th style="width: 110px;"><span style="color:red; font-weight: normal;">*</span>수량</th>
+            <th style="width: 140px;">예상단가</th>
+            <th style="width: 140px;">금액</th>
             <th style="width: 80px;"></th>
           </tr>
         </thead>
@@ -73,7 +73,7 @@
                      min="0" step="1" />
             </td>
             <td>
-              <input type="number" class="form-control form-control-sm po-amt text-end" readonly />
+              <input type="number" class="form-control form-control-sm po-amt text-end bg-secondary-subtle" readonly />
             </td>
             <td class="text-center">
               <button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button>
@@ -82,12 +82,11 @@
         </tbody>
       </table>
 
-      <div class="form-text">저장 시 품목은 extTxt6(JSON)로 저장됩니다.</div>
     </div>
   </div>
 
   <div class="col-12">
-    <label class="form-label mt-2">비고(선택)</label>
+    <label class="form-label mt-2">비고</label>
     <input type="text" class="form-control" name="extTxt4" maxlength="200" />
   </div>
 </div>
@@ -154,7 +153,7 @@
       <td></td>
       <td><input type="number" class="form-control form-control-sm po-qty text-end" min="1" step="1" value="1" /></td>
       <td><input type="number" class="form-control form-control-sm po-unit text-end" min="0" step="1" /></td>
-      <td><input type="number" class="form-control form-control-sm po-amt text-end" readonly /></td>
+      <td><input type="number" class="form-control form-control-sm po-amt text-end bg-secondary-subtle" readonly /></td>
       <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
     `;
 

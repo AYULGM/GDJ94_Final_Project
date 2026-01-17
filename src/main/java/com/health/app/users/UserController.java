@@ -22,21 +22,23 @@ public class UserController {
     
     
     // 회원탈퇴 기능
-    @PostMapping("/withdraw")
-    public String withdraw(Authentication authentication,
-                           RedirectAttributes redirectAttributes) {
-
-        String loginId = authentication.getName();
-
-        userService.withdraw(loginId);
-
-        // 로그아웃 후 메시지 전달
-        return "redirect:/login?withdraw";
-    }
+//    @PostMapping("/withdraw")
+//    public String withdraw(Authentication authentication,
+//                           RedirectAttributes redirectAttributes) {
+//
+//        String loginId = authentication.getName();
+//
+//        userService.withdraw(loginId);
+//
+//        // 로그아웃 후 메시지 전달
+//        return "redirect:/login?withdraw";
+//    }
 
     
     @GetMapping("/password")
-    public String passwordForm() {
+    public String passwordForm(Model model) {
+    	model.addAttribute("pageTitle", "비밀번호 변경");
+    	
         return "users/password";
     }
 
@@ -107,6 +109,7 @@ public class UserController {
 
         UserDTO userInfo = userService.findByLoginId(loginId);
         model.addAttribute("user", userInfo);
+        model.addAttribute("pageTitle", "정보 수정");
 
         return "users/update";
     }
@@ -154,36 +157,24 @@ public class UserController {
 
         UserDTO userInfo = userService.findByLoginId(loginId);
         model.addAttribute("user", userInfo);
+        model.addAttribute("pageTitle", "내 정보");
 
         return "users/mypage";
     }
     
-    /**
-     * 사용자 목록
-     * GET /users
-     */
-//    @GetMapping
-//    public String userList(Model model) {
-//        model.addAttribute("pageTitle", "사용자 관리");
-//        return "users/list";
-//    }
-
-    /**
-     * 회원가입 화면
-     * GET /users/join
-     */
+    // 회원가입 페이지
     @GetMapping("/join")
     public String join() {
         return "users/join";
     }
 
-    /**
-     * 회원가입 처리
-     * POST /users/joinProc
-     */
+    // 회원가입 처리
     @PostMapping("/joinProc")
-    public String joinProc(UserDTO userDTO) {
+    public String joinProc(UserDTO userDTO, RedirectAttributes ra) {
     	
+    	
+    	try {
+    		
         // 🔧 부서 코드 정규화 (회원가입 시 부서코드가 "" 라면 → null (DB에 null이 들어가도록))
         if (userDTO.getDepartmentCode() != null && userDTO.getDepartmentCode().isBlank()) 
         {
@@ -210,6 +201,17 @@ public class UserController {
 
         // 3️⃣ 가입 후 로그인 페이지로
         return "redirect:/login";
+        
+    	}
+    	catch (IllegalStateException e) {
+
+            // 🔥 에러 메시지 전달
+            ra.addFlashAttribute("error", e.getMessage());
+
+            // 다시 회원가입 페이지로
+            return "redirect:/users/join";
+        }
+    	
     }
     
     // 로그인창에서 비밀번호 찾기

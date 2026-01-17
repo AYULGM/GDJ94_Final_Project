@@ -19,9 +19,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
     
-    public void withdraw(String loginId) {
-        userMapper.withdraw(loginId);
-    }
+    // 회원탈퇴기능
+//    public void withdraw(String loginId) {
+//        userMapper.withdraw(loginId);
+//    }
 
     
     @Transactional(readOnly = true)

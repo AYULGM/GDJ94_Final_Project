@@ -25,7 +25,7 @@ public class StatisticsController {
      */
     @GetMapping
     public String statisticsViewPage(Model model) {
-        model.addAttribute("pageTitle", "통계 대시보드");
+        model.addAttribute("pageTitle", "Dash Board");
         return "statistics/view";
     }
 

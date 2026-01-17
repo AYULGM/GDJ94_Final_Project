@@ -7,7 +7,7 @@
 	<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 	<%@ taglib prefix="c" uri="jakarta.tags.core"%>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>AdminLTE v4 | Dashboard</title>
+    <title>Doge Company</title>
 
     <!--begin::Fonts-->
     <link
@@ -55,6 +55,20 @@
       integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4="
       crossorigin="anonymous"
     />
+       <!-- jQuery (Summernote 선행 필요) -->
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+      crossorigin="anonymous"></script>
+
+    <!-- Summernote -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-ko-KR.min.js"></script>
+   
+    <!-- input태그 안에 required 속성을 가진 것들은 빨간색으로 색칠 -->
+    <link rel="stylesheet" href="/css/requiredRed.css">
+    
   </head>
   <!--end::Head-->
 
@@ -133,8 +147,8 @@
                 </li> 
 -->
                 <li class="user-body">
-                  <a href="/users/mypage" class="btn btn-default btn-flat">My page</a>
-                  <a href="<c:url value='/logout'/>" class="btn btn-default btn-flat float-end">Sign out</a>
+                  <a href="/users/mypage" class="btn btn-outline-primary btn-flat">내 정보</a>
+                  <a href="<c:url value='/logout'/>" class="btn btn-outline-danger btn-flat float-end">로그아웃</a>
                 </li>
               </ul>
             </li>

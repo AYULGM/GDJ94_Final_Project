@@ -20,7 +20,7 @@
 
           <!-- 지점명 -->
           <div class="mb-3">
-            <label class="form-label">지점명</label>
+            <label class="form-label required-label">지점명</label>
             <input type="text"
                    name="branchName"
                    class="form-control"
@@ -39,24 +39,24 @@
 
           <!-- 우편번호 -->
           <div class="mb-3">
-            <label class="form-label">우편번호</label>
+            <label class="form-label required-label">우편번호</label>
             <input type="text"
                    name="postNo"
                    id="postNo"
                    class="form-control"
                    value="${branch.postNo}"
-                   readonly>
+                   required readonly>
           </div>
 
           <!-- 기본주소 -->
           <div class="mb-3">
-            <label class="form-label">기본 주소</label>
+            <label class="form-label required-label">기본 주소</label>
             <input type="text"
                    name="baseAddress"
                    id="baseAddress"
                    class="form-control"
                    value="${branch.baseAddress}"
-                   readonly>
+                   required readonly>
           </div>
 
           <!-- 상세주소 -->
@@ -71,7 +71,7 @@
 
           <!-- 담당자 -->
           <div class="mb-3">
-            <label class="form-label">담당자명</label>
+            <label class="form-label required-label">담당자명</label>
             <input type="text"
                    name="managerName"
                    class="form-control"
@@ -81,7 +81,7 @@
 
           <!-- 연락처 -->
           <div class="mb-3">
-            <label class="form-label">담당자 연락처</label>
+            <label class="form-label required-label">담당자 연락처</label>
             <input type="text"
                    name="managerPhone"
                    class="form-control"
@@ -91,7 +91,7 @@
 
           <!-- 운영시간 -->
           <div class="mb-3">
-            <label class="form-label">운영시간</label>
+            <label class="form-label required-label">운영시간</label>
 
             <div class="d-flex align-items-center gap-2">
               <input type="time"
@@ -117,6 +117,14 @@
                    id="operatingHours"
                    value="${branch.operatingHours}">
           </div>
+          
+          <div class="mb-3">
+			  <label class="form-label required-label">수정 사유</label>
+			  <textarea name="reason"
+			            class="form-control"
+			            rows="3"
+			            required></textarea>
+			</div>
 
         </div>
 

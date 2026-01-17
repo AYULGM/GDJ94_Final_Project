@@ -9,6 +9,9 @@ public interface BranchMapper {
 
     List<BranchDTO> selectBranchList();
     
+    // ADMIN은 지점관리를 눌렀을때 본인 지점만 보이게
+    List<BranchDTO> selectBranchById(Long branchId);
+    
     // detail.jsp
     BranchDTO selectBranchDetail(Long branchId);
     

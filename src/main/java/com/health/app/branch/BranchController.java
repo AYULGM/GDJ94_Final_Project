@@ -22,9 +22,9 @@ public class BranchController {
     private final BranchService branchService;
 
     @GetMapping("/list")
-    public String branchList(Model model) {
+    public String branchList(Model model, @AuthenticationPrincipal LoginUser loginUser) {
 
-        List<BranchDTO> list = branchService.getBranchList();
+        List<BranchDTO> list = branchService.getBranchList(loginUser);
         model.addAttribute("branchList", list);
         model.addAttribute("pageTitle", "지점 관리");
         return "branch/list";
@@ -35,6 +35,7 @@ public class BranchController {
         BranchDTO branch = branchService.getBranchDetail(branchId);
         // 지점 상세
         model.addAttribute("branch", branch);
+        model.addAttribute("pageTitle", "지점 상세정보 · 변경 이력");
         //지점 변경 이력
         model.addAttribute("historyList", branchService.getBranchHistoryList(branchId));
         
@@ -42,7 +43,10 @@ public class BranchController {
     }
     
     @GetMapping("/register")
-    public String branchRegisterForm() {
+    public String branchRegisterForm(Model model) {
+    	
+    	model.addAttribute("pageTitle", "지점 등록");
+    	
         return "branch/register";
     }
 
@@ -61,6 +65,7 @@ public class BranchController {
     @GetMapping("/update")
     public String updateForm(@RequestParam Long branchId, Model model) {
         model.addAttribute("branch", branchService.getBranchDetail(branchId));
+        model.addAttribute("pageTitle", "지점 수정");
         return "branch/update";
     }
 
@@ -68,9 +73,10 @@ public class BranchController {
     @PostMapping("/update")
     public String update(
             BranchDTO dto,
+            @RequestParam String reason,
             @AuthenticationPrincipal LoginUser loginUser
     ) {
-        branchService.updateBranch(dto, loginUser.getUserId());
+        branchService.updateBranch(dto, reason, loginUser.getUserId());
         return "redirect:/branch/detail?branchId=" + dto.getBranchId();
     }
     

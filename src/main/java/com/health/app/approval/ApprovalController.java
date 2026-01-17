@@ -25,6 +25,7 @@ public class ApprovalController {
     @GetMapping("list")
     public String approvalList(@AuthenticationPrincipal LoginUser loginUser, Model model) {
         model.addAttribute("list", approvalService.getMyDocs(loginUser.getUserId()));
+        model.addAttribute("pageTitle", "전자결재");
         return "approval/list";
     }
 
@@ -36,6 +37,7 @@ public class ApprovalController {
         ApprovalDetailPageDTO page = approvalService.getDetailPage(loginUser.getUserId(), docVerId);
         model.addAttribute("page", page);
         model.addAttribute("docVerId", docVerId);
+        model.addAttribute("pageTitle", "전자결재");
         return "approval/detail";
     }
 
@@ -46,28 +48,30 @@ public class ApprovalController {
                                Model model) {
 
         model.addAttribute("branches", approvalService.getBranches());
-
         if (docVerId != null) {
             ApprovalDraftDTO draft = approvalService.getDraftForEdit(docVerId, loginUser.getUserId());
             model.addAttribute("draft", draft);
             model.addAttribute("mode", "edit");
-
+            model.addAttribute("pageTitle", "전자수정");
             model.addAttribute("products",
                     draft.getBranchId() != null
                             ? approvalService.getProductsByBranch(draft.getBranchId())
                             : java.util.Collections.emptyList());
         } else {
             model.addAttribute("mode", "new");
-            model.addAttribute("products", java.util.Collections.emptyList());
-        }
+            model.addAttribute("products", approvalService.getProductsByBranch(null)); // draft 사용 금지
+            model.addAttribute("pageTitle", "전자작성");
 
+        }
+        model.addAttribute("handoverCandidates", approvalService.getHandoverCandidates(loginUser.getUserId()));
         return "approval/form";
     }
 
 
     // 서명 페이지
     @GetMapping("signature")
-    public String approvalSignature() {
+    public String approvalSignature(Model model) {
+    	model.addAttribute("pageTitle", "서명창");
         return "approval/signature";
     }
 
@@ -81,6 +85,7 @@ public class ApprovalController {
     @GetMapping("inbox")
     public String inbox(@AuthenticationPrincipal LoginUser loginUser, Model model) {
         model.addAttribute("list", approvalService.getMyInbox(loginUser.getUserId()));
+    	model.addAttribute("pageTitle", "결재함");
         return "approval/inbox";
     }
 
@@ -107,6 +112,7 @@ public class ApprovalController {
     @GetMapping("line")
     public String linePage(@RequestParam Long docVerId, Model model) {
         model.addAttribute("docVerId", docVerId);
+    	model.addAttribute("pageTitle", "결재라인");
         return "approval/line";
     }
 

@@ -6,7 +6,8 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface UserMapper {
 	
-	int withdraw(String loginId);
+	// 회원탈퇴 기능
+//	int withdraw(String loginId);
 	
 	UserDTO selectForPasswordCheck(String loginId);
 	

@@ -23,6 +23,26 @@
 	    ORDER BY b.branch_id DESC
 	</select>
 
+<!-- ADMIN은 지점관리를 눌렀을때 본인 지점만 보이게 -->
+	<select id="selectBranchById"
+	        parameterType="long"
+	        resultType="com.health.app.branch.BranchDTO">
+	    SELECT
+	        b.branch_id       AS branchId,
+	        b.branch_name     AS branchName,
+	        b.manager_name    AS managerName,
+	        b.manager_phone   AS managerPhone,
+	        b.operating_hours AS operatingHours,
+	        b.status_code     AS statusCode,
+	        cc.code_desc      AS statusName
+	    FROM branch b
+	    LEFT JOIN common_code cc
+	        ON cc.code_group = 'BRANCH_STATUS'
+	       AND cc.code = b.status_code
+	    WHERE b.branch_id = #{branchId}
+	      AND b.use_yn = TRUE
+	</select>
+
 
 	<select id="selectBranchDetail"
 	        parameterType="long"
@@ -115,49 +135,58 @@
     <!-- =========================
      지점 변경 이력 조회
      ========================= -->
-	<select id="selectBranchHistoryList"
-	        parameterType="long"
-	        resultType="com.health.app.branch.BranchHistoryDTO">
-	
-	<![CDATA[
-	SELECT
-	    h.create_date        AS createDate,
-	    h.history_type       AS historyType,
-	    h.change_field       AS changeField,
-	    h.before_value       AS beforeValue,
-	    h.after_value        AS afterValue,
-	    h.reason             AS reason,
-	    u.name               AS createUserName
-	FROM (
-	    -- ① 지점 상태 변경 이력
-	    SELECT
-	        bsl.create_date,
-	        'STATUS_CHANGE'        AS history_type,
-	        'status_code'          AS change_field,
-	        bsl.before_status_code AS before_value,
-	        bsl.after_status_code  AS after_value,
-	        bsl.reason,
-	        bsl.create_user
-	    FROM branch_status_log bsl
-	    WHERE bsl.branch_id = #{branchId}
-	
-	    UNION ALL
-	
-	    -- ② 지점 정보 수정 이력
-	    SELECT
-	        bul.create_date,
-	        'UPDATE'               AS history_type,
-	        bul.change_field,
-	        bul.before_value,
-	        bul.after_value,
-	        bul.reason,
-	        bul.create_user
-	    FROM branch_update_log bul
-	    WHERE bul.branch_id = #{branchId}
-	) h
-	JOIN users u ON u.user_id = h.create_user
-	ORDER BY h.create_date DESC
-	]]>
-	</select>
+<select id="selectBranchHistoryList"
+        parameterType="long"
+        resultType="com.health.app.branch.BranchHistoryDTO">
+
+<![CDATA[
+SELECT
+    h.create_date AS createDate,
+    h.history_type AS historyType,
+    h.change_field AS changeField,
+    h.before_value AS beforeValue,
+    h.after_value AS afterValue,
+    h.reason,
+    u.name AS createUserName
+FROM (
+    -- ① 상태 변경 이력
+    SELECT
+        bsl.create_date,
+        'STATUS_CHANGE' AS history_type,
+        '상태' AS change_field,
+
+        cc1.code_desc AS before_value,
+        cc2.code_desc AS after_value,
+
+        bsl.reason,
+        bsl.create_user
+    FROM branch_status_log bsl
+    LEFT JOIN common_code cc1
+      ON cc1.code_group = 'BRANCH_STATUS'
+     AND cc1.code = bsl.before_status_code
+    LEFT JOIN common_code cc2
+      ON cc2.code_group = 'BRANCH_STATUS'
+     AND cc2.code = bsl.after_status_code
+    WHERE bsl.branch_id = #{branchId}
+
+    UNION ALL
+
+    -- ② 일반 수정 이력
+    SELECT
+        bul.create_date,
+        'UPDATE' AS history_type,
+        bul.change_field,
+        bul.before_value,
+        bul.after_value,
+        bul.reason,
+        bul.create_user
+    FROM branch_update_log bul
+    WHERE bul.branch_id = #{branchId}
+) h
+JOIN users u ON u.user_id = h.create_user
+ORDER BY h.create_date DESC
+]]>
+</select>
+
     
 </mapper>

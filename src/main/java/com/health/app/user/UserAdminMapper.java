@@ -8,6 +8,9 @@ public interface UserAdminMapper {
 
     List<UserAdminDTO> selectUserAdminList();
     
+    // 지점별 사용자 조회 (ADMIN용)
+    List<UserAdminDTO> selectUserAdminListByBranch(Long branchId);
+
     UserAdminDTO selectUserAdminDetail(Long userId);
 
     void insertUser(UserAdminDTO dto);
@@ -20,6 +23,7 @@ public interface UserAdminMapper {
 	void insertRoleChangeLog(Long userId, String beforeRoleCode, String afterRoleCode,
 	            Long createUser, String reason);
 	
+	// 이력 저장
 	void insertUserHistory(Long userId, String changeType,
 	          String beforeValue, String afterValue,
 	          String reason, Long createUser);
@@ -30,10 +34,9 @@ public interface UserAdminMapper {
 
 	void updatePassword(Long userId, String password, Long updateUser);
 
-	List<UserHistoryDTO> selectUserHistory(Long userId);
-
-	List<UserBranchLogDTO> selectUserBranchLogs(Long userId);
-
-	List<RoleChangeLogDTO> selectRoleChangeLogs(Long userId);
+	List<UserBranchLogDTO> selectUserAllHistory(Long userId);
+	
+    // 탈퇴 처리
+    int updateUseYn(Long userId, Long updateUser);
 
 }

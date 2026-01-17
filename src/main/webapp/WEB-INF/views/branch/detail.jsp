@@ -37,9 +37,23 @@
           <tr>
             <th>상태</th>
             <td>
-              <span class="badge bg-info">
-                ${branch.statusCode} - ${branch.statusName}
-              </span>
+				<c:choose>
+				    <c:when test="${branch.statusCode eq 'BS001'}">
+				        <span class="badge bg-success">${branch.statusName}</span>
+				    </c:when>
+				
+				    <c:when test="${branch.statusCode eq 'BS002'}">
+				        <span class="badge bg-danger">${branch.statusName}</span>
+				    </c:when>
+				
+				    <c:when test="${branch.statusCode eq 'BS003'}">
+				        <span class="badge bg-warning">${branch.statusName}</span>
+				    </c:when>
+				
+				    <c:otherwise>
+				        <span class="badge bg-secondary">${branch.statusName}</span>
+				    </c:otherwise>
+				</c:choose>
             </td>
           </tr>
         </table>

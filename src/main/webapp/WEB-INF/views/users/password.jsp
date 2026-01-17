@@ -5,10 +5,6 @@
 
 <div class="content-wrapper p-4">
 
-    <section class="content-header">
-        <h1>비밀번호 변경</h1>
-    </section>
-
     <section class="content">
         <div class="row justify-content-center">
             <div class="col-md-5">
