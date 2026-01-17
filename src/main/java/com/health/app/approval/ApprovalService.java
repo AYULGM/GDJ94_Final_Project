@@ -106,7 +106,9 @@ public class ApprovalService {
         }
 
         if (dto.getDocNo() == null || dto.getDocNo().isBlank()) {
-            dto.setDocNo("TMP-" + System.currentTimeMillis());
+        	String num = String.valueOf(System.currentTimeMillis()).substring(7);
+        	dto.setDocNo("TMP-" + num);
+
         }
 
         dto.setStatusCode("AS001");

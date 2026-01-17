@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
+
 <!doctype html>
 <html lang="ko">
 <head>
@@ -52,7 +54,7 @@
                 <td><c:out value="${row.typeCode}"/></td>
                 <td><c:out value="${row.formCode}"/></td>
                 <td><span class="badge text-bg-secondary"><c:out value="${row.mySeq}"/></span></td>
-                <td><c:out value="${row.submittedAt}"/></td>
+				<td><c:out value="${fn:replace(row.submittedAt, 'T', ' ')}"/></td>
                 <td class="text-end">
                   <a class="btn btn-sm btn-primary" href="/approval/handle?docVerId=${row.docVerId}">
                     결재하기
