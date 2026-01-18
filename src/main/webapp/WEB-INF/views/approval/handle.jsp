@@ -141,7 +141,7 @@
                   <td class="text-nowrap">
                     <span class="badge text-bg-secondary">${l.decisionCode}</span>
                   </td>
-                  <td class="text-nowrap">${l.decidedDate}</td>
+				  <td class="text-nowrap">${l.decidedDate.toString().replace('T',' ')}</td>
                 </tr>
               </c:forEach>
 
