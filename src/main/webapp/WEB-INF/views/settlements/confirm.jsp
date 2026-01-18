@@ -103,11 +103,14 @@
         </div>
 
         <!-- 정산 대상 매출 목록 -->
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">정산 대상 매출 목록</h3>
+                        <h3 class="card-title">매출 목록</h3>
+                        <div class="card-tools">
+                            <span class="badge bg-primary" id="salesTotalCount">0건</span>
+                        </div>
                     </div>
 
                     <div class="card-body p-0">
@@ -131,7 +134,57 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="card-footer clearfix">
+                        <ul class="pagination pagination-sm m-0 float-end" id="salesPagination"></ul>
+                    </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 정산 대상 지출 목록 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">지출 목록</h3>
+                        <div class="card-tools">
+                            <span class="badge bg-danger" id="expensesTotalCount">0건</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px">번호</th>
+                                    <th>지점</th>
+                                    <th>지출일시</th>
+                                    <th>카테고리</th>
+                                    <th>내용</th>
+                                    <th class="text-end">금액</th>
+                                    <th style="width: 100px">정산여부</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">조회 조건을 입력하고 조회 버튼을 눌러주세요.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer clearfix">
+                        <ul class="pagination pagination-sm m-0 float-end" id="expensesPagination"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 정산 생성 버튼 -->
+        <div class="row">
+            <div class="col-12 text-end">
+                <button type="button" class="btn btn-success btn-lg" id="btnCreateSettlement" style="display: none;">
+                    <i class="bi bi-check-circle"></i> 정산 생성
+                </button>
             </div>
         </div>
 
@@ -143,6 +196,9 @@
 <script>
 let currentSalesData = [];
 let currentExpensesData = [];
+let salesPage = 1;
+let expensesPage = 1;
+const pageSize = 10;
 
 // 권한 정보 (hidden input에서 읽어옴)
 const userPermissions = {
@@ -162,13 +218,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadBranchOptions();
 
     // 초기 데이터 로드
-    loadUnsettledSales();
+    loadData();
 
     // 폼 제출 이벤트
     document.getElementById('filterForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        loadUnsettledSales();
+        salesPage = 1;
+        expensesPage = 1;
+        loadData();
     });
+
+    // 정산 생성 버튼 이벤트
+    document.getElementById('btnCreateSettlement').addEventListener('click', createSettlement);
 });
 
 // 지점 옵션 로드
@@ -216,44 +277,61 @@ async function loadBranchOptions() {
     }
 }
 
-// 정산 대상 매출 조회
-async function loadUnsettledSales() {
+// 데이터 로드 (매출 + 지출)
+async function loadData() {
     const formData = new FormData(document.getElementById('filterForm'));
     const params = new URLSearchParams(formData);
 
+    // 로딩 표시
+    document.getElementById('salesTableBody').innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
+    document.getElementById('expensesTableBody').innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
+
     try {
-        const tbody = document.getElementById('salesTableBody');
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm"></div></td></tr>';
+        // 매출 데이터 조회
+        const salesResponse = await fetch('/statistics/api/unsettled-sales?' + params.toString());
+        currentSalesData = await salesResponse.json();
 
-        const response = await fetch('/statistics/api/unsettled-sales?' + params.toString());
-        currentSalesData = await response.json();
-
-        // 지출 데이터도 조회 (손익 계산용)
-        const expensesResponse = await fetch(`/statistics/api/expenses/by-period?${params.toString()}&groupBy=monthly`);
+        // 지출 데이터 조회
+        const expensesResponse = await fetch('/statistics/api/unsettled-expenses?' + params.toString());
         currentExpensesData = await expensesResponse.json();
 
-        renderSalesTable(currentSalesData);
-        updateSummary(currentSalesData, currentExpensesData);
+        // 테이블 렌더링
+        renderSalesTable();
+        renderExpensesTable();
 
+        // 요약 정보 업데이트
+        updateSummary();
+
+        // 요약 섹션 및 정산 생성 버튼 표시
         document.getElementById('summarySection').style.display = 'flex';
+        document.getElementById('btnCreateSettlement').style.display = 'inline-block';
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);
-        document.getElementById('salesTableBody').innerHTML =
-            '<tr><td colspan="8" class="text-center text-danger">데이터를 불러오는데 실패했습니다.</td></tr>';
+        document.getElementById('salesTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">데이터를 불러오는데 실패했습니다.</td></tr>';
+        document.getElementById('expensesTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">데이터를 불러오는데 실패했습니다.</td></tr>';
     }
 }
 
-// 테이블 렌더링
-function renderSalesTable(sales) {
+// 매출 테이블 렌더링
+function renderSalesTable() {
     const tbody = document.getElementById('salesTableBody');
+    const totalCount = currentSalesData.length;
 
-    if (!sales || sales.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center">정산 대상 매출이 없습니다.</td></tr>';
+    document.getElementById('salesTotalCount').textContent = totalCount + '건';
+
+    if (totalCount === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">매출 데이터가 없습니다.</td></tr>';
+        document.getElementById('salesPagination').innerHTML = '';
         return;
     }
 
-    tbody.innerHTML = sales.map(sale =>
+    // 페이징 처리
+    const startIdx = (salesPage - 1) * pageSize;
+    const endIdx = Math.min(startIdx + pageSize, totalCount);
+    const pageData = currentSalesData.slice(startIdx, endIdx);
+
+    tbody.innerHTML = pageData.map(sale =>
         '<tr>' +
             '<td>' + sale.saleId + '</td>' +
             '<td>' + (sale.saleNo || '-') + '</td>' +
@@ -261,31 +339,109 @@ function renderSalesTable(sales) {
             '<td>' + formatDateTime(sale.soldAt) + '</td>' +
             '<td>' + getCategoryName(sale.categoryCode) + '</td>' +
             '<td class="text-end">' + formatCurrency(sale.totalAmount || 0) + '</td>' +
-            '<td>' +
-                '<span class="badge ' + getStatusBadgeClass(sale.statusCode) + '">' +
-                    getStatusName(sale.statusCode) +
-                '</span>' +
-            '</td>' +
-            '<td>' +
-                '<span class="badge ' + (sale.settled ? 'bg-secondary' : 'bg-warning') + '">' +
-                    (sale.settled ? '정산됨' : '미정산') +
-                '</span>' +
-            '</td>' +
+            '<td><span class="badge ' + getStatusBadgeClass(sale.statusCode) + '">' + getStatusName(sale.statusCode) + '</span></td>' +
+            '<td><span class="badge ' + (sale.settled ? 'bg-secondary' : 'bg-warning') + '">' + (sale.settled ? '정산됨' : '미정산') + '</span></td>' +
         '</tr>'
     ).join('');
+
+    // 페이지네이션 렌더링
+    renderPagination('salesPagination', totalCount, salesPage, function(page) {
+        salesPage = page;
+        renderSalesTable();
+    });
+}
+
+// 지출 테이블 렌더링
+function renderExpensesTable() {
+    const tbody = document.getElementById('expensesTableBody');
+    const totalCount = currentExpensesData.length;
+
+    document.getElementById('expensesTotalCount').textContent = totalCount + '건';
+
+    if (totalCount === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">지출 데이터가 없습니다.</td></tr>';
+        document.getElementById('expensesPagination').innerHTML = '';
+        return;
+    }
+
+    // 페이징 처리
+    const startIdx = (expensesPage - 1) * pageSize;
+    const endIdx = Math.min(startIdx + pageSize, totalCount);
+    const pageData = currentExpensesData.slice(startIdx, endIdx);
+
+    tbody.innerHTML = pageData.map(expense =>
+        '<tr>' +
+            '<td>' + expense.expenseId + '</td>' +
+            '<td>' + (expense.branchName || '-') + '</td>' +
+            '<td>' + formatDateTime(expense.expenseAt) + '</td>' +
+            '<td>' + getExpenseCategoryName(expense.categoryCode) + '</td>' +
+            '<td>' + (expense.description || '-') + '</td>' +
+            '<td class="text-end">' + formatCurrency(expense.amount || 0) + '</td>' +
+            '<td><span class="badge ' + (expense.settled ? 'bg-secondary' : 'bg-warning') + '">' + (expense.settled ? '정산됨' : '미정산') + '</span></td>' +
+        '</tr>'
+    ).join('');
+
+    // 페이지네이션 렌더링
+    renderPagination('expensesPagination', totalCount, expensesPage, function(page) {
+        expensesPage = page;
+        renderExpensesTable();
+    });
+}
+
+// 페이지네이션 렌더링
+function renderPagination(elementId, totalCount, currentPage, onPageChange) {
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const pagination = document.getElementById(elementId);
+
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+
+    // 이전 버튼
+    html += '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '">';
+    html += '<a class="page-link" href="#" data-page="' + (currentPage - 1) + '">&laquo;</a></li>';
+
+    // 페이지 번호
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, startPage + 4);
+
+    for (let i = startPage; i <= endPage; i++) {
+        html += '<li class="page-item ' + (i === currentPage ? 'active' : '') + '">';
+        html += '<a class="page-link" href="#" data-page="' + i + '">' + i + '</a></li>';
+    }
+
+    // 다음 버튼
+    html += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '">';
+    html += '<a class="page-link" href="#" data-page="' + (currentPage + 1) + '">&raquo;</a></li>';
+
+    pagination.innerHTML = html;
+
+    // 이벤트 바인딩
+    pagination.querySelectorAll('.page-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = parseInt(this.dataset.page);
+            if (page >= 1 && page <= totalPages) {
+                onPageChange(page);
+            }
+        });
+    });
 }
 
 // 요약 정보 업데이트
-function updateSummary(sales, expenses) {
-    const totalSalesAmount = sales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
-    const totalExpensesAmount = expenses.reduce((sum, expense) => sum + (expense.totalAmount || 0), 0);
+function updateSummary() {
+    const totalSalesAmount = currentSalesData.reduce(function(sum, sale) { return sum + (parseFloat(sale.totalAmount) || 0); }, 0);
+    const totalExpensesAmount = currentExpensesData.reduce(function(sum, expense) { return sum + (parseFloat(expense.amount) || 0); }, 0);
     const totalProfit = totalSalesAmount - totalExpensesAmount;
 
     document.getElementById('totalSales').textContent = formatCurrency(totalSalesAmount);
-    document.getElementById('salesCount').textContent = sales.length + '건';
+    document.getElementById('salesCount').textContent = currentSalesData.length + '건';
 
     document.getElementById('totalExpenses').textContent = formatCurrency(totalExpensesAmount);
-    document.getElementById('expensesCount').textContent = expenses.reduce((sum, e) => sum + (e.expenseCount || 0), 0) + '건';
+    document.getElementById('expensesCount').textContent = currentExpensesData.length + '건';
 
     const profitElement = document.getElementById('totalProfit');
     profitElement.textContent = formatCurrency(totalProfit);
@@ -294,8 +450,8 @@ function updateSummary(sales, expenses) {
 
 // 정산 생성
 async function createSettlement() {
-    if (currentSalesData.length === 0) {
-        alert('정산 대상 매출이 없습니다.');
+    if (currentSalesData.length === 0 && currentExpensesData.length === 0) {
+        alert('정산 대상 데이터가 없습니다.');
         return;
     }
 
@@ -303,8 +459,9 @@ async function createSettlement() {
         return;
     }
 
+    const branchValue = document.getElementById('branchId').value;
     const requestData = {
-        branchId: parseInt(document.getElementById('branchId').value) || null,
+        branchId: branchValue === '0' ? null : parseInt(branchValue),
         fromDate: document.getElementById('startDate').value,
         toDate: document.getElementById('endDate').value
     };
@@ -318,42 +475,58 @@ async function createSettlement() {
 
         if (response.ok) {
             const result = await response.json();
-            alert(result.message);
-            window.location.href = `/settlements/${result.settlementId}`;
+            alert(result.message || '정산이 생성되었습니다.');
+            window.location.href = '/settlements/' + result.settlementId;
         } else {
-            throw new Error('정산 생성 실패');
+            const error = await response.json();
+            throw new Error(error.message || '정산 생성 실패');
         }
     } catch (error) {
         console.error('정산 생성 실패:', error);
-        alert('정산 생성에 실패했습니다.');
+        alert('정산 생성에 실패했습니다: ' + error.message);
     }
 }
 
-// 카테고리 이름
+// 매출 카테고리 이름
 function getCategoryName(code) {
     const categories = {
         'MEMBERSHIP': '회원권',
         'PT': 'PT',
         'GOODS': '용품',
+        'PRODUCT': '상품',
         'ETC': '기타'
     };
-    return categories[code] || code;
+    return categories[code] || code || '-';
+}
+
+// 지출 카테고리 이름
+function getExpenseCategoryName(code) {
+    const categories = {
+        'SALARY': '급여',
+        'RENT': '임대료',
+        'UTILITY': '공과금',
+        'SUPPLY': '비품',
+        'ETC': '기타'
+    };
+    return categories[code] || code || '-';
 }
 
 // 상태 이름
 function getStatusName(code) {
     const statuses = {
         'PENDING': '대기',
+        'COMPLETED': '완료',
         'CONFIRMED': '확정',
         'CANCELLED': '취소'
     };
-    return statuses[code] || code;
+    return statuses[code] || code || '-';
 }
 
 // 상태 뱃지 클래스
 function getStatusBadgeClass(code) {
     const classes = {
         'PENDING': 'bg-warning',
+        'COMPLETED': 'bg-success',
         'CONFIRMED': 'bg-success',
         'CANCELLED': 'bg-secondary'
     };
@@ -365,7 +538,7 @@ function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return year + '-' + month + '-' + day;
 }
 
 // 날짜/시간 포맷

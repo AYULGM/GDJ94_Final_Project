@@ -266,7 +266,7 @@
     </select>
 
     <!-- =========================================================
-         ST-007: 정산 대상 매출 조회 (미정산 매출)
+         ST-007: 정산 대상 매출 조회 (sales 테이블 기준)
        ========================================================= -->
     <select id="selectUnsettledSales" parameterType="com.health.app.statistics.StatisticsSearchDto"
             resultType="com.health.app.statistics.UnsettledSaleDto">
@@ -282,16 +282,43 @@
             CASE WHEN ssm.settlement_id IS NOT NULL THEN TRUE ELSE FALSE END AS settled,
             ssm.settlement_id AS settlementId
         FROM sales s
-        JOIN branch b ON b.branch_id = s.branch_id
+        LEFT JOIN branch b ON b.branch_id = s.branch_id
         LEFT JOIN settlement_sale_map ssm ON ssm.sale_id = s.sale_id AND ssm.use_yn = 1
         WHERE s.use_yn = 1
-          AND b.use_yn = 1
           AND s.status_code = 'COMPLETED'
           AND DATE(s.sold_at) BETWEEN #{startDate} AND #{endDate}
         <if test="branchId != null and branchId != 0">
           AND s.branch_id = #{branchId}
         </if>
         ORDER BY s.sold_at DESC, s.sale_id DESC
+    </select>
+
+    <!-- =========================================================
+         ST-007-2: 정산 대상 지출 조회 (expenses 테이블 기준)
+       ========================================================= -->
+    <select id="selectUnsettledExpenses" parameterType="com.health.app.statistics.StatisticsSearchDto"
+            resultType="com.health.app.statistics.UnsettledExpenseDto">
+        SELECT
+            e.expense_id AS expenseId,
+            e.branch_id AS branchId,
+            b.branch_name AS branchName,
+            e.expense_at AS expenseAt,
+            e.category_code AS categoryCode,
+            e.amount AS amount,
+            e.description AS description,
+            e.settlement_flag AS settlementFlag,
+            CASE WHEN sem.settlement_id IS NOT NULL THEN TRUE ELSE FALSE END AS settled,
+            sem.settlement_id AS settlementId
+        FROM expenses e
+        LEFT JOIN branch b ON b.branch_id = e.branch_id
+        LEFT JOIN settlement_expense_map sem ON sem.expense_id = e.expense_id AND sem.use_yn = 1
+        WHERE e.use_yn = 1
+          AND e.settlement_flag = TRUE
+          AND DATE(e.expense_at) BETWEEN #{startDate} AND #{endDate}
+        <if test="branchId != null and branchId != 0">
+          AND e.branch_id = #{branchId}
+        </if>
+        ORDER BY e.expense_at DESC, e.expense_id DESC
     </select>
 
     <!-- =========================================================
