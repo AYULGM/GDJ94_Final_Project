@@ -26,6 +26,11 @@ public interface SettlementService {
     Long createSettlement(CreateSettlementRequestDto requestDto, Long currentUserId);
 
     /**
+     * 선택 정산 생성 (선택된 항목만)
+     */
+    Long createSelectedSettlement(SelectedSettlementRequestDto requestDto, Long currentUserId);
+
+    /**
      * 정산 확정
      */
     void confirmSettlement(Long settlementId, String reason, Long currentUserId);

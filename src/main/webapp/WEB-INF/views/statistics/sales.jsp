@@ -61,14 +61,12 @@
                 <div class="card">
                     <div class="card-body">
                         <form id="filterForm" class="row g-3">
-                            <c:if test="${activeTab ne 'branch'}">
-                                <div class="col-md-3">
-                                    <label for="branchId" class="form-label">지점</label>
-                                    <select class="form-select" id="branchId" name="branchId">
-                                        <option value="0" selected>전체</option>
-                                    </select>
-                                </div>
-                            </c:if>
+                            <div class="col-md-3">
+                                <label for="branchId" class="form-label">지점</label>
+                                <select class="form-select" id="branchId" name="branchId">
+                                    <option value="0" selected>전체</option>
+                                </select>
+                            </div>
                             <div class="col-md-3">
                                 <label for="startDate" class="form-label">시작일</label>
                                 <input type="date" class="form-control" id="startDate" name="startDate" required>
@@ -174,10 +172,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('startDate').value = formatDate(sixMonthsAgo);
     document.getElementById('endDate').value = formatDate(today);
 
-    // 지점 목록 로드 (지점별이 아닌 경우) - await로 완료 대기
-    if (activeTab !== 'branch') {
-        await loadBranchOptions();
-    }
+    // 지점 목록 로드 - await로 완료 대기
+    await loadBranchOptions();
 
     // 차트 초기화
     initChart();

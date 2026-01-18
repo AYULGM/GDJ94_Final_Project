@@ -158,6 +158,21 @@ class NotificationClient {
     }
 
     /**
+     * 특정 알림을 삭제
+     * @param {number} notifId - 알림 ID
+     */
+    async deleteNotification(notifId) {
+        try {
+            await fetch(`${this.contextPath}/api/notifications/${notifId}`, {
+                method: 'DELETE'
+            });
+            this.loadUnreadCount();
+        } catch (error) {
+            console.error('알림 삭제 실패:', error);
+        }
+    }
+
+    /**
      * 모든 알림을 읽음 처리
      */
     async markAllAsRead() {
@@ -243,13 +258,15 @@ class NotificationClient {
             item.addEventListener('click', async (e) => {
                 e.preventDefault();
 
-                // 읽음 처리
-                if (!notification.isRead) {
-                    await this.markAsRead(notification.notifId);
-                    // UI 업데이트
-                    item.classList.remove('bg-light');
-                    const badge = item.querySelector('.badge');
-                    if (badge) badge.remove();
+                // 알림 삭제 처리
+                await this.deleteNotification(notification.notifId);
+
+                // 알림 목록에서 제거
+                item.remove();
+
+                // 목록이 비었으면 "알림이 없습니다" 표시
+                if (listContainer.children.length === 0) {
+                    listContainer.innerHTML = '<div class="dropdown-item text-center text-secondary">알림이 없습니다</div>';
                 }
 
                 // 관련 페이지로 이동

@@ -302,7 +302,67 @@
     </insert>
 
     <!-- =========================================================
-         13) 정산 이력 로그 등록
+         13) 선택된 매출 합계 조회
+       ========================================================= -->
+    <select id="selectSelectedSalesTotalAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(s.total_amount), 0)
+        FROM sales s
+        WHERE s.sale_id IN
+        <foreach collection="saleIds" item="saleId" open="(" separator="," close=")">
+            #{saleId}
+        </foreach>
+          AND s.use_yn = 1
+    </select>
+
+    <!-- =========================================================
+         14) 선택된 지출 합계 조회
+       ========================================================= -->
+    <select id="selectSelectedExpensesTotalAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(e.amount), 0)
+        FROM expenses e
+        WHERE e.expense_id IN
+        <foreach collection="expenseIds" item="expenseId" open="(" separator="," close=")">
+            #{expenseId}
+        </foreach>
+          AND e.use_yn = 1
+    </select>
+
+    <!-- =========================================================
+         15) 선택된 매출 정산 매핑 등록
+       ========================================================= -->
+    <insert id="insertSelectedSettlementSaleMaps">
+        INSERT INTO settlement_sale_map (
+            settlement_id,
+            sale_id,
+            settle_status,
+            create_user,
+            use_yn
+        )
+        VALUES
+        <foreach collection="saleIds" item="saleId" separator=",">
+            (#{settlementId}, #{saleId}, 'SETTLED', #{createUser}, TRUE)
+        </foreach>
+    </insert>
+
+    <!-- =========================================================
+         16) 선택된 지출 정산 매핑 등록
+       ========================================================= -->
+    <insert id="insertSelectedSettlementExpenseMaps">
+        INSERT INTO settlement_expense_map (
+            settlement_id,
+            expense_id,
+            settle_status,
+            create_user,
+            use_yn
+        )
+        VALUES
+        <foreach collection="expenseIds" item="expenseId" separator=",">
+            (#{settlementId}, #{expenseId}, 'SETTLED', #{createUser}, TRUE)
+        </foreach>
+    </insert>
+
+    <!-- =========================================================
+         17) 정산 이력 로그 등록
        ========================================================= -->
     <insert id="insertSettlementHistory" parameterType="com.health.app.settlements.SettlementHistoryDto"
             useGeneratedKeys="true" keyProperty="logId">
@@ -348,7 +408,7 @@
         FROM settlement_log sl
         LEFT JOIN users u ON u.user_id = sl.actor_user_id
         WHERE sl.settlement_id = #{settlementId}
-          AND sl.use_yn = 1
+        -- 감사 로그는 삭제/숨김 불가 (use_yn 조건 제거)
         ORDER BY sl.acted_at DESC, sl.log_id DESC
     </select>
 

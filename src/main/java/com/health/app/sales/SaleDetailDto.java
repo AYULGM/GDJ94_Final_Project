@@ -21,6 +21,7 @@ public class SaleDetailDto {
     private String categoryCode;
     private BigDecimal totalAmount;
     private String memo;
+    private Boolean settled;         // 정산 여부
 
     // 생성/수정 정보
     private Long createUser;
