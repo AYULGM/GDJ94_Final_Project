@@ -11,6 +11,9 @@ public class InboundRequestDetailDto {
     private Long inboundRequestId;
     private String inboundRequestNo;
 
+    /** ✅ 추가: 요청 지점(재고 반영 대상) */
+    private Long requestBranchId;
+
     private String vendorName;
     private String statusCode;
 

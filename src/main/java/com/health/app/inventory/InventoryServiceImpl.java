@@ -20,14 +20,25 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public List<OptionDto> getProductOptions(Long branchId) {
-        // branchId가 null이면 XML에서 전체 상품을 반환하도록 되어있음
         return inventoryMapper.selectProductOptions(branchId);
     }
 
     @Override
-    public List<InventoryViewDto> getInventoryList(Long branchId, String keyword, Boolean onlyLowStock) {
+    public List<InventoryViewDto> getInventoryList(Long branchId, String keyword, Boolean onlyLowStock, Integer page, Integer size) {
         if (onlyLowStock == null) onlyLowStock = false;
-        return inventoryMapper.selectInventoryList(branchId, keyword, onlyLowStock);
+
+        if (page == null || page < 1) page = 1;
+        if (size == null || size < 1) size = 20;
+        if (size > 200) size = 200;
+
+        int offset = (page - 1) * size;
+        return inventoryMapper.selectInventoryList(branchId, keyword, onlyLowStock, offset, size);
+    }
+
+    @Override
+    public long getInventoryListCount(Long branchId, String keyword, Boolean onlyLowStock) {
+        if (onlyLowStock == null) onlyLowStock = false;
+        return inventoryMapper.selectInventoryListCount(branchId, keyword, onlyLowStock);
     }
 
     @Override
@@ -42,7 +53,6 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public void adjustInventory(Long branchId, Long productId, String moveTypeCode, Long quantity, String reason, Long userId) {
-
         if (branchId == null || branchId <= 0) throw new IllegalArgumentException("branchId가 올바르지 않습니다.");
         if (productId == null || productId <= 0) throw new IllegalArgumentException("productId가 올바르지 않습니다.");
         if (quantity == null || quantity <= 0) throw new IllegalArgumentException("수량은 1 이상이어야 합니다.");
@@ -66,20 +76,16 @@ public class InventoryServiceImpl implements InventoryService {
             default -> throw new IllegalArgumentException("유효하지 않은 유형입니다. (IN/OUT/ADJUST)");
         }
 
-        //  inventory_id 조회 (audit target_id로 넣기 위함)
         Long inventoryId = inventoryMapper.selectInventoryId(branchId, productId);
         if (inventoryId == null) throw new IllegalArgumentException("inventory_id를 찾을 수 없습니다. (branchId/productId 확인)");
 
-        // 1) 재고 업데이트
         inventoryMapper.updateInventoryQuantity(branchId, productId, afterQty, null, userId);
 
-        // 2) 재고 이력 적재
         inventoryMapper.insertInventoryHistory(
                 branchId, productId, moveTypeCode, quantity, reason,
                 "INVENTORY_ADJUST", null, userId
         );
 
-        // 3)  감사로그 적재 (DB 컬럼명 기준)
         inventoryMapper.insertAuditLog(
                 userId,
                 "INVENTORY_ADJUST",
@@ -94,7 +100,6 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public void updateLowStockThreshold(Long branchId, Long productId, Long lowStockThreshold, Long userId) {
-
         if (branchId == null || branchId <= 0) throw new IllegalArgumentException("branchId가 올바르지 않습니다.");
         if (productId == null || productId <= 0) throw new IllegalArgumentException("productId가 올바르지 않습니다.");
         if (lowStockThreshold != null && lowStockThreshold < 0) throw new IllegalArgumentException("기준 수량은 0 이상이어야 합니다.");
@@ -103,7 +108,7 @@ public class InventoryServiceImpl implements InventoryService {
         InventoryDetailDto current = inventoryMapper.selectInventoryDetail(branchId, productId);
         if (current == null) throw new IllegalArgumentException("재고 데이터가 존재하지 않습니다. (branchId/productId 확인)");
 
-        Long before = current.getLowStockThreshold(); // null 가능
+        Long before = current.getLowStockThreshold();
 
         int updated = inventoryMapper.updateLowStockThreshold(branchId, productId, lowStockThreshold, userId);
         if (updated == 0) throw new IllegalArgumentException("기준 수량 저장에 실패했습니다. (대상 재고 없음 또는 use_yn=0)");

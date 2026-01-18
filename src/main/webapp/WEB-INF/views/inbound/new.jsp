@@ -6,7 +6,7 @@
 <div class="container-fluid py-3">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">구매요청서(PR) - 입고요청 등록</h3>
+        <h3 class="mb-0">입고 요청</h3>
         <a class="btn btn-outline-secondary" href="<c:url value='/inbound'/>">목록</a>
     </div>
 

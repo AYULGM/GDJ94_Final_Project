@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.health.app.notices.NoticeMapper">
 
@@ -38,13 +38,13 @@
       create_date, update_user, update_date,
       use_yn, publish_start_date, publish_end_date
     ) VALUES (
-      #{title}, #{content},
-      #{noticeType}, #{targetType}, #{categoryCode},
-      #{isPinned}, #{status},
-      #{writerId}, 0,
-      NOW(), #{updateUser}, NOW(),
-      1, #{publishStartDate}, #{publishEndDate}
-    )
+               #{title}, #{content},
+               #{noticeType}, #{targetType}, #{categoryCode},
+               #{isPinned}, #{status},
+               #{writerId}, 0,
+               NOW(), #{updateUser}, NOW(),
+               1, #{publishStartDate}, #{publishEndDate}
+             )
     ]]>
   </insert>
 
@@ -82,20 +82,20 @@
   <!-- 단건 조회 -->
   <select id="selectOne" resultMap="NoticeMap">
 	  <![CDATA[
-	  SELECT
-	    n.notice_id, n.title, n.content,
-	    n.notice_type, n.target_type, n.category_code,
-	    n.is_pinned, n.status,
-	    n.writer_id,
-	    u.name AS writer_name,           -- ✅ 추가
-	    n.view_count,
-	    n.create_date, n.update_user, n.update_date,
-	    n.use_yn, n.publish_start_date, n.publish_end_date
-	  FROM notices n
-	  LEFT JOIN users u ON u.user_id = n.writer_id   -- ✅ 추가
-	  WHERE n.notice_id = #{noticeId}
-	    AND n.use_yn = 1
-	  ]]>
+    SELECT
+      n.notice_id, n.title, n.content,
+      n.notice_type, n.target_type, n.category_code,
+      n.is_pinned, n.status,
+      n.writer_id,
+      u.name AS writer_name,           -- ✅ 추가
+      n.view_count,
+      n.create_date, n.update_user, n.update_date,
+      n.use_yn, n.publish_start_date, n.publish_end_date
+    FROM notices n
+           LEFT JOIN users u ON u.user_id = n.writer_id   -- ✅ 추가
+    WHERE n.notice_id = #{noticeId}
+      AND n.use_yn = 1
+    ]]>
 	</select>
 
 
@@ -110,53 +110,53 @@
   </update>
 
   <!-- 사용자 목록 -->
-<select id="selectList" resultMap="NoticeMap">
+  <select id="selectList" resultMap="NoticeMap">
   <![CDATA[
-  SELECT DISTINCT
-    n.notice_id, n.title, n.content,
-    n.notice_type, n.target_type, n.category_code,
-    n.is_pinned, n.status,
-    n.writer_id,
-    u.name AS writer_name,              -- ✅ 추가
-    n.view_count,
-    n.create_date, n.update_user, n.update_date,
-    n.use_yn, n.publish_start_date, n.publish_end_date
-  FROM notices n
-  LEFT JOIN users u
-    ON u.user_id = n.writer_id          -- ✅ 추가
-  LEFT JOIN notice_targets nt
-    ON n.notice_id = nt.notice_id
-   AND nt.use_yn = 1
-  WHERE n.use_yn = 1
-    AND n.status = 'NS001'
-    AND (n.publish_start_date IS NULL OR n.publish_start_date <= NOW())
-    AND (n.publish_end_date IS NULL OR n.publish_end_date >= NOW())
-    AND (
+    SELECT DISTINCT
+      n.notice_id, n.title, n.content,
+      n.notice_type, n.target_type, n.category_code,
+      n.is_pinned, n.status,
+      n.writer_id,
+      u.name AS writer_name,              -- ✅ 추가
+      n.view_count,
+      n.create_date, n.update_user, n.update_date,
+      n.use_yn, n.publish_start_date, n.publish_end_date
+    FROM notices n
+           LEFT JOIN users u
+                     ON u.user_id = n.writer_id          -- ✅ 추가
+           LEFT JOIN notice_targets nt
+                     ON n.notice_id = nt.notice_id
+                       AND nt.use_yn = 1
+    WHERE n.use_yn = 1
+      AND n.status = 'NS001'
+      AND (n.publish_start_date IS NULL OR n.publish_start_date <= NOW())
+      AND (n.publish_end_date IS NULL OR n.publish_end_date >= NOW())
+      AND (
       n.target_type = 'TT001'
-      OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
-    )
-  ORDER BY n.is_pinned DESC, n.create_date DESC
-  ]]>
+        OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
+      )
+    ORDER BY n.is_pinned DESC, n.create_date DESC
+    ]]>
 </select>
 
   <!-- 관리자 목록 -->
-<select id="selectAdminList" resultMap="NoticeMap">
+  <select id="selectAdminList" resultMap="NoticeMap">
   <![CDATA[
-  SELECT
-    n.notice_id, n.title, n.content,
-    n.notice_type, n.target_type, n.category_code,
-    n.is_pinned, n.status,
-    n.writer_id,
-    u.name AS writer_name,              -- ✅ 추가
-    n.view_count,
-    n.create_date, n.update_user, n.update_date,
-    n.use_yn, n.publish_start_date, n.publish_end_date
-  FROM notices n
-  LEFT JOIN users u
-    ON u.user_id = n.writer_id          -- ✅ 추가
-  WHERE n.use_yn = 1
-  ORDER BY n.is_pinned DESC, n.create_date DESC
-  ]]>
+    SELECT
+      n.notice_id, n.title, n.content,
+      n.notice_type, n.target_type, n.category_code,
+      n.is_pinned, n.status,
+      n.writer_id,
+      u.name AS writer_name,              -- ✅ 추가
+      n.view_count,
+      n.create_date, n.update_user, n.update_date,
+      n.use_yn, n.publish_start_date, n.publish_end_date
+    FROM notices n
+           LEFT JOIN users u
+                     ON u.user_id = n.writer_id          -- ✅ 추가
+    WHERE n.use_yn = 1
+    ORDER BY n.is_pinned DESC, n.create_date DESC
+    ]]>
 </select>
 
 
@@ -180,10 +180,10 @@
       create_user, create_date,
       use_yn
     ) VALUES (
-      #{noticeId}, #{branchId},
-      #{createUser}, NOW(),
-      1
-    )
+               #{noticeId}, #{branchId},
+               #{createUser}, NOW(),
+               1
+             )
     ]]>
   </insert>
 
@@ -193,7 +193,7 @@
     SELECT b.branch_id AS branchId,
            b.branch_name AS branchName
     FROM notice_targets nt
-    JOIN branch b ON b.branch_id = nt.branch_id
+           JOIN branch b ON b.branch_id = nt.branch_id
     WHERE nt.notice_id = #{noticeId}
       AND nt.use_yn = 1
     ORDER BY b.branch_name
@@ -233,64 +233,64 @@
       create_user, create_date,
       use_yn
     ) VALUES (
-      #{noticeId}, #{changeType}, #{beforeValue}, #{afterValue}, #{reason},
-      #{createUser}, NOW(),
-      1
-    )
+               #{noticeId}, #{changeType}, #{beforeValue}, #{afterValue}, #{reason},
+               #{createUser}, NOW(),
+               1
+             )
     ]]>
   </insert>
-  
-<select id="selectListPaged" resultMap="NoticeMap">
+
+  <select id="selectListPaged" resultMap="NoticeMap">
   <![CDATA[
-  SELECT DISTINCT
-    n.notice_id, n.title, n.content,
-    n.notice_type, n.target_type, n.category_code,
-    n.is_pinned, n.status,
-    n.writer_id,
-    u.name AS writer_name,              -- ✅ 추가
-    n.view_count,
-    n.create_date, n.update_user, n.update_date,
-    n.use_yn, n.publish_start_date, n.publish_end_date
-  FROM notices n
-  LEFT JOIN users u
-    ON u.user_id = n.writer_id          -- ✅ 추가
-  LEFT JOIN notice_targets nt
-    ON n.notice_id = nt.notice_id
-   AND nt.use_yn = 1
-  WHERE n.use_yn = 1
-    AND n.status = 'NS001'
-    AND (n.publish_start_date IS NULL OR n.publish_start_date <= NOW())
-    AND (n.publish_end_date IS NULL OR n.publish_end_date >= NOW())
-    AND (
+    SELECT DISTINCT
+      n.notice_id, n.title, n.content,
+      n.notice_type, n.target_type, n.category_code,
+      n.is_pinned, n.status,
+      n.writer_id,
+      u.name AS writer_name,              -- ✅ 추가
+      n.view_count,
+      n.create_date, n.update_user, n.update_date,
+      n.use_yn, n.publish_start_date, n.publish_end_date
+    FROM notices n
+           LEFT JOIN users u
+                     ON u.user_id = n.writer_id          -- ✅ 추가
+           LEFT JOIN notice_targets nt
+                     ON n.notice_id = nt.notice_id
+                       AND nt.use_yn = 1
+    WHERE n.use_yn = 1
+      AND n.status = 'NS001'
+      AND (n.publish_start_date IS NULL OR n.publish_start_date <= NOW())
+      AND (n.publish_end_date IS NULL OR n.publish_end_date >= NOW())
+      AND (
       n.target_type = 'TT001'
-      OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
-    )
-  ORDER BY n.is_pinned DESC, n.create_date DESC
-  LIMIT #{limit} OFFSET #{offset}
-  ]]>
+        OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
+      )
+    ORDER BY n.is_pinned DESC, n.create_date DESC
+      LIMIT #{limit} OFFSET #{offset}
+    ]]>
 </select>
 
 
-<select id="countUserList" resultType="long">
+  <select id="countUserList" resultType="long">
   <![CDATA[
-  SELECT COUNT(DISTINCT n.notice_id)
-  FROM notices n
-  LEFT JOIN notice_targets nt
-    ON n.notice_id = nt.notice_id
-   AND nt.use_yn = 1
-  WHERE n.use_yn = 1
-    AND n.status = 'NS001'
-    AND (n.publish_start_date IS NULL OR n.publish_start_date <= NOW())
-    AND (n.publish_end_date IS NULL OR n.publish_end_date >= NOW())
-    AND (
+    SELECT COUNT(DISTINCT n.notice_id)
+    FROM notices n
+           LEFT JOIN notice_targets nt
+                     ON n.notice_id = nt.notice_id
+                       AND nt.use_yn = 1
+    WHERE n.use_yn = 1
+      AND n.status = 'NS001'
+      AND (n.publish_start_date IS NULL OR n.publish_start_date <= NOW())
+      AND (n.publish_end_date IS NULL OR n.publish_end_date >= NOW())
+      AND (
       n.target_type = 'TT001'
-      OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
-    )
-  ]]>
+        OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
+      )
+    ]]>
 </select>
 
   <select id="selectAdminListPaged" resultMap="NoticeMap">
-  <![CDATA[
+    <![CDATA[
   SELECT DISTINCT
     n.notice_id, n.title, n.content,
     n.notice_type, n.target_type, n.category_code,
@@ -308,29 +308,29 @@
    AND nt.use_yn = 1
   WHERE n.use_yn = 1
   ]]>
-  <if test="status != null and status != ''">
-    <![CDATA[ AND n.status = #{status} ]]>
-  </if>
-  <if test="targetType != null and targetType != ''">
-    <![CDATA[ AND n.target_type = #{targetType} ]]>
-  </if>
-  <if test="branchId != null">
-    <![CDATA[
+    <if test="status != null and status != ''">
+      <![CDATA[ AND n.status = #{status} ]]>
+    </if>
+    <if test="targetType != null and targetType != ''">
+      <![CDATA[ AND n.target_type = #{targetType} ]]>
+    </if>
+    <if test="branchId != null">
+      <![CDATA[
       AND (
         n.target_type = 'TT001'
         OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
       )
     ]]>
-  </if>
-  <![CDATA[
+    </if>
+    <![CDATA[
   ORDER BY n.is_pinned DESC, n.create_date DESC
   LIMIT #{limit} OFFSET #{offset}
   ]]>
-</select>
+  </select>
 
 
-<select id="countAdminList" resultType="long">
-  <![CDATA[
+  <select id="countAdminList" resultType="long">
+    <![CDATA[
   SELECT COUNT(DISTINCT n.notice_id)
   FROM notices n
   LEFT JOIN notice_targets nt
@@ -338,21 +338,21 @@
    AND nt.use_yn = 1
   WHERE n.use_yn = 1
   ]]>
-  <if test="status != null and status != ''">
-    <![CDATA[ AND n.status = #{status} ]]>
-  </if>
-  <if test="targetType != null and targetType != ''">
-    <![CDATA[ AND n.target_type = #{targetType} ]]>
-  </if>
-  <if test="branchId != null">
-    <![CDATA[
+    <if test="status != null and status != ''">
+      <![CDATA[ AND n.status = #{status} ]]>
+    </if>
+    <if test="targetType != null and targetType != ''">
+      <![CDATA[ AND n.target_type = #{targetType} ]]>
+    </if>
+    <if test="branchId != null">
+      <![CDATA[
       AND (
         n.target_type = 'TT001'
         OR (n.target_type = 'TT002' AND nt.branch_id = #{branchId})
       )
     ]]>
-  </if>
-</select>
-  
+    </if>
+  </select>
+
 
 </mapper>

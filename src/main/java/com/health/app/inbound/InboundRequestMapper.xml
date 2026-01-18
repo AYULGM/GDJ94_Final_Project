@@ -5,7 +5,6 @@
 
 <mapper namespace="com.health.app.inbound.InboundRequestMapper">
 
-    <!-- 상품 옵션 -->
     <select id="selectProductOptions" resultType="com.health.app.inbound.InboundOptionDto">
         SELECT
         p.product_id AS id,
@@ -15,13 +14,14 @@
         ORDER BY p.product_name ASC
     </select>
 
-    <!-- 헤더 insert -->
+    <!-- ✅ request_branch_id 포함 -->
     <insert id="insertInboundHeader"
             parameterType="com.health.app.inbound.InboundRequestHeaderDto"
             useGeneratedKeys="true"
             keyProperty="inboundRequestId">
         INSERT INTO inbound_request_header (
         inbound_request_no,
+        request_branch_id,
         vendor_name,
         status_code,
         requested_at,
@@ -44,6 +44,7 @@
         use_yn
         ) VALUES (
         #{inboundRequestNo},
+        #{requestBranchId},
         #{vendorName},
         #{statusCode},
         NOW(),
@@ -67,7 +68,6 @@
         )
     </insert>
 
-    <!-- 상세 insert -->
     <insert id="insertInboundDetail"
             parameterType="com.health.app.inbound.InboundRequestItemDto"
             useGeneratedKeys="true"
@@ -97,7 +97,6 @@
         )
     </insert>
 
-    <!-- 결재 문서 link 저장 -->
     <update id="updateApprovalLink">
         UPDATE inbound_request_header
         SET
@@ -110,11 +109,12 @@
         WHERE inbound_request_id = #{inboundRequestId}
     </update>
 
-    <!-- 목록 -->
+    <!-- ✅ 지점 필터 조건 추가 -->
     <select id="selectInboundList" resultType="com.health.app.inbound.InboundRequestListDto">
         SELECT
         h.inbound_request_id AS inboundRequestId,
         h.inbound_request_no AS inboundRequestNo,
+        h.request_branch_id  AS requestBranchId,
         h.vendor_name AS vendorName,
         h.status_code AS statusCode,
         h.requested_at AS requestedAt,
@@ -126,14 +126,17 @@
         <if test="statusCode != null and statusCode != ''">
             AND h.status_code = #{statusCode}
         </if>
+        <if test="requestBranchId != null">
+            AND h.request_branch_id = #{requestBranchId}
+        </if>
         ORDER BY h.inbound_request_id DESC
     </select>
 
-    <!-- 헤더 상세 -->
     <select id="selectInboundHeader" resultType="com.health.app.inbound.InboundRequestDetailDto">
         SELECT
         h.inbound_request_id AS inboundRequestId,
         h.inbound_request_no AS inboundRequestNo,
+        h.request_branch_id  AS requestBranchId,
         h.vendor_name AS vendorName,
         h.status_code AS statusCode,
         h.requested_at AS requestedAt,
@@ -154,7 +157,6 @@
         AND h.use_yn = 1
     </select>
 
-    <!-- 상세 품목 -->
     <select id="selectInboundItems" resultType="com.health.app.inbound.InboundRequestItemDto">
         SELECT
         d.inbound_request_item_id AS inboundRequestItemId,
@@ -176,7 +178,6 @@
         ORDER BY d.inbound_request_item_id ASC
     </select>
 
-    <!-- 승인완료 → inventory 증가 -->
     <update id="upsertInventoryIncrease">
         INSERT INTO inventory (
         branch_id,
@@ -206,7 +207,6 @@
         update_date = NOW()
     </update>
 
-    <!-- 승인완료 → inventory_history IN 로그 -->
     <insert id="insertInventoryHistoryIn">
         INSERT INTO inventory_history (
         branch_id,
@@ -237,13 +237,22 @@
         )
     </insert>
 
-    <!-- inbound_request 승인 상태 업데이트 -->
     <update id="updateStatusApproved">
         UPDATE inbound_request_header
         SET
         status_code = 'IR_APPROVED',
         approved_at = NOW(),
         approved_by = #{userId},
+        update_user = #{userId},
+        update_date = NOW()
+        WHERE inbound_request_id = #{inboundRequestId}
+    </update>
+
+    <!--  처리완료 추가 -->
+    <update id="updateStatusDone">
+        UPDATE inbound_request_header
+        SET
+        status_code = 'IR_DONE',
         update_user = #{userId},
         update_date = NOW()
         WHERE inbound_request_id = #{inboundRequestId}

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <jsp:include page="../includes/admin_header.jsp" />
 
@@ -27,11 +28,13 @@
             <tbody>
             <tr>
               <th style="width: 180px;">지점</th>
-              <td>${detail.branchName} (ID: ${detail.branchId})</td>
+              <!--  (ID: xx) 제거 -->
+              <td>${detail.branchName}</td>
             </tr>
             <tr>
               <th>상품</th>
-              <td>${detail.productName} (ID: ${detail.productId})</td>
+              <!--  (ID: xx) 제거 -->
+              <td>${detail.productName}</td>
             </tr>
             <tr>
               <th>현재 수량</th>
@@ -59,117 +62,79 @@
 
           <a class="btn btn-secondary mb-4" href="<c:url value='/inventory'/>">목록으로</a>
 
-          <!-- 기준 수량 설정 -->
-          <div class="card mb-4">
-            <div class="card-header">
-              <h4 class="card-title mb-0">기준 수량 설정</h4>
-            </div>
-            <div class="card-body">
+          <!--  기준 수량 설정 : 본사 Admin / Master / Grandmaster만 노출 -->
+          <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
+            <div class="card mb-4">
+              <div class="card-header">
+                <h4 class="card-title mb-0">기준 수량 설정</h4>
+              </div>
+              <div class="card-body">
 
-              <c:if test="${not empty thresholdSuccess}">
-                <div class="alert alert-success">${thresholdSuccess}</div>
-              </c:if>
-              <c:if test="${not empty thresholdError}">
-                <div class="alert alert-danger">${thresholdError}</div>
-              </c:if>
+                <c:if test="${not empty thresholdSuccess}">
+                  <div class="alert alert-success">${thresholdSuccess}</div>
+                </c:if>
+                <c:if test="${not empty thresholdError}">
+                  <div class="alert alert-danger">${thresholdError}</div>
+                </c:if>
 
-              <form method="post" action="<c:url value='/inventory/threshold'/>" class="row g-3">
-                <input type="hidden" name="branchId" value="${detail.branchId}"/>
-                <input type="hidden" name="productId" value="${detail.productId}"/>
+                <form method="post" action="<c:url value='/inventory/threshold'/>" class="row g-3">
+                  <input type="hidden" name="branchId" value="${detail.branchId}"/>
+                  <input type="hidden" name="productId" value="${detail.productId}"/>
 
-                <div class="col-md-4">
-                  <label class="form-label">지점 기준 수량 (0이면 상품 기본값 사용)</label>
-                  <input type="number" name="lowStockThreshold" min="0"
-                         class="form-control"
-                         value="<c:out value='${detail.lowStockThreshold}'/>"
-                         placeholder="예: 10 (0이면 기본값)"/>
-                </div>
-
-                <div class="col-md-8 d-flex align-items-end">
-                  <div class="text-muted">
-                    현재 적용 기준:
-                    <strong>${detail.standardQuantity}</strong>
-                    <c:choose>
-                      <c:when test="${detail.lowStockThreshold != null and detail.lowStockThreshold > 0}">
-                        (지점별 기준)
-                      </c:when>
-                      <c:otherwise>
-                        (상품 기본 reorder_point)
-                      </c:otherwise>
-                    </c:choose>
+                  <div class="col-md-4">
+                    <label class="form-label">지점 기준 수량 (0이면 상품 기본값 사용)</label>
+                    <input type="number" name="lowStockThreshold" min="0"
+                           class="form-control"
+                           value="<c:out value='${detail.lowStockThreshold}'/>"
+                           placeholder="예: 10 (0이면 기본값)"/>
                   </div>
-                </div>
 
-                <div class="col-12 text-end">
-                  <button type="submit" class="btn btn-primary">저장</button>
-                </div>
-              </form>
+                  <div class="col-md-8 d-flex align-items-end">
+                    <div class="text-muted">
+                      현재 적용 기준: <strong>${detail.standardQuantity}</strong>
+                      <!--  '(상품 기본 reorder_point)' 삭제 -->
+                      <c:choose>
+                        <c:when test="${detail.lowStockThreshold != null and detail.lowStockThreshold > 0}">
+                          (지점별 기준)
+                        </c:when>
+                        <c:otherwise>
+                          (상품 기본값)
+                        </c:otherwise>
+                      </c:choose>
+                    </div>
+                  </div>
+
+                  <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary">저장</button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
+          </sec:authorize>
 
-          <!-- 재고 조정 -->
-          <div class="card mb-4">
-            <div class="card-header">
-              <h4 class="card-title mb-0">재고 조정</h4>
-            </div>
-            <div class="card-body">
+          <!--  재고 조정 UI 제거 (전자결재로 이관) -->
+          <%-- 재고 조정은 전자결재(재고조정요청서)로 처리 예정이므로 화면에서 제거 --%>
 
-              <c:if test="${not empty adjustSuccess}">
-                <div class="alert alert-success">${adjustSuccess}</div>
-              </c:if>
-              <c:if test="${not empty adjustError}">
-                <div class="alert alert-danger">${adjustError}</div>
-              </c:if>
-
-              <form method="post" action="<c:url value='/inventory/adjust'/>" class="row g-3">
-                <input type="hidden" name="branchId" value="${detail.branchId}"/>
-                <input type="hidden" name="productId" value="${detail.productId}"/>
-
-                <div class="col-md-3">
-                  <label class="form-label">유형</label>
-                  <select name="moveTypeCode" class="form-select" required>
-                    <option value="IN">입고(IN)</option>
-                    <option value="OUT">출고(OUT)</option>
-                    <option value="ADJUST">조정(ADJUST)</option>
-                  </select>
-                </div>
-
-                <div class="col-md-3">
-                  <label class="form-label">수량</label>
-                  <input type="number" name="quantity" min="1" class="form-control" required/>
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label">사유</label>
-                  <input type="text" name="reason" maxlength="200" class="form-control" required/>
-                </div>
-
-                <div class="col-12 text-end">
-                  <button type="submit" class="btn btn-primary">반영</button>
-                </div>
-              </form>
-
-            </div>
-          </div>
-
-          <!-- 이력 -->
+          <!--  이력 -->
           <div class="card">
             <div class="card-header">
               <h4 class="card-title mb-0">재고 변동 이력</h4>
             </div>
+
             <div class="card-body p-0">
               <table class="table table-bordered mb-0">
                 <thead>
                 <tr>
-                  <th>일시</th>
-                  <th>유형</th>
-                  <th class="text-end">수량</th>
-                  <th>사유</th>
-                  <th>ref_type</th>
-                  <th>ref_id</th>
-                  <th>작성자</th>
+                  <th class="text-center" style="width: 180px;">일시</th>
+                  <th class="text-center" style="width: 120px;">유형</th>
+                  <th class="text-center" style="width: 90px;">수량</th>
+                  <th class="text-center">사유</th>
+                  <th class="text-center" style="width: 140px;">연결 문서</th>
+                  <th class="text-center" style="width: 110px;">문서 ID</th>
+                  <th class="text-center" style="width: 110px;">작성자(ID)</th>
                 </tr>
                 </thead>
+
                 <tbody>
                 <c:if test="${empty history}">
                   <tr>
@@ -179,13 +144,40 @@
 
                 <c:forEach var="h" items="${history}">
                   <tr>
-                    <td>${h.createDate}</td>
-                    <td>${h.moveTypeCode}</td>
-                    <td class="text-end">${h.quantity}</td>
-                    <td>${h.reason}</td>
-                    <td>${h.refType}</td>
-                    <td>${h.refId}</td>
-                    <td>${h.createUser}</td>
+                    <td class="text-center align-middle">${h.createDate}</td>
+
+                    <td class="text-center align-middle">
+                      <c:choose>
+                        <c:when test="${h.moveTypeCode eq 'IN'}">입고</c:when>
+                        <c:when test="${h.moveTypeCode eq 'OUT'}">출고</c:when>
+                        <c:when test="${h.moveTypeCode eq 'ADJUST'}">조정</c:when>
+                        <c:otherwise>${h.moveTypeCode}</c:otherwise>
+                      </c:choose>
+                    </td>
+
+                    <td class="text-end align-middle">${h.quantity}</td>
+
+                    <!--  사유: 글씨 정렬(좌측 + 세로 가운데) -->
+                    <td class="text-start align-middle">${h.reason}</td>
+
+                    <td class="text-center align-middle">
+                      <c:choose>
+                        <c:when test="${empty h.refType}">-</c:when>
+                        <c:when test="${h.refType eq 'INBOUND_REQUEST'}">구매요청/입고</c:when>
+                        <c:when test="${h.refType eq 'PURCHASE'}">구매/발주</c:when>
+                        <c:when test="${h.refType eq 'INVENTORY_ADJUST'}">재고조정(수기)</c:when>
+                        <c:otherwise>${h.refType}</c:otherwise>
+                      </c:choose>
+                    </td>
+
+                    <td class="text-center align-middle">
+                      <c:choose>
+                        <c:when test="${h.refId == null}">-</c:when>
+                        <c:otherwise>${h.refId}</c:otherwise>
+                      </c:choose>
+                    </td>
+
+                    <td class="text-center align-middle">${h.createUser}</td>
                   </tr>
                 </c:forEach>
                 </tbody>
