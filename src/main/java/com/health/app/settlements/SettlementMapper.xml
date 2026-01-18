@@ -408,7 +408,7 @@
         FROM settlement_log sl
         LEFT JOIN users u ON u.user_id = sl.actor_user_id
         WHERE sl.settlement_id = #{settlementId}
-          AND sl.use_yn = 1
+        -- 감사 로그는 삭제/숨김 불가 (use_yn 조건 제거)
         ORDER BY sl.acted_at DESC, sl.log_id DESC
     </select>
 

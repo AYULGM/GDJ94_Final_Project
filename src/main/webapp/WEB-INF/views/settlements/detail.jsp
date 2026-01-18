@@ -175,6 +175,7 @@
 
 <script>
 const settlementId = '<c:out value="${settlementId}"/>';
+const isReadOnly = new URLSearchParams(window.location.search).get('readonly') === 'true';
 
 // 페이지 로드
 document.addEventListener('DOMContentLoaded', function() {
@@ -248,13 +249,13 @@ async function loadSettlementHistories() {
 
         tbody.innerHTML = histories.map(history =>
             '<tr>' +
-                '<td>' + formatDateTime(history.historyDate) + '</td>' +
+                '<td>' + formatDateTime(history.actedAt) + '</td>' +
                 '<td>' +
-                    '<span class="badge ' + getStatusBadgeClass(history.statusCode) + '">' +
-                        getStatusName(history.statusCode) +
+                    '<span class="badge ' + getStatusBadgeClass(history.afterStatus) + '">' +
+                        getStatusName(history.afterStatus) +
                     '</span>' +
                 '</td>' +
-                '<td>' + (history.handledByName || '-') + '</td>' +
+                '<td>' + (history.actorUserName || '-') + '</td>' +
                 '<td>' + (history.reason || '-') + '</td>' +
             '</tr>'
         ).join('');
@@ -269,9 +270,17 @@ async function loadSettlementHistories() {
 // 액션 버튼 렌더링
 function renderActionButtons(statusCode) {
     const buttonsDiv = document.getElementById('actionButtons');
+
+    // 읽기 전용 모드면 버튼 표시 안함
+    if (isReadOnly) {
+        buttonsDiv.innerHTML = '';
+        return;
+    }
+
     let buttons = '';
 
     if (statusCode === 'PENDING') {
+        // 대기 상태: 확정/취소 가능
         buttons += `
             <button type="button" class="btn btn-success" onclick="confirmSettlement()">
                 <i class="bi bi-check-circle"></i> 확정
@@ -280,13 +289,15 @@ function renderActionButtons(statusCode) {
                 <i class="bi bi-x-circle"></i> 취소
             </button>
         `;
+    } else if (statusCode === 'CONFIRMED') {
+        // 확정 상태: 취소만 가능
+        buttons += `
+            <button type="button" class="btn btn-warning" onclick="cancelSettlement()">
+                <i class="bi bi-x-circle"></i> 취소
+            </button>
+        `;
     }
-
-    buttons += `
-        <button type="button" class="btn btn-danger" onclick="deleteSettlement()">
-            <i class="bi bi-trash"></i> 삭제
-        </button>
-    `;
+    // 취소 상태: 버튼 없음 (변경 불가)
 
     buttonsDiv.innerHTML = buttons;
 }

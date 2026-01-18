@@ -28,15 +28,6 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">상태</label>
-                                <select class="form-select" id="statusCode" name="statusCode">
-                                    <option value="">전체</option>
-                                    <option value="PENDING">대기</option>
-                                    <option value="CONFIRMED">확정</option>
-                                    <option value="CANCELLED">취소</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
                                 <label class="form-label">카테고리</label>
                                 <select class="form-select" id="categoryCode" name="categoryCode">
                                     <option value="">전체</option>
@@ -54,17 +45,17 @@
                                     <option value="false">미정산</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">기간</label>
-                                <div class="input-group">
-                                    <input type="date" class="form-control" id="startDate" name="startDate">
-                                    <span class="input-group-text">~</span>
-                                    <input type="date" class="form-control" id="endDate" name="endDate">
-                                </div>
+                            <div class="col-md-2">
+                                <label class="form-label">시작일</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate">
                             </div>
-                            <div class="col-md-1 d-flex align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label">종료일</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-search"></i>
+                                    <i class="bi bi-search"></i> 검색
                                 </button>
                             </div>
                         </form>
@@ -96,7 +87,7 @@
                                     <th>판매일시</th>
                                     <th>카테고리</th>
                                     <th class="text-end">금액</th>
-                                    <th style="width: 100px">상태</th>
+                                    <th>담당자</th>
                                     <th style="width: 100px">정산여부</th>
                                     <th style="width: 80px">상세</th>
                                 </tr>
@@ -235,11 +226,7 @@ function renderSaleTable(list) {
             '<td>' + formatDateTime(sale.soldAt) + '</td>' +
             '<td>' + getCategoryName(sale.categoryCode) + '</td>' +
             '<td class="text-end">' + formatCurrency(sale.totalAmount) + '</td>' +
-            '<td>' +
-                '<span class="badge ' + getStatusBadgeClass(sale.statusCode) + '">' +
-                    getStatusName(sale.statusCode) +
-                '</span>' +
-            '</td>' +
+            '<td>' + (sale.createUserName || '-') + '</td>' +
             '<td>' +
                 '<span class="badge ' + (sale.settled ? 'bg-secondary' : 'bg-warning') + '">' +
                     (sale.settled ? '정산됨' : '미정산') +
