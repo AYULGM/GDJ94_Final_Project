@@ -58,12 +58,15 @@ public class InventoryController {
             Authentication authentication,
             Model model
     ) {
+        //  상단 헤더(브레드크럼) 제목
+        model.addAttribute("pageTitle", "재고 현황");
+
         LoginUser loginUser = requireLoginUser(authentication);
 
         boolean canViewAllBranches = isHeadOffice(authentication);
         boolean canEditInventory = canViewAllBranches;
 
-        //  branchId 최종 결정값을 별도로 둬서 "람다 final" 문제 원천 차단
+        // branchId 최종 결정값
         Long resolvedBranchId = branchId;
 
         // 지점 사용자는 본인 지점으로 강제
@@ -122,6 +125,9 @@ public class InventoryController {
             Authentication authentication,
             Model model
     ) {
+        //  상단 헤더(브레드크럼) 제목
+        model.addAttribute("pageTitle", "재고 상세");
+
         LoginUser loginUser = requireLoginUser(authentication);
 
         boolean canViewAllBranches = isHeadOffice(authentication);

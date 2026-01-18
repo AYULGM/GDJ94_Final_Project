@@ -17,7 +17,6 @@ public class InboundRequestController {
 
     private final InboundRequestService inboundRequestService;
 
-    /** 구매요청서(PR) 작성 폼 */
     @GetMapping("/new")
     public String newForm(Model model) {
         model.addAttribute("products", inboundRequestService.getProductOptions());
@@ -26,16 +25,16 @@ public class InboundRequestController {
         return "inbound/new";
     }
 
-    /** 구매요청서(PR) 등록 + 결재 Draft 생성 + 결재선 페이지로 이동 */
     @PostMapping
     public String create(@AuthenticationPrincipal LoginUser loginUser,
                          @ModelAttribute InboundRequestFormDto form,
                          RedirectAttributes ra) {
 
-        Long userId = (loginUser != null ? loginUser.getUserId() : 1L); // TODO 로그인 연동되면 1L 제거
+        Long userId = (loginUser != null ? loginUser.getUserId() : 1L);
+        Long requestBranchId = (loginUser != null ? loginUser.getBranchId() : 1L);
 
         try {
-            Long docVerId = inboundRequestService.createInboundRequestAndDraft(userId, form);
+            Long docVerId = inboundRequestService.createInboundRequestAndDraft(userId, requestBranchId, form);
 
             ra.addFlashAttribute("message", "구매요청서가 등록되었습니다. 결재선을 지정해주세요.");
             return "redirect:/approval/line?docVerId=" + docVerId;
@@ -46,7 +45,6 @@ public class InboundRequestController {
         }
     }
 
-    /** 목록 */
     @GetMapping
     public String list(@RequestParam(required = false) String statusCode,
                        Model model) {
@@ -58,7 +56,6 @@ public class InboundRequestController {
         return "inbound/list";
     }
 
-    /** 상세 */
     @GetMapping("/detail")
     public String detail(@RequestParam Long inboundRequestId, Model model) {
         InboundRequestDetailDto header = inboundRequestService.getInboundRequestDetail(inboundRequestId);
@@ -71,18 +68,23 @@ public class InboundRequestController {
     }
 
     /**
-     * 전자결재 최종 승인 완료 시점에 호출되도록 연결할 엔드포인트(임시)
-     * - 전자결재 담당자가 승인완료 훅에서 호출하면, 재고 반영 + 이력 저장 + 상태 업데이트까지 처리함
+     * (임시) 승인 완료(IR_APPROVED)된 구매요청서를 "처리완료"로 만들고,
+     * 요청 지점 재고를 반영한다.
      */
-    @PostMapping("/apply")
-    @ResponseBody
-    public String applyApproved(@RequestParam Long inboundRequestId,
-                                @RequestParam(required = false) Long approvedBy) {
+    @PostMapping("/{inboundRequestId}/process")
+    public String process(@PathVariable Long inboundRequestId,
+                          @AuthenticationPrincipal LoginUser loginUser,
+                          RedirectAttributes ra) {
 
-        inboundRequestService.applyApprovedInboundToInventory(
-                inboundRequestId,
-                approvedBy != null ? approvedBy : 1L
-        );
-        return "OK";
+        Long approvedBy = (loginUser != null ? loginUser.getUserId() : 1L);
+
+        try {
+            inboundRequestService.applyApprovedInboundToInventory(inboundRequestId, approvedBy);
+            ra.addFlashAttribute("message", "재고 반영 및 처리 완료로 변경했습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/inbound/detail?inboundRequestId=" + inboundRequestId;
     }
 }

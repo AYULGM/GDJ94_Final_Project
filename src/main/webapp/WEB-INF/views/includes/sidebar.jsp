@@ -62,7 +62,7 @@
         <li class="nav-item">
           <a href="<c:url value='/inventory'/>" class="nav-link">
             <i class="nav-icon bi bi-box-seam"></i>
-            <p>재고 관리</p>
+            <p>재고 현황</p>
           </a>
         </li>
 

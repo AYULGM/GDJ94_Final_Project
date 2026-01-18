@@ -15,33 +15,25 @@ public class InboundRequestService {
     private final InboundRequestMapper inboundRequestMapper;
     private final ApprovalService approvalService;
 
-    /**
-     * 본사(중앙) 입고로 고정.
-     * - 본사를 branch 테이블에 등록해두고 그 ID를 쓰는 게 정석
-     */
-    private static final Long HQ_BRANCH_ID = 1L;
+    // NOTE
+    // - 구매요청서(PR)는 "지점 -> 본사" 요청 문서
+    // - 최종 승인 완료 후에는, 요청 지점(request_branch_id)의 재고가 증가해야 함
 
-    // ======================
-    // 옵션
-    // ======================
     @Transactional(readOnly = true)
     public List<InboundOptionDto> getProductOptions() {
         return inboundRequestMapper.selectProductOptions();
     }
 
-    // ======================
-    // 등록 + 결재 Draft 생성
-    // ======================
     @Transactional
-    public Long createInboundRequestAndDraft(Long loginUserId, InboundRequestFormDto form) {
+    public Long createInboundRequestAndDraft(Long loginUserId, Long requestBranchId, InboundRequestFormDto form) {
 
-        validateForm(form);
+        validateForm(form, requestBranchId);
 
-        // 1) inbound_request_header 저장
         InboundRequestHeaderDto header = new InboundRequestHeaderDto();
         header.setInboundRequestNo("IR-" + System.currentTimeMillis());
+        header.setRequestBranchId(requestBranchId);
         header.setVendorName(form.getVendorName());
-        header.setStatusCode("IR_REQ"); // 요청 상태(임의 코드, 프로젝트 공통코드에 맞춰 변경 가능)
+        header.setStatusCode("IR_REQ");
         header.setRequestedBy(loginUserId);
         header.setTitle(form.getTitle());
         header.setMemo(form.getMemo());
@@ -52,7 +44,6 @@ public class InboundRequestService {
         inboundRequestMapper.insertInboundHeader(header);
         Long inboundRequestId = header.getInboundRequestId();
 
-        // 2) inbound_request_detail 저장(다품목)
         for (InboundRequestItemDto item : form.getItems()) {
             item.setInboundRequestId(inboundRequestId);
             item.setCreateUser(loginUserId);
@@ -61,23 +52,16 @@ public class InboundRequestService {
             inboundRequestMapper.insertInboundDetail(item);
         }
 
-        // 3) 전자결재 Draft 자동 생성
-        // - 전자결재 쪽에서 "구매요청서" 타입/폼 코드가 정해져 있을 거라 AT005는 필요에 맞게 바꾸면 됨.
         ApprovalDraftDTO draft = new ApprovalDraftDTO();
         draft.setTypeCode("AT005");
-        draft.setFormCode("AT005"); // form_code NOT NULL 대응 (시스템에 맞게 변경)
+        draft.setFormCode("AT005");
         draft.setTitle(safe(form.getTitle()));
         draft.setBody(buildBody(form));
-
-        // 너가 보여준 폼처럼 ext 텍스트 칸을 활용한다는 전제
-        // extTxt1: 공급처
-        // extTxt6: 품목 JSON(문자열)
         draft.setExtTxt1(safe(form.getVendorName()));
         draft.setExtTxt6(form.buildItemsJsonLikeText());
 
         ApprovalDraftDTO saved = approvalService.saveDraft(loginUserId, draft);
 
-        // 4) inbound_request_header에 결재 문서 link 저장
         inboundRequestMapper.updateApprovalLink(
                 inboundRequestId,
                 saved.getDocId(),
@@ -90,9 +74,6 @@ public class InboundRequestService {
         return saved.getDocVerId();
     }
 
-    // ======================
-    // 조회
-    // ======================
     @Transactional(readOnly = true)
     public List<InboundRequestListDto> getInboundRequestList(String statusCode) {
         return inboundRequestMapper.selectInboundList(statusCode);
@@ -108,9 +89,6 @@ public class InboundRequestService {
         return inboundRequestMapper.selectInboundItems(inboundRequestId);
     }
 
-    // ======================
-    // 승인완료 → 재고 반영
-    // ======================
     @Transactional
     public void applyApprovedInboundToInventory(Long inboundRequestId, Long approvedBy) {
 
@@ -119,17 +97,36 @@ public class InboundRequestService {
             throw new IllegalArgumentException("입고요청서가 존재하지 않습니다. inboundRequestId=" + inboundRequestId);
         }
 
+        if (header.getRequestBranchId() == null || header.getRequestBranchId() <= 0) {
+            throw new IllegalStateException("요청 지점(request_branch_id)이 비어있습니다. DB 컬럼/저장 로직을 확인하세요.");
+        }
+
+        if ("IR_DONE".equals(header.getStatusCode())) {
+            throw new IllegalStateException("이미 처리 완료된 구매요청서입니다.");
+        }
+
+        // 승인 훅 미연결 대비: IR_REQ면 승인 처리 먼저(테스트/운영 겸용)
+        if ("IR_REQ".equals(header.getStatusCode())) {
+            inboundRequestMapper.updateStatusApproved(inboundRequestId, approvedBy);
+            header = inboundRequestMapper.selectInboundHeader(inboundRequestId);
+        }
+
+        if (!"IR_APPROVED".equals(header.getStatusCode())) {
+            throw new IllegalStateException("승인 완료(IR_APPROVED) 상태에서만 재고 반영이 가능합니다. 현재 상태=" + header.getStatusCode());
+        }
+
         List<InboundRequestItemDto> items = inboundRequestMapper.selectInboundItems(inboundRequestId);
         if (items == null || items.isEmpty()) {
             throw new IllegalStateException("입고요청 품목이 없습니다.");
         }
 
-        // 재고 반영(본사 고정)
+        Long targetBranchId = header.getRequestBranchId();
+
         for (InboundRequestItemDto it : items) {
-            inboundRequestMapper.upsertInventoryIncrease(HQ_BRANCH_ID, it.getProductId(), it.getQuantity(), approvedBy);
+            inboundRequestMapper.upsertInventoryIncrease(targetBranchId, it.getProductId(), it.getQuantity(), approvedBy);
 
             inboundRequestMapper.insertInventoryHistoryIn(
-                    HQ_BRANCH_ID,
+                    targetBranchId,
                     it.getProductId(),
                     it.getQuantity(),
                     "INBOUND_APPROVED",
@@ -139,15 +136,14 @@ public class InboundRequestService {
             );
         }
 
-        // inbound_request 상태 승인처리
-        inboundRequestMapper.updateStatusApproved(inboundRequestId, approvedBy);
+        inboundRequestMapper.updateStatusDone(inboundRequestId, approvedBy);
     }
 
-    // ======================
-    // 내부 유틸
-    // ======================
-    private void validateForm(InboundRequestFormDto form) {
+    private void validateForm(InboundRequestFormDto form, Long requestBranchId) {
         if (form == null) throw new IllegalArgumentException("요청 데이터가 없습니다.");
+        if (requestBranchId == null || requestBranchId <= 0) {
+            throw new IllegalArgumentException("요청 지점 정보가 없습니다. 로그인 유저의 branch_id를 확인하세요.");
+        }
         if (isBlank(form.getVendorName())) throw new IllegalArgumentException("공급처(vendor_name)는 필수입니다.");
         if (isBlank(form.getTitle())) throw new IllegalArgumentException("문서 제목(title)은 필수입니다.");
 

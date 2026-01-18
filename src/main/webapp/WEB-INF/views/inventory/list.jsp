@@ -13,11 +13,14 @@
 
             <div class="card-body">
 
-                <%-- 디버그용: 필요 시 사용 --%>
-                <%-- <div style="color:red;">listSize=${fn:length(list)}</div> --%>
+                <%-- 디버그용: 페이징이 실제로 먹는지 확인할 때만 잠깐 켜기 --%>
+                <%-- <div style="color:red;">listSize=${fn:length(list)} / page=${page} / size=${size} / total=${totalCount}</div> --%>
 
                 <!-- 검색/필터 폼 -->
                 <form method="get" action="<c:url value='/inventory'/>" class="row g-2 mb-3">
+                    <!--  검색 시에는 기본 1페이지부터 -->
+                    <input type="hidden" name="page" value="1"/>
+                    <input type="hidden" name="size" value="${empty size ? 20 : size}"/>
 
                     <!-- 지점 선택 -->
                     <div class="col-md-3">
@@ -99,7 +102,6 @@
 
                         <c:otherwise>
                             <c:forEach var="row" items="${list}">
-                                <!-- 링크는 var로 먼저 만들고 href에는 변수만 넣는다(깨짐 방지) -->
                                 <c:url var="detailUrl" value="/inventory/detail">
                                     <c:param name="branchId" value="${row.branchId}"/>
                                     <c:param name="productId" value="${row.productId}"/>
@@ -109,11 +111,9 @@
                                     <td class="text-truncate" style="max-width: 240px;">${row.branchName}</td>
                                     <td class="text-truncate" style="max-width: 360px;">${row.productName}</td>
 
-                                    <!-- 숫자는 무조건 오른쪽 정렬 -->
                                     <td class="text-end">${row.quantity}</td>
                                     <td class="text-end">${row.thresholdValue}</td>
 
-                                    <!-- 상태는 가운데 정렬 -->
                                     <td class="text-center">
                                         <c:choose>
                                             <c:when test="${row.lowStock == 1}">
@@ -125,7 +125,6 @@
                                         </c:choose>
                                     </td>
 
-                                    <!-- 버튼도 가운데 정렬 -->
                                     <td class="text-center">
                                         <a class="btn btn-sm btn-outline-secondary" href="${detailUrl}">
                                             보기
@@ -138,7 +137,64 @@
                     </tbody>
                 </table>
 
-                <!-- 혹시 다른 CSS가 table 정렬을 덮어써도 깨지지 않게 보강 -->
+                <!--  페이지네이션 (여기부터 추가) -->
+                <c:if test="${totalPages > 1}">
+                    <c:set var="startPage" value="${page - 2}" />
+                    <c:set var="endPage" value="${page + 2}" />
+
+                    <c:if test="${startPage < 1}">
+                        <c:set var="startPage" value="1" />
+                    </c:if>
+                    <c:if test="${endPage > totalPages}">
+                        <c:set var="endPage" value="${totalPages}" />
+                    </c:if>
+
+                    <nav aria-label="inventory pagination">
+                        <ul class="pagination justify-content-center">
+
+                            <!-- 이전 -->
+                            <li class="page-item <c:if test='${page <= 1}'>disabled</c:if>">
+                                <c:url var="prevUrl" value="/inventory">
+                                    <c:param name="branchId" value="${branchId}"/>
+                                    <c:param name="keyword" value="${keyword}"/>
+                                    <c:param name="onlyLowStock" value="${onlyLowStock}"/>
+                                    <c:param name="size" value="${size}"/>
+                                    <c:param name="page" value="${page - 1}"/>
+                                </c:url>
+                                <a class="page-link" href="${prevUrl}" aria-label="Previous">&laquo;</a>
+                            </li>
+
+                            <!-- 숫자 페이지 -->
+                            <c:forEach var="p" begin="${startPage}" end="${endPage}">
+                                <li class="page-item <c:if test='${p == page}'>active</c:if>">
+                                    <c:url var="pageUrl" value="/inventory">
+                                        <c:param name="branchId" value="${branchId}"/>
+                                        <c:param name="keyword" value="${keyword}"/>
+                                        <c:param name="onlyLowStock" value="${onlyLowStock}"/>
+                                        <c:param name="size" value="${size}"/>
+                                        <c:param name="page" value="${p}"/>
+                                    </c:url>
+                                    <a class="page-link" href="${pageUrl}">${p}</a>
+                                </li>
+                            </c:forEach>
+
+                            <!-- 다음 -->
+                            <li class="page-item <c:if test='${page >= totalPages}'>disabled</c:if>">
+                                <c:url var="nextUrl" value="/inventory">
+                                    <c:param name="branchId" value="${branchId}"/>
+                                    <c:param name="keyword" value="${keyword}"/>
+                                    <c:param name="onlyLowStock" value="${onlyLowStock}"/>
+                                    <c:param name="size" value="${size}"/>
+                                    <c:param name="page" value="${page + 1}"/>
+                                </c:url>
+                                <a class="page-link" href="${nextUrl}" aria-label="Next">&raquo;</a>
+                            </li>
+
+                        </ul>
+                    </nav>
+                </c:if>
+
+                <!-- 스타일 보강 -->
                 <style>
                     .inventory-table .qty-col { width: 110px; }
                     .inventory-table .status-col { width: 110px; }
