@@ -180,28 +180,30 @@
           </ul>
         </li>
 
-        <!-- 매출·지출 통계 Treeview -->
-        <li class="nav-item">
-          <a href="#" class="nav-link" data-lte-toggle="treeview">
-            <i class="nav-icon bi bi-bar-chart"></i>
-            <p>
-              매출·지출 통계
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="<c:url value='/statistics/sales'/>" class="nav-link">
-                <p>매출 통계</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<c:url value='/statistics/expenses'/>" class="nav-link">
-                <p>지출 통계</p>
-              </a>
-            </li>
-          </ul>
-        </li>
+        <!-- 매출·지출 통계 Treeview (관리자 전용) -->
+        <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-lte-toggle="treeview">
+              <i class="nav-icon bi bi-bar-chart"></i>
+              <p>
+                매출·지출 통계
+                <i class="nav-arrow bi bi-chevron-right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="<c:url value='/statistics/sales'/>" class="nav-link">
+                  <p>매출 통계</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<c:url value='/statistics/expenses'/>" class="nav-link">
+                  <p>지출 통계</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </sec:authorize>
 
         <!-- 정산 관리 Treeview -->
         <li class="nav-item">
@@ -223,26 +225,28 @@
                 <p>지출 관리</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="<c:url value='/statistics/comparison'/>" class="nav-link">
-                <p>손익 비교</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<c:url value='/settlements/confirm'/>" class="nav-link">
-                <p>정산 생성</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<c:url value='/settlements'/>" class="nav-link">
-                <p>정산 내역 조회</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<c:url value='/settlements/history'/>" class="nav-link">
-                <p>정산 이력 로그</p>
-              </a>
-            </li>
+            <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
+              <li class="nav-item">
+                <a href="<c:url value='/statistics/comparison'/>" class="nav-link">
+                  <p>손익 비교</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<c:url value='/settlements/confirm'/>" class="nav-link">
+                  <p>정산 확정</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<c:url value='/settlements'/>" class="nav-link">
+                  <p>정산 내역 조회</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<c:url value='/settlements/history'/>" class="nav-link">
+                  <p>정산 이력 로그</p>
+                </a>
+              </li>
+            </sec:authorize>
           </ul>
         </li>
 

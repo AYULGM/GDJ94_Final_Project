@@ -16,6 +16,7 @@ public class SaleSearchDto {
     private LocalDate startDate;     // 검색 시작일
     private LocalDate endDate;       // 검색 종료일
     private String keyword;          // 검색 키워드 (매출 번호, 메모)
+    private Boolean settlementFlag;  // 정산 여부 (true: 정산됨, false: 미정산)
 
     // 페이징 관련
     private Integer page;            // 현재 페이지

@@ -92,6 +92,30 @@ public interface SettlementMapper {
                                     @Param("createUser") Long createUser);
 
     /**
+     * 선택된 매출 합계 조회
+     */
+    BigDecimal selectSelectedSalesTotalAmount(@Param("saleIds") List<Long> saleIds);
+
+    /**
+     * 선택된 지출 합계 조회
+     */
+    BigDecimal selectSelectedExpensesTotalAmount(@Param("expenseIds") List<Long> expenseIds);
+
+    /**
+     * 선택된 매출 정산 매핑 등록
+     */
+    int insertSelectedSettlementSaleMaps(@Param("settlementId") Long settlementId,
+                                         @Param("saleIds") List<Long> saleIds,
+                                         @Param("createUser") Long createUser);
+
+    /**
+     * 선택된 지출 정산 매핑 등록
+     */
+    int insertSelectedSettlementExpenseMaps(@Param("settlementId") Long settlementId,
+                                            @Param("expenseIds") List<Long> expenseIds,
+                                            @Param("createUser") Long createUser);
+
+    /**
      * 정산 이력 로그 등록
      */
     int insertSettlementHistory(SettlementHistoryDto historyDto);

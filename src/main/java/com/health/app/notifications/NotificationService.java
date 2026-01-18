@@ -152,4 +152,21 @@ public class NotificationService {
     public int markAllAsRead(Long userId) {
         return recipientRepository.markAllAsReadByUserId(userId, LocalDateTime.now());
     }
+
+    /**
+     * 특정 알림을 삭제합니다 (해당 사용자의 수신 기록만 삭제).
+     * @param notifId 알림 ID
+     * @param userId 사용자 ID
+     */
+    @Transactional
+    public void deleteNotification(Long notifId, Long userId) {
+        NotificationRecipient recipient = recipientRepository
+                .findByNotificationIdAndUserId(notifId, userId)
+                .orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다."));
+
+        recipient.setUseYn(false);
+        recipient.setUpdateUser(userId);
+        recipient.setUpdateDate(LocalDateTime.now());
+        recipientRepository.save(recipient);
+    }
 }

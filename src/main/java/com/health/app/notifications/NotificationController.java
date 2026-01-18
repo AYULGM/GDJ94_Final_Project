@@ -110,4 +110,24 @@ public class NotificationController {
 
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 특정 알림을 삭제합니다.
+     * DELETE /api/notifications/{notifId}
+     *
+     * @param notifId 알림 ID
+     * @param authentication Spring Security 인증 객체
+     * @return 성공 메시지
+     */
+    @DeleteMapping("/{notifId}")
+    public ResponseEntity<Map<String, String>> deleteNotification(@PathVariable Long notifId, Authentication authentication) {
+        Long currentUserId = getCurrentUserId(authentication);
+
+        notificationService.deleteNotification(notifId, currentUserId);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "알림을 삭제했습니다.");
+
+        return ResponseEntity.ok(response);
+    }
 }

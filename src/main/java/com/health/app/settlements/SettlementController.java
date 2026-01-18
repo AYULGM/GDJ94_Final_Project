@@ -81,7 +81,7 @@ public class SettlementController {
     }
 
     /**
-     * 정산 생성 API
+     * 정산 생성 API (전체 기간)
      */
     @PostMapping("/api")
     @ResponseBody
@@ -90,6 +90,25 @@ public class SettlementController {
             Authentication authentication) {
         Long currentUserId = getCurrentUserId(authentication);
         Long settlementId = settlementService.createSettlement(requestDto, currentUserId);
+
+        Map<String, Object> response = Map.of(
+                "success", true,
+                "message", "정산이 생성되었습니다.",
+                "settlementId", settlementId
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 선택 정산 생성 API (선택된 항목만)
+     */
+    @PostMapping("/api/selected")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> createSelectedSettlement(
+            @RequestBody SelectedSettlementRequestDto requestDto,
+            Authentication authentication) {
+        Long currentUserId = getCurrentUserId(authentication);
+        Long settlementId = settlementService.createSelectedSettlement(requestDto, currentUserId);
 
         Map<String, Object> response = Map.of(
                 "success", true,

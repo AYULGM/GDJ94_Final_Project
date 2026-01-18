@@ -133,6 +133,88 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     @Transactional
     @CacheEvict(value = {"statistics", "settlements"}, allEntries = true)
+    public Long createSelectedSettlement(SelectedSettlementRequestDto requestDto, Long currentUserId) {
+        // 선택된 항목이 없으면 예외
+        if ((requestDto.getSaleIds() == null || requestDto.getSaleIds().isEmpty()) &&
+            (requestDto.getExpenseIds() == null || requestDto.getExpenseIds().isEmpty())) {
+            throw new IllegalArgumentException("정산할 항목을 선택해주세요.");
+        }
+
+        // 1. 선택된 매출/지출 합계 계산
+        BigDecimal salesAmount = BigDecimal.ZERO;
+        if (requestDto.getSaleIds() != null && !requestDto.getSaleIds().isEmpty()) {
+            salesAmount = settlementMapper.selectSelectedSalesTotalAmount(requestDto.getSaleIds());
+        }
+
+        BigDecimal expenseAmount = BigDecimal.ZERO;
+        if (requestDto.getExpenseIds() != null && !requestDto.getExpenseIds().isEmpty()) {
+            expenseAmount = settlementMapper.selectSelectedExpensesTotalAmount(requestDto.getExpenseIds());
+        }
+
+        // 2. 손익 계산
+        BigDecimal profitAmount = salesAmount.subtract(expenseAmount);
+
+        // 3. 정산 번호 생성
+        String settlementNo = generateSelectedSettlementNo();
+
+        // 4. 정산 등록
+        SettlementDto settlementDto = SettlementDto.builder()
+                .settlementNo(settlementNo)
+                .branchId(requestDto.getBranchId())
+                .fromDate(requestDto.getFromDate())
+                .toDate(requestDto.getToDate())
+                .salesAmount(salesAmount)
+                .expenseAmount(expenseAmount)
+                .profitAmount(profitAmount)
+                .statusCode(SettlementStatus.PENDING.name())
+                .createUser(currentUserId)
+                .build();
+
+        settlementMapper.insertSettlement(settlementDto);
+        Long settlementId = settlementDto.getSettlementId();
+
+        // 5. 정산-매출/지출 매핑 등록 (선택된 항목만)
+        if (requestDto.getSaleIds() != null && !requestDto.getSaleIds().isEmpty()) {
+            settlementMapper.insertSelectedSettlementSaleMaps(
+                    settlementId,
+                    requestDto.getSaleIds(),
+                    currentUserId
+            );
+        }
+
+        if (requestDto.getExpenseIds() != null && !requestDto.getExpenseIds().isEmpty()) {
+            settlementMapper.insertSelectedSettlementExpenseMaps(
+                    settlementId,
+                    requestDto.getExpenseIds(),
+                    currentUserId
+            );
+        }
+
+        // 6. 정산 이력 로그 등록
+        saveSettlementHistory(
+                settlementId,
+                SettlementActionType.CREATE.name(),
+                null,
+                SettlementStatus.PENDING.name(),
+                "선택 정산 생성",
+                currentUserId
+        );
+
+        return settlementId;
+    }
+
+    /**
+     * 선택 정산 번호 생성 (SEL-YYYYMMDD-XXXXXX)
+     */
+    private String generateSelectedSettlementNo() {
+        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String randomNum = String.format("%06d", (int) (Math.random() * 1000000));
+        return "SEL-" + dateStr + "-" + randomNum;
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = {"statistics", "settlements"}, allEntries = true)
     public void confirmSettlement(Long settlementId, String reason, Long currentUserId) {
         // 1. 기존 정산 정보 조회
         SettlementDetailDto settlement = settlementMapper.selectSettlementDetail(settlementId);
