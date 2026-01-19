@@ -126,7 +126,8 @@
                             <a href="<c:url value='/expenses'/>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 목록
                             </a>
-                            <div>
+                            <!-- 정산된 항목은 수정/삭제 불가 -->
+                            <div id="actionButtons" style="display: none;">
                                 <button type="button" class="btn btn-danger" onclick="deleteExpense()">
                                     <i class="bi bi-trash"></i> 삭제
                                 </button>
@@ -186,8 +187,11 @@ async function loadExpenseDetail() {
         document.getElementById('updateUser').textContent = expense.updateUserName || '-';
         document.getElementById('updateDate').textContent = formatDateTime(expense.updateDate);
 
-        // 수정 버튼 링크 설정
-        document.getElementById('editButton').href = '/expenses/form?expenseId=' + expense.expenseId;
+        // 정산되지 않은 항목만 수정/삭제 버튼 표시 (실제 정산 완료 여부 기준)
+        if (!expense.settled) {
+            document.getElementById('actionButtons').style.display = 'block';
+            document.getElementById('editButton').href = '/expenses/form?expenseId=' + expense.expenseId;
+        }
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);

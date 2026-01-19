@@ -70,11 +70,6 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">매출 목록</h3>
-                        <div class="card-tools">
-                            <a href="<c:url value='/sales/form'/>" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus-circle"></i> 매출 등록
-                            </a>
-                        </div>
                     </div>
 
                     <div class="card-body p-0">

@@ -124,4 +124,16 @@ public interface SettlementMapper {
      * 정산 이력 로그 조회
      */
     List<SettlementHistoryDto> selectSettlementHistories(@Param("settlementId") Long settlementId);
+
+    /**
+     * 정산 취소 시 매출 매핑 해제
+     */
+    int releaseSettlementSaleMaps(@Param("settlementId") Long settlementId,
+                                   @Param("updateUser") Long updateUser);
+
+    /**
+     * 정산 취소 시 지출 매핑 해제
+     */
+    int releaseSettlementExpenseMaps(@Param("settlementId") Long settlementId,
+                                      @Param("updateUser") Long updateUser);
 }

@@ -72,11 +72,6 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">지출 목록</h3>
-                        <div class="card-tools">
-                            <a href="<c:url value='/expenses/form'/>" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus-circle"></i> 지출 등록
-                            </a>
-                        </div>
                     </div>
 
                     <div class="card-body p-0">
