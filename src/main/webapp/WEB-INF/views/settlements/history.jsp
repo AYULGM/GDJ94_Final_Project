@@ -213,7 +213,7 @@ function renderHistoryTable(histories) {
         '<tr>' +
             '<td>' + (history.logId || '-') + '</td>' +
             '<td>' +
-                '<a href="/settlements/' + history.settlementId + '">' +
+                '<a href="/settlements/' + history.settlementId + '?readonly=true">' +
                     history.settlementId + ' ' + (history.settlementNo ? '(' + history.settlementNo + ')' : '') +
                 '</a>' +
             '</td>' +

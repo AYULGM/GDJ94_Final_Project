@@ -155,11 +155,6 @@
                                         <input type="file" class="form-control-file" id="eventAttachments" multiple>
                                         <small class="form-text text-muted">다중 파일 첨부 가능</small>
                                     </div>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="eventNotification">
-                                        <label class="form-check-label" for="eventNotification">알림 설정</label>
-                                        <small class="form-text text-muted">알림 설정 기능은 추후 추가 예정입니다.</small>
-                                    </div>
                                     <div class="form-group">
                                         <label for="eventDescription">내용</label>
                                         <textarea class="form-control" id="eventDescription" rows="3"></textarea>

@@ -1,7 +1,15 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
+
+<!-- 로그인 사용자 정보 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+    <input type="hidden" id="userId" value="${loginUser.userId}"/>
+</sec:authorize>
 
 <!-- Main content -->
 <div class="app-content-header">
@@ -76,11 +84,10 @@
                                 <textarea class="form-control" id="memo" name="memo" rows="3"></textarea>
                             </div>
 
+                            <!-- 담당자 (숨김 - 자동 설정) -->
+                            <input type="hidden" id="handledBy" name="handledBy">
+
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="handledBy" class="form-label">담당자</label>
-                                    <input type="number" class="form-control" id="handledBy" name="handledBy" placeholder="사용자 ID">
-                                </div>
                                 <div class="col-md-6">
                                     <label for="settlementFlag" class="form-label">정산 여부</label>
                                     <select class="form-select" id="settlementFlag" name="settlementFlag">
@@ -145,19 +152,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('expenseForm').addEventListener('submit', handleSubmit);
 });
 
-// 지점 옵션 로드
+// 지점 옵션 로드 (등록 모드: 본인 지점 자동 선택)
 async function loadBranchOptions() {
     try {
         const response = await fetch('/expenses/api/options/branches');
         const branches = await response.json();
 
         const select = document.getElementById('branchId');
+        const userBranchId = document.getElementById('userBranchId')?.value || '0';
+        const userId = document.getElementById('userId')?.value || '';
+
         branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
             option.value = branch.id;
             option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
+
+        // 등록 모드이면 본인 지점/담당자 자동 설정
+        if (!isEditMode) {
+            if (userBranchId && userBranchId !== '0') {
+                select.value = userBranchId;
+            }
+            if (userId) {
+                document.getElementById('handledBy').value = userId;
+            }
+        }
     } catch (error) {
         console.error('지점 목록 로드 실패:', error);
     }

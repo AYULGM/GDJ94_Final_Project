@@ -194,7 +194,8 @@
           </ul>
         </li>
 
-        <!-- 매출·지출 통계 -->
+        <!-- 매출·지출 통계 (관리자 이상만 표시 - 캡틴 접근 제한) -->
+        <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
         <li class="nav-item">
           <a href="#" class="nav-link" data-lte-toggle="treeview">
             <i class="nav-icon bi bi-bar-chart"></i>
@@ -216,6 +217,7 @@
             </li>
           </ul>
         </li>
+        </sec:authorize>
 
         <!-- 정산 관리 -->
         <li class="nav-item">
@@ -227,6 +229,7 @@
             </p>
           </a>
           <ul class="nav nav-treeview">
+            <!-- 매출/지출 관리 - 모든 권한 접근 가능 (캡틴은 본인 지점만) -->
             <li class="nav-item">
               <a href="<c:url value='/sales'/>" class="nav-link">
                 <p>매출 관리</p>
@@ -237,6 +240,8 @@
                 <p>지출 관리</p>
               </a>
             </li>
+            <!-- 아래 메뉴는 관리자 이상만 표시 (캡틴 접근 제한) -->
+            <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
             <li class="nav-item">
               <a href="<c:url value='/statistics/comparison'/>" class="nav-link">
                 <p>손익 비교</p>
@@ -244,7 +249,7 @@
             </li>
             <li class="nav-item">
               <a href="<c:url value='/settlements/confirm'/>" class="nav-link">
-                <p>정산 생성</p>
+                <p>정산 확정</p>
               </a>
             </li>
             <li class="nav-item">
@@ -257,6 +262,7 @@
                 <p>정산 이력 로그</p>
               </a>
             </li>
+            </sec:authorize>
           </ul>
         </li>
 

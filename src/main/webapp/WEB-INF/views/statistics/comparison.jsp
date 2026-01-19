@@ -14,23 +14,6 @@
 </sec:authorize>
 
 <!-- Main content -->
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">손익 비교</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="<c:url value='/'/>">Home</a></li>
-                    <li class="breadcrumb-item"><a href="<c:url value='/statistics'/>">정산·통계</a></li>
-                    <li class="breadcrumb-item active">손익 비교</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="app-content">
     <div class="container-fluid">
 

@@ -209,4 +209,37 @@ public class StatisticsController {
         List<ProfitComparisonDto> result = statisticsService.getProfitComparison(searchDto);
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * ST-009: 정산용 매출/지출 합계 조회 API (전자결재 정산 폼에서 사용)
+     * 특정 기간과 지점에 대한 매출/지출/손익 합계를 반환
+     */
+    @GetMapping("/api/settlement-summary")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> getSettlementSummary(StatisticsSearchDto searchDto) {
+        // 매출 합계 조회 (status_code = 'COMPLETED')
+        List<SalesStatisticsDto> salesData = statisticsService.getSalesByBranch(searchDto);
+        long totalSales = salesData.stream()
+                .mapToLong(s -> s.getTotalAmount() != null ? s.getTotalAmount().longValue() : 0L)
+                .sum();
+
+        // 지출 합계 조회 (settlement_flag = TRUE)
+        List<ExpenseStatisticsDto> expensesData = statisticsService.getExpensesByBranch(searchDto);
+        long totalExpenses = expensesData.stream()
+                .mapToLong(e -> e.getTotalAmount() != null ? e.getTotalAmount().longValue() : 0L)
+                .sum();
+
+        // 손익 계산
+        long profit = totalSales - totalExpenses;
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("totalSales", totalSales);
+        result.put("totalExpenses", totalExpenses);
+        result.put("profit", profit);
+        result.put("startDate", searchDto.getStartDate());
+        result.put("endDate", searchDto.getEndDate());
+        result.put("branchId", searchDto.getBranchId());
+
+        return ResponseEntity.ok(result);
+    }
 }
