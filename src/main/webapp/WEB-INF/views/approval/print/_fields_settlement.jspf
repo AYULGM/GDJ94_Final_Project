@@ -2,37 +2,28 @@
 
 <c:set var="ext" value="${doc.form}" />
 
-<!-- 문서번호 -->
 <div class="field" style="left:1040px; top:140px; width:360px;">
   <c:out value="${doc.docNo}"/>
 </div>
 
-<!-- 기안자 -->
 <div class="field" style="left:220px; top:185px; width:420px;">
   <c:out value="${doc.drafterName}"/>
 </div>
 
-<!-- 작성일 -->
 <div class="field" style="left:220px; top:225px; width:420px;">
   <c:out value="${ext.writtenDateStr}"/>
 </div>
 
-<!-- 지출일(extDt1) -->
-<div class="field" style="left:220px; top:340px; width:420px;">
-  <c:out value="${ext.extDt1}"/>
+<!-- 기간 -->
+<div class="field" style="left:220px; top:340px; width:520px;">
+  <c:out value="${ext.extDt1}"/> ~ <c:out value="${ext.extDt2}"/>
 </div>
 
-<!-- 금액(extNo1) -->
-<div class="field right" style="left:1010px; top:340px; width:360px;">
-  <c:out value="${ext.extNo1}"/>
-</div>
-
-<!-- 제목/사유(extTxt2) -->
+<!-- 정산 요약 -->
 <div class="field" style="left:220px; top:395px; width:1150px;">
   <c:out value="${ext.extTxt2}"/>
 </div>
 
-<!-- 상세(JSON/본문) -->
 <div class="field pre" style="left:220px; top:460px; width:1150px; height:1180px;">
   <c:out value="${ext.extTxt6}"/>
 </div>

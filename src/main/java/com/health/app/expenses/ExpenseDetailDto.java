@@ -22,7 +22,8 @@ public class ExpenseDetailDto {
     private String memo;
     private Long handledBy;
     private String handledByName;
-    private Boolean settlementFlag;
+    private Boolean settlementFlag;   // 정산 대상 여부 (지출 등록 시 설정)
+    private Boolean settled;          // 실제 정산 완료 여부 (매핑 테이블 기준)
 
     // 생성/수정 정보
     private Long createUser;

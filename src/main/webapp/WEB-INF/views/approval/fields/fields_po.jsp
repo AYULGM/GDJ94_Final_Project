@@ -4,14 +4,10 @@
 <input type="hidden" name="extTxt6" id="poItemsJson" />
 
 <div class="row g-2">
-  <div class="col-md-4">
-    <label class="form-label required-label">거래처명</label>
-    <input type="text" class="form-control" name="extTxt1" maxlength="100" required />
-  </div>
-
+  
   <div class="col-md-4">
     <label class="form-label">담당자</label>
-    <input type="text" class="form-control" name="extTxt4" maxlength="100" placeholder="담당자명" />
+    <input type="text" class="form-control bg-secondary-subtle" name="extTxt4" maxlength="100" value='${loginUser.name}' readonly />
   </div>
 
   <div class="col-md-4">
@@ -19,13 +15,8 @@
     <input type="date" class="form-control" name="extDt1" required />
   </div>
 
-  <div class="col-md-8">
-    <label class="form-label mt-2">결제조건</label>
-    <input type="text" class="form-control" name="extTxt3" maxlength="200" placeholder="예: 납품 후 30일 이내" />
-  </div>
-
   <div class="col-md-4">
-    <label class="form-label mt-2">총액</label>
+    <label class="form-label ">총액</label>
     <input type="number" class="form-control bg-secondary-subtle" name="extNo1" id="poTotal" readonly />
   </div>
 
@@ -37,7 +28,7 @@
 
     <div class="table-responsive mt-2">
       <!-- ✅ id를 poTable로 통일 -->
-      <table class="table table-sm table-bordered align-middle" id="poTable">
+      <table class="table table-sm table-bordered align-middle" id="poTable" value ="">
         <thead class="table-light">
           <tr>
             <th class="required-label">품목명</th>

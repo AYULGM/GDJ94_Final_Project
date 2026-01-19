@@ -1,0 +1,23 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<c:set var="ext" value="${doc.form}" />
+
+<div class="field" style="left:1040px; top:140px; width:360px;">
+  <c:out value="${doc.docNo}"/>
+</div>
+
+<div class="field" style="left:220px; top:185px; width:420px;">
+  <c:out value="${doc.drafterName}"/>
+</div>
+
+<div class="field" style="left:220px; top:225px; width:420px;">
+  <c:out value="${ext.writtenDateStr}"/>
+</div>
+
+<div class="field" style="left:220px; top:340px; width:1150px;">
+  <c:out value="${ext.extTxt2}"/>
+</div>
+
+<div class="field pre" style="left:220px; top:400px; width:1150px; height:1240px;">
+  <c:out value="${ext.extTxt6}"/>
+</div>

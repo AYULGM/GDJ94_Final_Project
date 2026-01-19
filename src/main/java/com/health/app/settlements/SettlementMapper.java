@@ -126,6 +126,16 @@ public interface SettlementMapper {
     List<SettlementHistoryDto> selectSettlementHistories(@Param("settlementId") Long settlementId);
 
     /**
+     * 정산 취소 시 매출 매핑 해제
+     */
+    int releaseSettlementSaleMaps(@Param("settlementId") Long settlementId,
+                                   @Param("updateUser") Long updateUser);
+
+    /**
+     * 정산 취소 시 지출 매핑 해제
+     */
+    int releaseSettlementExpenseMaps(@Param("settlementId") Long settlementId,
+                                      @Param("updateUser") Long updateUser);
      * 선택된 매출의 지점별 그룹화 조회
      */
     List<Map<String, Object>> selectSelectedSalesGroupByBranch(@Param("saleIds") List<Long> saleIds);

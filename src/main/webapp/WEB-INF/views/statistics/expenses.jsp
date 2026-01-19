@@ -297,23 +297,31 @@ function initChart() {
     expensesChart.render();
 }
 
-// 차트 업데이트
+// 차트 업데이트 (지점별은 상위 6개만 표시)
 function updateChart(data) {
     let categories, values;
+    let chartData = data;
+
+    // 지점별 탭인 경우 지출 기준 상위 6개만 선택
+    if (activeTab === 'branch') {
+        chartData = [...data]
+            .sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0))
+            .slice(0, 6);
+    }
 
     switch(activeTab) {
         case 'branch':
-            categories = data.map(item => item.branchName || '미분류');
+            categories = chartData.map(item => item.branchName || '미분류');
             break;
         case 'category':
-            categories = data.map(item => item.categoryName || '미분류');
+            categories = chartData.map(item => item.categoryName || '미분류');
             break;
         case 'period':
-            categories = data.map(item => item.periodLabel || item.period);
+            categories = chartData.map(item => item.periodLabel || item.period);
             break;
     }
 
-    values = data.map(item => item.totalAmount || 0);
+    values = chartData.map(item => item.totalAmount || 0);
 
     expensesChart.updateOptions({
         xaxis: { categories: categories },

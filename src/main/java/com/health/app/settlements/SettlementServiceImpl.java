@@ -347,6 +347,10 @@ public class SettlementServiceImpl implements SettlementService {
 
         settlementMapper.updateSettlement(updateDto);
 
+        // 2-1. 매출/지출 매핑 해제 (미정산 상태로 복원)
+        settlementMapper.releaseSettlementSaleMaps(settlementId, currentUserId);
+        settlementMapper.releaseSettlementExpenseMaps(settlementId, currentUserId);
+
         // 3. 정산 이력 로그 등록
         saveSettlementHistory(
                 settlementId,

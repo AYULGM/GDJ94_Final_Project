@@ -2,8 +2,9 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<jsp:include page="../includes/admin_header.jsp" />
+<c:set var="ctx" value="${pageContext.request.contextPath}" />
 
+<jsp:include page="../includes/admin_header.jsp" />
 <style>
   /* 좌측 미리보기만 스크롤 */
   .preview-box{
@@ -12,27 +13,37 @@
     background: #f8f9fa;
   }
 
-  /* iframe 스크롤 제거 + 축소 */
+  /* 스케일 값 */
+  :root { --pv-scale: 0.70; }
+
+  /* iframe을 감싸는 래퍼에 스케일 적용 */
+  .preview-scale{
+    transform: scale(var(--pv-scale));
+    transform-origin: top left;
+
+    /* 축소된 실제 폭만큼만 차지하게 해서 스크롤/클리핑 안정화 */
+    width: calc(1250px * var(--pv-scale));
+  }
+
   .preview-iframe{
-    width: 1250px;
-    height: 2000px;
-    border: 0;
-    overflow: hidden;
-    display: block;
+    width: 1448px;
+    height: 2048px;
     transform: scale(0.7);
     transform-origin: top left;
   }
 
+
   /* 우측 패널도 화면 높이에 맞추고 내부만 스크롤 */
   .side-sticky{
     position: sticky;
-    top: 88px; /* 헤더 높이에 맞춰 조정 */
+    top: 88px;
   }
   .side-scroll{
     max-height: calc(100vh - 140px);
     overflow: auto;
   }
 </style>
+
 
 <div class="container-fluid py-3 px-3">
   <div class="row g-3">
@@ -43,18 +54,21 @@
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
           <div class="fw-semibold col-8">문서 미리보기</div>
           <div class="d-flex gap-2">
-            <a class="btn btn-sm btn-outline-dark" href="/approval/view?docVerId=${docVerId}">출력/미리보기</a>
-            <a class="btn btn-sm btn-outline-secondary" href="/approval/list">목록</a>
+            <a class="btn btn-sm btn-outline-dark" href="${ctx}/approval/view?docVerId=${docVerId}">출력/미리보기</a>
+            <a class="btn btn-sm btn-outline-secondary" href="${ctx}/approval/list">목록</a>
           </div>
         </div>
         <div class="card-body p-0">
-          <div class="preview-box">
-            <iframe
-			  src="/approval/view?docVerId=${docVerId}&preview=1"
-			  class="preview-iframe"
-			  scrolling="no"
-			  title="문서 미리보기"></iframe>
-          </div>
+			<div class="preview-box">
+			  <div class="preview-scale">
+			    <iframe
+			      src="${ctx}/approval/view?docVerId=${docVerId}&preview=1"
+			      class="preview-iframe"
+			      scrolling="no"
+			      title="문서 미리보기"></iframe>
+			  </div>
+			</div>
+
         </div>
       </div>
     </div>
@@ -239,7 +253,7 @@
             <div class="d-grid gap-2">
 
               <c:if test="${page.canRecall}">
-                <form method="post" action="/approval/recall">
+                <form method="post" action="${ctx}/approval/recall">
                   <input type="hidden" name="docVerId" value="${docVerId}" />
                   <c:if test="${not empty _csrf}">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
@@ -249,10 +263,10 @@
               </c:if>
 
               <c:if test="${page.canEdit}">
-                <a class="btn btn-secondary" href="/approval/form?docVerId=${docVerId}">수정</a>
-                <a class="btn btn-outline-secondary" href="/approval/line?docVerId=${docVerId}">결재선 수정</a>
+                <a class="btn btn-secondary" href="${ctx}/approval/form?docVerId=${docVerId}">수정</a>
+                <a class="btn btn-outline-secondary" href="${ctx}/approval/line?docVerId=${docVerId}">결재선 수정</a>
 
-                <form method="post" action="/approval/resubmit">
+                <form method="post" action="${ctx}/approval/resubmit">
                   <input type="hidden" name="docVerId" value="${docVerId}" />
                   <c:if test="${not empty _csrf}">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />

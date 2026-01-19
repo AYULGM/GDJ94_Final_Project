@@ -1,0 +1,76 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<c:set var="ext" value="${doc.form}" />
+
+<div class="field" style="left:1040px; top:140px; width:360px;">
+  <c:out value="${doc.docNo}"/>
+</div>
+
+<div class="field" style="left:220px; top:185px; width:420px;">
+  <c:out value="${doc.drafterName}"/>
+</div>
+
+<div class="field" style="left:220px; top:225px; width:420px;">
+  <c:out value="${ext.writtenDateStr}"/>
+</div>
+
+<!-- 요청 제목 -->
+<div class="field" style="left:220px; top:340px; width:1150px;">
+  <c:out value="${ext.extTxt2}"/>
+</div>
+
+<!-- 총액(있다면 extNo1) -->
+<div class="field right" style="left:1010px; top:395px; width:360px;">
+  <c:out value="${ext.extNo1}"/>
+</div>
+
+<!-- 품목 JSON -->
+<script type="application/json" id="itemsJson_${doc.docVerId}"><c:out value="${ext.extTxt6}"/></script>
+
+<div class="field" style="left:220px; top:460px; width:1150px;">
+  <table style="width:100%; font-size:16px; border-collapse:collapse;">
+    <thead>
+      <tr>
+        <th style="width:60px; border-bottom:1px solid #cbd5e1; padding:4px 6px;">No</th>
+        <th style="border-bottom:1px solid #cbd5e1; padding:4px 6px;">품목</th>
+        <th style="width:120px; border-bottom:1px solid #cbd5e1; padding:4px 6px; text-align:right;">수량</th>
+        <th style="width:160px; border-bottom:1px solid #cbd5e1; padding:4px 6px; text-align:right;">단가</th>
+        <th style="width:180px; border-bottom:1px solid #cbd5e1; padding:4px 6px; text-align:right;">금액</th>
+      </tr>
+    </thead>
+    <tbody id="itemsTbody_${doc.docVerId}"></tbody>
+  </table>
+</div>
+
+<script>
+(function(){
+  var el = document.getElementById('itemsJson_${doc.docVerId}');
+  if(!el) return;
+  var raw = (el.textContent || '').trim();
+  if(!raw) return;
+  try{
+    var items = JSON.parse(raw);
+    var tbody = document.getElementById('itemsTbody_${doc.docVerId}');
+    if(!tbody || !Array.isArray(items)) return;
+    tbody.innerHTML = items.map(function(it, idx){
+      var name = (it && (it.productName || it.name)) ? (it.productName || it.name) : '';
+      var qty = (it && it.qty != null) ? it.qty : ((it && it.quantity != null) ? it.quantity : '');
+      var unitPrice = (it && it.unitPrice != null) ? it.unitPrice : ((it && it.price != null) ? it.price : '');
+      var amt = (it && it.amount != null) ? it.amount : ((it && it.amt != null) ? it.amt : '');
+      return '<tr>'+
+        '<td style="padding:4px 6px; border-bottom:1px solid #e2e8f0;">' + (idx+1) + '</td>'+
+        '<td style="padding:4px 6px; border-bottom:1px solid #e2e8f0;">' + escapeHtml(name) + '</td>'+
+        '<td style="padding:4px 6px; border-bottom:1px solid #e2e8f0; text-align:right;">' + escapeHtml(String(qty)) + '</td>'+
+        '<td style="padding:4px 6px; border-bottom:1px solid #e2e8f0; text-align:right;">' + escapeHtml(String(unitPrice)) + '</td>'+
+        '<td style="padding:4px 6px; border-bottom:1px solid #e2e8f0; text-align:right;">' + escapeHtml(String(amt)) + '</td>'+
+        '</tr>';
+    }).join('');
+  }catch(e){/* ignore */}
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);
+    });
+  }
+})();
+</script>

@@ -1,9 +1,13 @@
 package com.health.app.notices;
 
+import com.health.app.attachments.Attachment;
+import com.health.app.attachments.AttachmentLinkRepository;
 import com.health.app.branch.BranchDTO;
+import com.health.app.files.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -13,6 +17,8 @@ import java.util.List;
 public class NoticeService {
 
     private final NoticeMapper noticeMapper;
+    private final FileService fileService;
+    private final AttachmentLinkRepository attachmentLinkRepository;
 
     private static final DateTimeFormatter DF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter TF = DateTimeFormatter.ofPattern("HH:mm");
@@ -40,7 +46,7 @@ public class NoticeService {
 
     // 공지 등록
     @Transactional
-    public Long create(NoticeDTO dto, Long actorUserId, String reason) {
+    public Long create(NoticeDTO dto, java.util.List<MultipartFile> files, Long actorUserId, String reason) {
         validateTargets(dto);
 
         if (dto.getIsPinned() == null) dto.setIsPinned(false);
@@ -48,6 +54,9 @@ public class NoticeService {
 
         dto.setUpdateUser(actorUserId);
         noticeMapper.insertNotice(dto);
+
+        // 첨부파일 저장/연결 (attachments + attachment_links)
+        storeAndLinkAttachments(dto.getNoticeId(), files, actorUserId);
 
         saveTargets(dto, actorUserId);
 
@@ -65,7 +74,7 @@ public class NoticeService {
 
     // 공지 수정
     @Transactional
-    public void update(NoticeDTO dto, Long actorUserId, String reason) {
+    public void update(NoticeDTO dto, java.util.List<MultipartFile> files, Long actorUserId, String reason) {
         validateTargets(dto);
 
         if (dto.getIsPinned() == null) dto.setIsPinned(false);
@@ -75,6 +84,9 @@ public class NoticeService {
 
         dto.setUpdateUser(actorUserId);
         noticeMapper.updateNotice(dto);
+
+        // 신규 첨부파일만 추가(기존 첨부는 유지)
+        storeAndLinkAttachments(dto.getNoticeId(), files, actorUserId);
 
         noticeMapper.deleteTargets(dto.getNoticeId(), actorUserId);
         saveTargets(dto, actorUserId);
@@ -94,6 +106,9 @@ public class NoticeService {
     public void delete(Long noticeId, Long actorUserId, String reason) {
         noticeMapper.softDelete(noticeId, actorUserId);
 
+        // 첨부 링크도 논리 삭제
+        attachmentLinkRepository.logicalDeleteByEntityTypeAndEntityId("NOTICE", noticeId);
+
         NoticeHistoryDTO h = new NoticeHistoryDTO();
         h.setNoticeId(noticeId);
         h.setChangeType("DELETE");
@@ -102,6 +117,25 @@ public class NoticeService {
         h.setReason((reason == null || reason.isBlank()) ? "DELETE" : reason);
         h.setCreateUser(actorUserId);
         noticeMapper.insertHistory(h);
+    }
+
+    /**
+     * 공지사항에 연결된 첨부파일 목록 조회
+     */
+    public java.util.List<Attachment> getAttachments(Long noticeId) {
+        return attachmentLinkRepository.findAttachmentsByEntityTypeAndEntityId("NOTICE", noticeId);
+    }
+
+    private void storeAndLinkAttachments(Long noticeId, java.util.List<MultipartFile> files, Long actorUserId) {
+        if (files == null || files.isEmpty()) return;
+        long sort = 0L;
+        for (MultipartFile f : files) {
+            if (f == null || f.isEmpty()) continue;
+            Long fileId = fileService.storeFile(f, actorUserId);
+            // role은 범용적으로 "ATTACHMENT" 사용
+            fileService.linkFileToEntity(fileId, "NOTICE", noticeId, "ATTACHMENT", actorUserId);
+            sort++;
+        }
     }
 
     // 대상 지점 저장

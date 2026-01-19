@@ -22,5 +22,37 @@
   ORDER BY p.product_name
 </select>
 
+<!-- AT005(구매요청서): product 테이블 전체(사용중) 상품 -->
+<select id="selectAllActiveProducts"
+        resultType="com.health.app.approval.ApprovalProductDTO">
+  SELECT
+    p.product_id   AS productId,
+    p.product_name AS productName,
+    p.product_desc AS productDesc,
+    p.price        AS price,
+    0              AS stockQty
+  FROM product p
+  WHERE p.use_yn = 1
+  ORDER BY p.product_name
+</select>
+
+<!-- AT006(발주서): inventory 에 등록된 "내 지점" 상품만 -->
+<select id="selectInventoryProductsByBranch"
+        resultType="com.health.app.approval.ApprovalProductDTO">
+  SELECT
+    p.product_id   AS productId,
+    p.product_name AS productName,
+    p.product_desc AS productDesc,
+    p.price        AS price,
+    i.quantity     AS stockQty
+  FROM inventory i
+  JOIN product p
+    ON p.product_id = i.product_id
+   AND p.use_yn     = 1
+  WHERE i.branch_id = #{branchId}
+    AND i.use_yn    = 1
+  ORDER BY p.product_name
+</select>
+
 
 </mapper>

@@ -48,7 +48,6 @@
         <tbody>
           <!-- 기본 1행 -->
           <tr>
-            <tr>
 			  <td>
 			    <select class="form-select form-select-sm ex-item" required>
 			      <option value="">선택</option>

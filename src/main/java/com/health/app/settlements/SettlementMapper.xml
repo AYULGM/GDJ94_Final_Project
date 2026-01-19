@@ -390,6 +390,30 @@
     </insert>
 
     <!-- =========================================================
+         17) 정산 취소 시 매출 매핑 해제
+       ========================================================= -->
+    <update id="releaseSettlementSaleMaps">
+        UPDATE settlement_sale_map
+        SET
+            use_yn = FALSE,
+            update_user = #{updateUser}
+        WHERE settlement_id = #{settlementId}
+          AND use_yn = TRUE
+    </update>
+
+    <!-- =========================================================
+         18) 정산 취소 시 지출 매핑 해제
+       ========================================================= -->
+    <update id="releaseSettlementExpenseMaps">
+        UPDATE settlement_expense_map
+        SET
+            use_yn = FALSE,
+            update_user = #{updateUser}
+        WHERE settlement_id = #{settlementId}
+          AND use_yn = TRUE
+    </update>
+
+    <!-- =========================================================
          14) 정산 이력 로그 조회
        ========================================================= -->
     <select id="selectSettlementHistories" resultType="com.health.app.settlements.SettlementHistoryDto">

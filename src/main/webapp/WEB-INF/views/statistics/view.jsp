@@ -638,14 +638,18 @@ function updateProfitChart(comparisonData) {
     profitChart.updateSeries([profit, loss]);
 }
 
-// 지점별 비교 차트 업데이트
+// 지점별 비교 차트 업데이트 (상위 6개 지점만 표시)
 function updateBranchChart(salesData, expensesData) {
-    // 매출 데이터를 기준으로 지점명 추출 (매출이 있는 지점만 표시)
-    const branchNames = salesData.map(item => item.branchName);
-    const salesValues = salesData.map(item => item.totalAmount || 0);
+    // 매출 기준 내림차순 정렬 후 상위 6개만 선택
+    const sortedSalesData = [...salesData]
+        .sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0))
+        .slice(0, 6);
+
+    const branchNames = sortedSalesData.map(item => item.branchName);
+    const salesValues = sortedSalesData.map(item => item.totalAmount || 0);
 
     // 매출 지점 순서에 맞춰 지출 데이터 매칭
-    const expensesValues = salesData.map(salesItem => {
+    const expensesValues = sortedSalesData.map(salesItem => {
         const expenseItem = expensesData.find(e => e.branchId === salesItem.branchId);
         return expenseItem ? (expenseItem.totalAmount || 0) : 0;
     });

@@ -31,7 +31,7 @@
 <c:if test="${param.preview ne '1'}">
   <div class="d-flex justify-content-end mb-2">
     <a class="back-btn"
-       href="/approval/detail?docVerId=${docVerId}">
+       href="${pageContext.request.contextPath}/approval/detail?docVerId=${docVerId}">
       ← 돌아가기
     </a>
   </div>

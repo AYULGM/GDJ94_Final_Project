@@ -54,25 +54,39 @@ public class ApprovalController {
 
         model.addAttribute("branches", approvalService.getBranches());
 
+        // 문서별 상품 소스가 달라서, 폼에서는 목록을 분리해서 내려준다.
+        // - AT005(구매요청서): product 테이블 전체
+        // - AT006(발주서): inventory 테이블(내 지점)
+        model.addAttribute("prProducts", approvalService.getAllActiveProducts());
+
         if (docVerId != null) {
             ApprovalDraftDTO draft = approvalService.getDraftForEdit(docVerId, loginUser.getUserId());
             model.addAttribute("draft", draft);
             model.addAttribute("mode", "edit");
             model.addAttribute("pageTitle", "전자수정");
 
+            // (구형) products 모델을 쓰는 화면/스크립트 호환용
             model.addAttribute("products",
                     draft.getBranchId() != null
                             ? approvalService.getProductsByBranch(draft.getBranchId())
                             : java.util.Collections.emptyList());
 
+            model.addAttribute("poProducts", approvalService.getInventoryProductsByBranch(draft.getBranchId()));
+
             model.addAttribute("entry", "approval");
 
         } else {
             model.addAttribute("mode", "new");
-            model.addAttribute("products", java.util.Collections.emptyList());
+
+            List<ApprovalProductDTO> prList = approvalService.getAllActiveProducts();
+            model.addAttribute("prProducts", prList);
+            model.addAttribute("products", prList); // ★ 구매요청서가 products를 봐도 뜨게
+
+            model.addAttribute("poProducts", approvalService.getInventoryProductsByBranch(loginUser.getBranchId()));
             model.addAttribute("pageTitle", "전자작성");
             model.addAttribute("entry", entry);
         }
+
 
         model.addAttribute("handoverCandidates", approvalService.getHandoverCandidates(loginUser.getUserId()));
         return "approval/form";
@@ -238,23 +252,18 @@ public class ApprovalController {
     }
 
 
-    // 출력 뷰(휴가 양식)
+    // 출력 뷰(보고서 이미지 오버레이)
     @GetMapping("view")
     public String view(@RequestParam Long docVerId, Model model) {
-        model.addAttribute("doc", approvalService.getPrintData(docVerId));
-        model.addAttribute("docVerId", docVerId);
-
-        String typeCode = approvalMapper.selectTypeCodeByDocVerId(docVerId);
-
-        // 휴가(AT009)는 기존 출력 서식 유지
-        if ("AT009".equals(typeCode)) {
-            model.addAttribute("bgImageUrl", "/approval/formPng/leave.png");
-            model.addAttribute("fieldsJspf", "/WEB-INF/views/approval/print/_fields_vacation.jspf");
-            return "approval/print/vacation_print";
+        try {
+            model.addAttribute("doc", approvalService.getPrintData(docVerId));
+            model.addAttribute("docVerId", docVerId);
+            return "approval/print/overlay_print";
+        } catch (Exception e) {
+            model.addAttribute("docVerId", docVerId);
+            model.addAttribute("errMsg", e.getMessage());
+            return "approval/print/preview_error";
         }
-
-        // 그 외 문서는 공통 프린트 뷰(텍스트 기반)로 출력
-        return "approval/print/generic_print";
     }
 
     // 결재 처리 화면(GET)

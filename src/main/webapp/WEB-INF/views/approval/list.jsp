@@ -23,7 +23,7 @@
         <div class="text-muted small"></div>
       </div>
 
-      <a class="btn btn-primary" href="/approval/form?entry=approval">결재 작성</a>
+      <a class="btn btn-primary" href="${pageContext.request.contextPath}/approval/form?entry=approval">결재 작성</a>
     </div>
 
     <div class="card shadow-sm">
@@ -58,9 +58,9 @@
 
                   <td>
                     <a class="link-primary text-decoration-none fw-semibold"
-                       href="/approval/detail?docVerId=${row.docVerId}">
+                       href="${pageContext.request.contextPath}/approval/detail?docVerId=${row.docVerId}">
                        <%-- 상세 화면 만들면 아래로 변경 권장:
-                       href="/approval/detail?docVerId=${row.docVerId}"
+                       href="${pageContext.request.contextPath}/approval/detail?docVerId=${row.docVerId}"
                        --%>
                       <c:out value="${row.title}" />
                     </a>

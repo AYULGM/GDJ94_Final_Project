@@ -88,7 +88,7 @@
       </div>
 
       <div class="card-body">
-        <form method="post" action="<c:url value='${formAction}'/>" id="noticeForm">
+        <form method="post" action="<c:url value='${formAction}'/>" id="noticeForm" enctype="multipart/form-data">
 
           <c:if test="${not empty notice.noticeId}">
             <input type="hidden" name="noticeId" value="${notice.noticeId}" />
@@ -104,6 +104,28 @@
             <label class="form-label required-label">내용</label>
             <textarea id="content" name="content" class="form-control" rows="10"><c:out value="${notice.content}" /></textarea>
 
+          </div>
+
+          <!-- 첨부파일(신규 추가) -->
+          <div class="mb-3">
+            <label class="form-label">첨부파일</label>
+            <input type="file" name="files" class="form-control" multiple />
+            <div class="form-text">여러 파일을 선택할 수 있습니다. (기존 첨부는 유지되며, 신규 파일만 추가됩니다.)</div>
+
+            <c:if test="${not empty attachments}">
+              <div class="mt-2">
+                <div class="fw-bold mb-1">기존 첨부</div>
+                <ul class="mb-0">
+                  <c:forEach items="${attachments}" var="f">
+                    <li>
+                      <a href="<c:url value='/files/download/${f.fileId}'/>">
+                        <c:out value="${f.originalName}"/>
+                      </a>
+                    </li>
+                  </c:forEach>
+                </ul>
+              </div>
+            </c:if>
           </div>
 
           <div class="row g-3 mb-3">

@@ -236,6 +236,19 @@ public class ApprovalService {
         return approvalProductMapper.selectProductsByBranch(branchId);
     }
 
+    // AT005(구매요청서): product 테이블 전체 상품
+    @Transactional(readOnly = true)
+    public List<ApprovalProductDTO> getAllActiveProducts() {
+        return approvalProductMapper.selectAllActiveProducts();
+    }
+
+    // AT006(발주서): inventory 에 등록된 내 지점 상품만
+    @Transactional(readOnly = true)
+    public List<ApprovalProductDTO> getInventoryProductsByBranch(Long branchId) {
+        if (branchId == null) return java.util.Collections.emptyList();
+        return approvalProductMapper.selectInventoryProductsByBranch(branchId);
+    }
+
  
 
     // 재상신(임시/반려/회수만 가능)

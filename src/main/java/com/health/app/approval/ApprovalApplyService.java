@@ -104,34 +104,12 @@ public class ApprovalApplyService {
         }
         String bodyHtml = draft.getBody();
         String plain = Jsoup.parse(bodyHtml == null ? "" : bodyHtml).text();
-
-        // 첫 번째 항목의 카테고리 코드 사용 (없으면 ETC)
-        String categoryCode = (lines.get(0).getItemCode() != null && !lines.get(0).getItemCode().isBlank())
-                ? lines.get(0).getItemCode()
-                : "ETC";
-
-        // 지출 항목 설명 생성 (항목명 + 기타 상세)
-        String description = draft.getExtTxt3();
-        if (description == null || description.isBlank()) {
-            StringBuilder descBuilder = new StringBuilder();
-            for (ExpenseLine line : lines) {
-                if (line.getItemName() != null && !line.getItemName().isBlank()) {
-                    if (descBuilder.length() > 0) descBuilder.append(", ");
-                    descBuilder.append(line.getItemName());
-                    if ("ETC".equals(line.getItemCode()) && line.getItemEtc() != null && !line.getItemEtc().isBlank()) {
-                        descBuilder.append("(").append(line.getItemEtc()).append(")");
-                    }
-                }
-            }
-            if (descBuilder.length() > 0) description = descBuilder.toString();
-        }
-
         ExpenseDto dto = ExpenseDto.builder()
                 .branchId(branchId)
                 .expenseAt(expenseAt)
-                .categoryCode(categoryCode)
+                .categoryCode("ETC")
                 .amount(amount)
-                .description(description)
+                .description(plain)
                 .memo(plain)
                 .settlementFlag(true)
                 .createUser(actorUserId)
@@ -482,12 +460,9 @@ public class ApprovalApplyService {
      * ========================================================= */
 
     // AT001 extTxt6
-    // JavaScript 필드명과 일치: { itemCode, itemName, itemEtc, amount, date, memo }
     @Data
     public static class ExpenseLine {
-        private String itemCode;    // 지출 항목 코드 (SALARY, RENT, UTILITY, SUPPLIES, ETC)
-        private String itemName;    // 지출 항목명
-        private String itemEtc;     // 기타 항목 상세
+        private String item;
         private BigDecimal amount;
         private LocalDate date;
         private String memo;

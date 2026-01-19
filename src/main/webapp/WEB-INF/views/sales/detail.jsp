@@ -107,7 +107,8 @@
                             <a href="<c:url value='/sales'/>" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> 목록
                             </a>
-                            <div>
+                            <!-- 정산된 항목은 수정/삭제 불가 -->
+                            <div id="actionButtons" style="display: none;">
                                 <button type="button" class="btn btn-danger" onclick="deleteSale()">
                                     <i class="bi bi-trash"></i> 삭제
                                 </button>
@@ -164,8 +165,11 @@ async function loadSaleDetail() {
         document.getElementById('updateUser').textContent = sale.updateUserName || '-';
         document.getElementById('updateDate').textContent = formatDateTime(sale.updateDate);
 
-        // 수정 버튼 링크 설정
-        document.getElementById('editButton').href = '/sales/form?saleId=' + sale.saleId;
+        // 정산되지 않은 항목만 수정/삭제 버튼 표시
+        if (!sale.settled) {
+            document.getElementById('actionButtons').style.display = 'block';
+            document.getElementById('editButton').href = '/sales/form?saleId=' + sale.saleId;
+        }
 
     } catch (error) {
         console.error('데이터 로드 실패:', error);

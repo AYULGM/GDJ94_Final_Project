@@ -42,6 +42,8 @@ public class SecurityConfig {
                         "/plugins/**",
                         "/dist/**",
                         "/favicon.ico",
+                        "/approval/css/**",
+                        "/approval/formPng/**",
                         "/files/**"
                 );
     }
