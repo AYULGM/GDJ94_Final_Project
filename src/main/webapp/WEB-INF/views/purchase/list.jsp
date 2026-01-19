@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="../includes/admin_header.jsp" />
 
@@ -7,8 +8,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">발주 목록</h3>
-                <a class="btn btn-sm btn-primary" href="<c:url value='/purchase/new'/>">발주 요청</a>
+                <h3 class="card-title">구매/발주 목록</h3>
             </div>
 
             <div class="card-body">
@@ -38,8 +38,10 @@
                         <input class="form-control" type="text" name="keyword" value="${keyword}" placeholder="발주번호/지점/상품 검색" />
                     </div>
 
-                    <div class="col-md-2">
-                        <button class="btn btn-primary w-100" type="submit">조회</button>
+                    <!-- ✅ 조회 버튼 옆으로 '발주 요청' 버튼 이동 -->
+                    <div class="col-md-2 d-flex gap-2">
+                        <button class="btn btn-primary flex-grow-1" type="submit">조회</button>
+                        <a class="btn btn-outline-primary flex-grow-1" href="<c:url value='/purchase/new'/>">발주 요청</a>
                     </div>
                 </form>
 
@@ -77,7 +79,8 @@
                                             <c:otherwise><span class="badge bg-danger">반려</span></c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td>${row.requestedAt}</td>
+                                    <!-- ✅ 'T' 제거 -->
+                                    <td>${fn:replace(row.requestedAt, 'T', ' ')}</td>
                                     <td class="text-end">${row.totalQuantity}</td>
                                     <td class="text-end">${row.totalAmount}</td>
                                 </tr>
