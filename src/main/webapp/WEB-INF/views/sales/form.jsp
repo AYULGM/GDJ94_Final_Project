@@ -1,7 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <jsp:include page="../includes/admin_header.jsp" />
+
+<!-- 로그인 사용자 정보 -->
+<sec:authorize access="isAuthenticated()">
+    <sec:authentication property="principal" var="loginUser"/>
+    <input type="hidden" id="userBranchId" value="${loginUser.branchId}"/>
+</sec:authorize>
 
 
 <div class="app-content">
@@ -123,19 +130,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('saleForm').addEventListener('submit', handleSubmit);
 });
 
-// 지점 옵션 로드
+// 지점 옵션 로드 (등록 모드: 본인 지점 자동 선택)
 async function loadBranchOptions() {
     try {
         const response = await fetch('/sales/api/options/branches');
         const branches = await response.json();
 
         const select = document.getElementById('branchId');
+        const userBranchId = document.getElementById('userBranchId')?.value || '0';
+
         branches.filter(branch => branch != null && branch.id != null).forEach(branch => {
             const option = document.createElement('option');
             option.value = branch.id;
             option.textContent = branch.name || '미지정';
             select.appendChild(option);
         });
+
+        // 등록 모드이고 본인 지점이 있으면 자동 선택
+        if (!isEditMode && userBranchId && userBranchId !== '0') {
+            select.value = userBranchId;
+        }
     } catch (error) {
         console.error('지점 목록 로드 실패:', error);
     }

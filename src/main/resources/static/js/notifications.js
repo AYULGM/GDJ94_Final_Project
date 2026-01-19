@@ -257,21 +257,30 @@ class NotificationClient {
             // 클릭 이벤트
             item.addEventListener('click', async (e) => {
                 e.preventDefault();
+                console.log('[알림 클릭] notifId:', notification.notifId);
 
-                // 알림 삭제 처리
-                await this.deleteNotification(notification.notifId);
+                try {
+                    // 알림 삭제 처리
+                    console.log('[알림 삭제 시작]');
+                    await this.deleteNotification(notification.notifId);
+                    console.log('[알림 삭제 완료]');
 
-                // 알림 목록에서 제거
-                item.remove();
+                    // 알림 목록에서 제거
+                    item.remove();
+                    console.log('[UI에서 제거 완료]');
 
-                // 목록이 비었으면 "알림이 없습니다" 표시
-                if (listContainer.children.length === 0) {
-                    listContainer.innerHTML = '<div class="dropdown-item text-center text-secondary">알림이 없습니다</div>';
-                }
+                    // 목록이 비었으면 "알림이 없습니다" 표시
+                    if (listContainer.children.length === 0) {
+                        listContainer.innerHTML = '<div class="dropdown-item text-center text-secondary">알림이 없습니다</div>';
+                    }
 
-                // 관련 페이지로 이동
-                if (notification.relatedUrl && notification.relatedUrl !== '#') {
-                    window.location.href = notification.relatedUrl;
+                    // 관련 페이지로 이동
+                    if (notification.relatedUrl && notification.relatedUrl !== '#') {
+                        console.log('[페이지 이동]', notification.relatedUrl);
+                        window.location.href = notification.relatedUrl;
+                    }
+                } catch (error) {
+                    console.error('[알림 클릭 오류]', error);
                 }
             });
 
