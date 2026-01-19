@@ -37,6 +37,9 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ApprovalApplyService {
 
+    // ✅ 본사 branchId (지점 테이블 기준 확정)
+    private static final Long HQ_BRANCH_ID = 1L;
+
     private final ApprovalMapper approvalMapper;
 
     private final ExpenseMapper expenseMapper;
@@ -44,6 +47,7 @@ public class ApprovalApplyService {
     private final SaleMapper saleMapper;
     private final InventoryMapper inventoryMapper;
     private final PurchaseMapper purchaseMapper;
+
     // AT005
     private final PurchaseService purchaseService;
 
@@ -61,18 +65,17 @@ public class ApprovalApplyService {
         if (draft == null) {
             throw new IllegalStateException("draft not found: " + docVerId);
         }
-        System.out.println("### APPLY START type=" + draft.getTypeCode());
-        System.out.println("### extTxt6=" + draft.getExtTxt6());
+//        System.out.println("### APPLY START type=" + draft.getTypeCode());
+//        System.out.println("### extTxt6=" + draft.getExtTxt6());
 
         switch (draft.getTypeCode()) {
             case "AT001" -> applyExpense(draft, actorUserId);
             case "AT002" -> applySettlement(draft, actorUserId);
             case "AT003" -> applySales(draft, actorUserId);
             case "AT004" -> applyInventoryAdjust(draft, actorUserId);
-            case "AT005" -> applyPurchaseRequest(draft, actorUserId); // ✅ 추가
-            case "AT006" -> applyInboundRequest(draft, actorUserId);  // ✅ 추가
+            case "AT005" -> applyPurchaseRequest(draft, actorUserId);
+            case "AT006" -> applyInboundRequest(draft, actorUserId);
             default -> {
-                // 프로젝트 정책에 맞춰 예외/무시 선택
                 // throw new UnsupportedOperationException("Unsupported typeCode: " + draft.getTypeCode());
             }
         }
@@ -80,7 +83,6 @@ public class ApprovalApplyService {
 
     /* =========================================================
      * AT001 지출 (expenses)
-     * - extNo1(branchId), extNo2(total), extTxt3(reason), extTxt6(items json)
      * ========================================================= */
     private void applyExpense(ApprovalDraftDTO draft, Long actorUserId) {
 
@@ -102,8 +104,10 @@ public class ApprovalApplyService {
         if (amount == null) {
             amount = sumExpenseAmount(lines);
         }
+
         String bodyHtml = draft.getBody();
         String plain = Jsoup.parse(bodyHtml == null ? "" : bodyHtml).text();
+
         ExpenseDto dto = ExpenseDto.builder()
                 .branchId(branchId)
                 .expenseAt(expenseAt)
@@ -129,7 +133,6 @@ public class ApprovalApplyService {
 
     /* =========================================================
      * AT002 정산 (settlement)
-     * - extDt1~2(period), extNo1~3(amounts)
      * ========================================================= */
     private void applySettlement(ApprovalDraftDTO draft, Long actorUserId) {
 
@@ -161,7 +164,6 @@ public class ApprovalApplyService {
 
     /* =========================================================
      * AT003 매출 (sales)
-     * - extNo1(branchId), extTxt2(memo), extTxt6(lines json)
      * ========================================================= */
     private void applySales(ApprovalDraftDTO draft, Long actorUserId) {
 
@@ -202,7 +204,6 @@ public class ApprovalApplyService {
 
     /* =========================================================
      * AT004 재고 조정 (inventory)
-     * - extNo1(branchId), extCode2(reason), extTxt6(lines json with signedQty)
      * ========================================================= */
     private void applyInventoryAdjust(ApprovalDraftDTO draft, Long actorUserId) {
 
@@ -262,10 +263,50 @@ public class ApprovalApplyService {
             );
         }
     }
+
+    /* =========================================================
+     * ✅ 공통: 재고 IN 반영 (재고 row 없으면 예외)
+     * - InventoryMapper에 insert/upsert가 없어서, AT004처럼 "없으면 예외" 정책으로 통일
+     * ========================================================= */
+    private void applyStockInOrThrow(
+            Long branchId,
+            Long productId,
+            Long qty,
+            String reason,
+            String refType,
+            Long refId,
+            Long actorUserId
+    ) {
+        if (branchId == null || branchId <= 0) {
+            throw new IllegalArgumentException("재고반영: branchId가 올바르지 않습니다.");
+        }
+        if (productId == null || productId <= 0) {
+            throw new IllegalArgumentException("재고반영: productId가 올바르지 않습니다.");
+        }
+        if (qty == null || qty <= 0) return;
+
+        InventoryDetailDto current = inventoryMapper.selectInventoryDetail(branchId, productId);
+        if (current == null) {
+            throw new IllegalArgumentException(
+                    "재고반영: inventory row가 없습니다. (지점/상품 재고를 먼저 생성해야 합니다) branchId="
+                            + branchId + ", productId=" + productId
+            );
+        }
+
+        long beforeQty = (current.getQuantity() == null) ? 0L : current.getQuantity();
+        long afterQty = beforeQty + qty;
+
+        inventoryMapper.updateInventoryQuantity(branchId, productId, afterQty, null, actorUserId);
+
+        inventoryMapper.insertInventoryHistory(
+                branchId, productId, "IN", qty,
+                reason, refType, refId, actorUserId
+        );
+    }
+
     /* =========================================================
      * AT005 구매요청(PR)
-     * - 폼(extTxt6): [{name, qty, unit, amt}]
-     * - 결재 승인 시 purchase_header / purchase_detail에 직접 저장 (결재파트만 수정)
+     * - ✅ 최종 승인 시: 본사(HQ_BRANCH_ID=10000) 재고 IN
      * ========================================================= */
     private void applyPurchaseRequest(ApprovalDraftDTO draft, Long actorUserId) {
 
@@ -275,7 +316,7 @@ public class ApprovalApplyService {
         }
 
         List<PrPoLine> lines =
-            readJsonList(draft.getExtTxt6(), new TypeReference<List<PrPoLine>>() {});
+                readJsonList(draft.getExtTxt6(), new TypeReference<List<PrPoLine>>() {});
         if (lines == null || lines.isEmpty()) {
             throw new IllegalArgumentException("AT005: 구매 품목이 없습니다.");
         }
@@ -299,8 +340,7 @@ public class ApprovalApplyService {
             }
             if (qty == null || qty <= 0) continue;
 
-            PurchaseRequestDto.PurchaseItemDto item =
-                new PurchaseRequestDto.PurchaseItemDto();
+            PurchaseRequestDto.PurchaseItemDto item = new PurchaseRequestDto.PurchaseItemDto();
             item.setProductId(productId);
             item.setQuantity(qty);
             item.setUnitPrice(l.getUnitPrice() == null ? 0L : l.getUnitPrice());
@@ -322,32 +362,46 @@ public class ApprovalApplyService {
         for (PurchaseRequestDto.PurchaseItemDto item : req.getItems()) {
             purchaseMapper.insertPurchaseDetail(purchaseId, item, actorUserId);
         }
+
+        // ✅ (추가) 본사 재고 IN 반영
+        for (PurchaseRequestDto.PurchaseItemDto item : req.getItems()) {
+            applyStockInOrThrow(
+                    HQ_BRANCH_ID,
+                    item.getProductId(),
+                    item.getQuantity(),
+                    "AT005_FINAL_APPROVED",
+                    "PURCHASE_REQUEST",
+                    purchaseId,
+                    actorUserId
+            );
+        }
     }
 
-
-
+    /* =========================================================
+     * AT006 발주서(입고요청)
+     * - ✅ 최종 승인 시: 자기 지점(requestBranchId = draft.branchId) 재고 IN
+     * ========================================================= */
     private void applyInboundRequest(ApprovalDraftDTO draft, Long actorUserId) {
-
-        String vendorName = safeTrim(draft.getExtTxt1()); // 거래처명(필수)
-        if (vendorName.isEmpty()) {
-            throw new IllegalArgumentException("AT006: 거래처명(extTxt1)이 없습니다.");
-        }
 
         if (draft.getExtDt1() == null) { // 납기일(필수)
             throw new IllegalArgumentException("AT006: 납기일(extDt1)이 없습니다.");
         }
 
-        // ✅ JSON은 이제 {productId, productName, qty, unitPrice, amount} 형태
         List<PrPoLine> lines =
                 readJsonList(draft.getExtTxt6(), new TypeReference<List<PrPoLine>>() {});
         if (lines == null || lines.isEmpty()) {
             throw new IllegalArgumentException("AT006: 발주 품목(extTxt6)이 비어 있습니다.");
         }
 
+        Long requestBranchId = draft.getBranchId();
+        if (requestBranchId == null || requestBranchId <= 0) {
+            throw new IllegalArgumentException("AT006: requestBranchId(branchId)가 없습니다.");
+        }
+
         // 1) Header 저장
         InboundRequestHeaderDto header = new InboundRequestHeaderDto();
+        header.setRequestBranchId(requestBranchId);
         header.setInboundRequestNo(generateInboundRequestNo());
-        header.setVendorName(vendorName);
         header.setStatusCode("IR_REQ");
         header.setRequestedAt(LocalDateTime.now());
         header.setRequestedBy(actorUserId);
@@ -364,7 +418,7 @@ public class ApprovalApplyService {
             throw new IllegalStateException("AT006: inbound_request_header 저장 실패(inboundRequestId 생성 실패)");
         }
 
-        // 2) Detail 저장 (✅ productId 직접 사용)
+        // 2) Detail 저장
         for (PrPoLine l : lines) {
             if (l == null) continue;
 
@@ -380,10 +434,6 @@ public class ApprovalApplyService {
             item.setInboundRequestId(inboundRequestId);
             item.setProductId(productId);
             item.setQuantity(qty);
-
-            // ✅ DTO/테이블에 컬럼이 있으면 아래도 저장 (있을 때만)
-            // item.setUnitPrice(l.getUnitPrice() == null ? 0L : l.getUnitPrice());
-            // item.setAmount(l.getAmount() == null ? 0L : l.getAmount());
 
             item.setCreateUser(actorUserId);
             item.setUpdateUser(actorUserId);
@@ -401,6 +451,26 @@ public class ApprovalApplyService {
                 inboundRequestId,
                 actorUserId
         );
+
+        // ✅ (추가) 자기 지점 재고 IN 반영
+        for (PrPoLine l : lines) {
+            if (l == null) continue;
+
+            Long productId = l.getProductId();
+            Long qty = l.getQty();
+            if (productId == null || productId <= 0) continue;
+            if (qty == null || qty <= 0) continue;
+
+            applyStockInOrThrow(
+                    requestBranchId,
+                    productId,
+                    qty,
+                    "AT006_FINAL_APPROVED",
+                    "INBOUND_REQUEST",
+                    inboundRequestId,
+                    actorUserId
+            );
+        }
     }
 
     /* =========================================================
@@ -456,10 +526,9 @@ public class ApprovalApplyService {
     }
 
     /* =========================================================
-     * JSON line DTOs (폼 구조 그대로)
+     * JSON line DTOs
      * ========================================================= */
 
-    // AT001 extTxt6
     @Data
     public static class ExpenseLine {
         private String item;
@@ -468,7 +537,6 @@ public class ApprovalApplyService {
         private String memo;
     }
 
-    // AT003 extTxt6
     @Data
     public static class SalesLine {
         private String type;
@@ -477,7 +545,6 @@ public class ApprovalApplyService {
         private String memo;
     }
 
-    // AT004 extTxt6
     @Data
     public static class InventoryAdjustLine {
         private Long branchId;
@@ -491,7 +558,6 @@ public class ApprovalApplyService {
         private Long price;
     }
 
-    // AT005/AT006 extTxt6 : [{name, qty, unit, amt}]
     @Data
     public static class PrPoLine {
         private Long productId;
@@ -501,8 +567,6 @@ public class ApprovalApplyService {
         private Long amount;
     }
 
-
-   
     private String buildPrMemo(ApprovalDraftDTO draft) {
         StringBuilder sb = new StringBuilder();
         if (draft.getExtDt1() != null) sb.append("희망납기일: ").append(draft.getExtDt1()).append("\n");
@@ -512,12 +576,13 @@ public class ApprovalApplyService {
         if (!safeTrim(draft.getBody()).isEmpty()) sb.append("본문: ").append(safeTrim(draft.getBody()));
         return sb.toString().trim();
     }
+
     private String generatePurchaseNo() {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String rnd = String.format("%06d", (int) (Math.random() * 1_000_000));
         return "PR-" + date + "-" + rnd;
     }
-  
+
     private String generateInboundRequestNo() {
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String rnd = String.format("%06d", (int) (Math.random() * 1_000_000));
@@ -527,17 +592,14 @@ public class ApprovalApplyService {
     private String buildPoMemoZipSafe(ApprovalDraftDTO draft) {
         StringBuilder sb = new StringBuilder();
 
-        // fields_po.jsp 기준 입력값들
         if (draft.getExtDt1() != null) sb.append("납기일: ").append(draft.getExtDt1()).append("\n");
         if (!safeTrim(draft.getExtTxt2()).isEmpty()) sb.append("담당/연락처: ").append(safeTrim(draft.getExtTxt2())).append("\n");
         if (!safeTrim(draft.getExtTxt3()).isEmpty()) sb.append("결제조건: ").append(safeTrim(draft.getExtTxt3())).append("\n");
         if (draft.getExtNo1() != null) sb.append("총액: ").append(draft.getExtNo1()).append("\n");
         if (!safeTrim(draft.getExtTxt4()).isEmpty()) sb.append("비고: ").append(safeTrim(draft.getExtTxt4())).append("\n");
 
-        // 공통 본문(선택)
         if (!safeTrim(draft.getBody()).isEmpty()) sb.append("본문: ").append(safeTrim(draft.getBody()));
 
         return sb.toString().trim();
     }
-
 }
