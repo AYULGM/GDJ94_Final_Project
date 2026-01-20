@@ -10,11 +10,17 @@ public interface PurchaseMapper {
 
     // 옵션
     List<PurchaseOptionDto> selectBranchOptions();
-
     List<PurchaseOptionDto> selectProductOptions();
 
     // 발주 생성
     int insertPurchaseHeader(PurchaseRequestDto dto);
+
+    /**
+     * PR/PO 번호 생성용 시퀀스
+     * ex) prefix=PR, year=2026 => PR-2026-0001
+     */
+    int selectNextDocSeq(@Param("prefix") String prefix,
+                         @Param("year") String year);
 
     int insertPurchaseDetail(@Param("purchaseId") Long purchaseId,
                              @Param("item") PurchaseRequestDto.PurchaseItemDto item,
@@ -23,10 +29,10 @@ public interface PurchaseMapper {
     // 조회
     List<PurchaseListDto> selectPurchaseList(@Param("branchId") Long branchId,
                                              @Param("statusCode") String statusCode,
-                                             @Param("keyword") String keyword);
+                                             @Param("keyword") String keyword,
+                                             @Param("docType") String docType);
 
     PurchaseDetailDto selectPurchaseHeader(@Param("purchaseId") Long purchaseId);
-
     List<PurchaseDetailItemDto> selectPurchaseItems(@Param("purchaseId") Long purchaseId);
 
     // 상태 변경

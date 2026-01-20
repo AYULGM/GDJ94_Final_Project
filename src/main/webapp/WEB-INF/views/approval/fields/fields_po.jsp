@@ -60,7 +60,7 @@
                      min="1" step="1" value="1" />
             </td>
             <td>
-              <input type="number" class="form-control form-control-sm po-unit text-end"
+              <input type="number" class="form-control form-control-sm po-unit text-end bg-secondary-subtle" readonly
                      min="0" step="1" />
             </td>
             <td>
@@ -138,7 +138,7 @@
     tr.innerHTML = `
       <td></td>
       <td><input type="number" class="form-control form-control-sm po-qty text-end" min="1" step="1" value="1" /></td>
-      <td><input type="number" class="form-control form-control-sm po-unit text-end" min="0" step="1" /></td>
+      <td><input type="number" class="form-control form-control-sm po-unit text-end bg-secondary-subtle" readonly min="0" step="1" /></td>
       <td><input type="number" class="form-control form-control-sm po-amt text-end bg-secondary-subtle" readonly /></td>
       <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm btnDelRow">삭제</button></td>
     `;

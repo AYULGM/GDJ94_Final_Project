@@ -16,19 +16,15 @@
 
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary" href="<c:url value='/inbound'/>">목록</a>
-
-            <!-- 상태별 버튼 분기 -->
             <c:if test="${header != null}">
                 <c:choose>
 
-                    <!-- 요청(결재 진행중) -->
                     <c:when test="${header.statusCode eq 'IR_REQ' or header.statusCode eq 'REQUESTED'}">
                         <button type="button" class="btn btn-outline-primary" disabled>
                             결재 진행중
                         </button>
                     </c:when>
 
-                    <!-- 승인완료 → 처리완료(입고반영) -->
                     <c:when test="${header.statusCode eq 'IR_APPROVED' or header.statusCode eq 'APPROVED'}">
                         <form method="post"
                               action="<c:url value='/inbound/${header.inboundRequestId}/process'/>"
@@ -41,14 +37,12 @@
                         </form>
                     </c:when>
 
-                    <!-- 처리완료 -->
                     <c:when test="${header.statusCode eq 'IR_DONE' or header.statusCode eq 'DONE'}">
                         <button type="button" class="btn btn-success" disabled>
                             처리완료
                         </button>
                     </c:when>
 
-                    <!-- 그 외 -->
                     <c:otherwise>
                         <button type="button" class="btn btn-outline-secondary" disabled>
                             상태 확인 필요
@@ -75,12 +69,10 @@
 
     <c:if test="${header != null}">
 
-        <!-- 기본 정보 -->
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>기본 정보</span>
 
-                <!-- 상태 뱃지(한글 느낌) -->
                 <c:choose>
                     <c:when test="${header.statusCode eq 'IR_REQ' or header.statusCode eq 'REQUESTED'}">
                         <span class="badge bg-secondary">요청</span>
@@ -154,13 +146,7 @@
                         <div>${header.memo}</div>
                     </div>
 
-                    <!-- ✅ 개발자용 ref_type/ref_id 숨김(시연/실무 UI에서 어색함) -->
-                        <%--
-                        <div class="col-md-6">
-                            <div class="text-muted">ref_type / ref_id</div>
-                            <div><b>${header.refType}</b> / <b>${header.refId}</b></div>
-                        </div>
-                        --%>
+
 
                 </div>
             </div>

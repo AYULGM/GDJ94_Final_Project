@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-
+<%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 <jsp:include page="../includes/admin_header.jsp" />
 
 <div class="container-fluid py-3">
@@ -53,7 +53,8 @@
                         <td>${row.title}</td>
                         <td>${row.vendorName}</td>
                         <td>${row.statusCode}</td>
-                        <td>${row.requestedAt}</td>
+                        <td><c:out value="${fn:replace(row.requestedAt, 'T', ' ')}" /></td>
+
                         <td class="text-center">
                             <a class="btn btn-sm btn-outline-primary"
                                href="<c:url value='/inbound/detail?inboundRequestId=${row.inboundRequestId}'/>">

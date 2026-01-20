@@ -19,6 +19,16 @@
         ORDER BY product_name ASC
     </select>
 
+    <select id="selectNextDocSeq" resultType="int">
+        SELECT IFNULL(
+        MAX(CAST(SUBSTRING_INDEX(purchase_no, '-', -1) AS UNSIGNED)),
+        0
+        ) + 1
+        FROM purchase_header
+        WHERE use_yn = 1
+        AND purchase_no LIKE CONCAT(#{prefix}, '-', #{year}, '-%')
+    </select>
+
     <insert id="insertPurchaseHeader"
             parameterType="com.health.app.purchase.PurchaseRequestDto"
             useGeneratedKeys="true"
@@ -80,6 +90,7 @@
         )
     </insert>
 
+    <!-- ✅ 여기 없으면 지금 에러가 그대로 뜸 -->
     <select id="selectPurchaseList"
             parameterType="map"
             resultType="com.health.app.purchase.PurchaseListDto">
@@ -98,20 +109,28 @@
         LEFT JOIN purchase_detail pd ON pd.purchase_id = ph.purchase_id AND pd.use_yn = 1
         LEFT JOIN product p ON p.product_id = pd.product_id
         <where>
-            AND ph.use_yn = 1
+            ph.use_yn = 1
             AND b.use_yn = 1
+
             <if test="branchId != null and branchId != 0">
                 AND ph.branch_id = #{branchId}
             </if>
+
             <if test="statusCode != null and statusCode != ''">
                 AND ph.status_code = #{statusCode}
             </if>
+
             <if test="keyword != null and keyword != ''">
                 AND (
                 ph.purchase_no LIKE CONCAT('%', #{keyword}, '%')
                 OR b.branch_name LIKE CONCAT('%', #{keyword}, '%')
                 OR p.product_name LIKE CONCAT('%', #{keyword}, '%')
                 )
+            </if>
+
+            <!-- docType: ALL | PR | PO (purchase_no prefix 기준) -->
+            <if test="docType != null and docType != '' and docType != 'ALL'">
+                AND ph.purchase_no LIKE CONCAT(#{docType}, '-%')
             </if>
         </where>
         GROUP BY
@@ -199,84 +218,5 @@
         AND purchase_id = #{purchaseId}
         AND status_code = 'REQUESTED'
     </update>
-
-    <select id="countInventory" parameterType="map" resultType="int">
-        SELECT COUNT(*)
-        FROM inventory
-        WHERE use_yn = 1
-        AND branch_id = #{branchId}
-        AND product_id = #{productId}
-    </select>
-
-    <update id="increaseInventory" parameterType="map">
-        UPDATE inventory
-        SET
-        quantity = quantity + #{qty},
-        update_user = #{userId},
-        update_date = NOW()
-        WHERE use_yn = 1
-        AND branch_id = #{branchId}
-        AND product_id = #{productId}
-    </update>
-
-    <insert id="insertInventory" parameterType="map">
-        INSERT INTO inventory
-        (
-        branch_id,
-        product_id,
-        quantity,
-        low_stock_threshold,
-        create_user,
-        create_date,
-        update_user,
-        update_date,
-        use_yn
-        )
-        VALUES
-        (
-        #{branchId},
-        #{productId},
-        #{qty},
-        0,
-        #{userId},
-        NOW(),
-        #{userId},
-        NOW(),
-        1
-        )
-    </insert>
-
-    <insert id="insertInventoryHistory" parameterType="map">
-        INSERT INTO inventory_history
-        (
-        branch_id,
-        product_id,
-        move_type_code,
-        quantity,
-        reason,
-        ref_type,
-        ref_id,
-        create_user,
-        create_date,
-        update_user,
-        update_date,
-        use_yn
-        )
-        VALUES
-        (
-        #{branchId},
-        #{productId},
-        #{moveTypeCode},
-        #{quantity},
-        #{reason},
-        #{refType},
-        #{refId},
-        #{userId},
-        NOW(),
-        #{userId},
-        NOW(),
-        1
-        )
-    </insert>
 
 </mapper>

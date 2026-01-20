@@ -133,9 +133,9 @@ public class UserAdminService {
         insertUserHistoryIfChanged("상세주소",
             before.getDetailAddress(), dto.getDetailAddress(), dto, reason);
 
-//        insertUserHistoryIfChanged("부서",
-//            before.getDepartmentCode(), dto.getDepartmentCode(), dto, reason);
-//
+        insertUserHistoryIfChanged("department_code",
+            before.getDepartmentCode(), dto.getDepartmentCode(), dto, reason);
+
 //        insertUserHistoryIfChanged("사용자 상태",
 //            before.getUserStatusCode(), dto.getUserStatusCode(), dto, reason);
 

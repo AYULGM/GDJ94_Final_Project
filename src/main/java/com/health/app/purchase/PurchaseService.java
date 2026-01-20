@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -41,7 +40,11 @@ public class PurchaseService {
             }
         }
 
-        String purchaseNo = "PO-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        // ✅ 번호가 너무 길어지는 문제 개선
+        // - purchase_no: PO-YYYY-#### (예: PO-2026-0001)
+        String year = String.valueOf(LocalDateTime.now().getYear());
+        int seq = purchaseMapper.selectNextDocSeq("PO", year);
+        String purchaseNo = String.format("PO-%s-%04d", year, seq);
 
         dto.setPurchaseNo(purchaseNo);
         dto.setStatusCode("REQUESTED");
@@ -62,8 +65,8 @@ public class PurchaseService {
     }
 
     @Transactional(readOnly = true)
-    public List<PurchaseListDto> getPurchaseList(Long branchId, String statusCode, String keyword) {
-        return purchaseMapper.selectPurchaseList(branchId, statusCode, keyword);
+    public List<PurchaseListDto> getPurchaseList(Long branchId, String statusCode, String keyword, String docType) {
+        return purchaseMapper.selectPurchaseList(branchId, statusCode, keyword, docType);
     }
 
     @Transactional(readOnly = true)
@@ -74,7 +77,6 @@ public class PurchaseService {
         return header;
     }
 
-    /** 결재 완료(상태만 변경) */
     public void approvePurchase(Long purchaseId, Long userId) {
         if (purchaseId == null || purchaseId <= 0) throw new IllegalArgumentException("purchaseId가 올바르지 않습니다.");
         if (userId == null) userId = 1L;
@@ -90,10 +92,6 @@ public class PurchaseService {
         if (updated != 1) throw new IllegalArgumentException("발주 승인 처리 실패");
     }
 
-    /**
-     * 결재가 끝난 발주서를 실제 '입고 처리'하는 단계.
-     * - 이때 inventory 증가 + inventory_history 기록
-     */
     public void fulfillPurchase(Long purchaseId, Long userId) {
         if (purchaseId == null || purchaseId <= 0) throw new IllegalArgumentException("purchaseId가 올바르지 않습니다.");
         if (userId == null) userId = 1L;

@@ -2,31 +2,17 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>전자결재 목록</title>
+<jsp:include page="../includes/admin_header.jsp" />
 
-  <!-- Bootstrap 5.3 (CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-  <jsp:include page="../includes/admin_header.jsp" />
-
-  <main class="container py-4">
+<div class="row">
+  <div class="col-12">
 
     <div class="d-flex align-items-center justify-content-between mb-3">
-      <div>
-        <div class="text-muted small"></div>
-      </div>
-
-      <a class="btn btn-primary" href="${pageContext.request.contextPath}/approval/form?entry=approval">결재 작성</a>
+      <div class="text-muted small"></div>
+      <a class="btn btn-primary" href="<c:url value='/approval/form?entry=approval'/>">결재 작성</a>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card">
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover table-striped align-middle mb-0">
@@ -46,7 +32,6 @@
                 <tr>
                   <td class="text-nowrap">${row.docNo}</td>
 
-                  <!-- 결재유형: 공통코드 설명(formName) 우선 -->
                   <td class="text-nowrap">
                     <c:choose>
                       <c:when test="${not empty row.formName}">
@@ -58,97 +43,37 @@
 
                   <td>
                     <a class="link-primary text-decoration-none fw-semibold"
-                       href="${pageContext.request.contextPath}/approval/detail?docVerId=${row.docVerId}">
-                       <%-- 상세 화면 만들면 아래로 변경 권장:
-                       href="${pageContext.request.contextPath}/approval/detail?docVerId=${row.docVerId}"
-                       --%>
+                       href="<c:url value='/approval/detail?docVerId=${row.docVerId}'/>">
                       <c:out value="${row.title}" />
                     </a>
                   </td>
 
-                  <!-- 상태: 배지 색상은 코드로, 텍스트는 공통코드 설명(docStatusName) 우선 -->
                   <td class="text-nowrap">
                     <c:choose>
-                      <c:when test="${row.docStatusCode == 'AS001'}">
-                        <span class="badge text-bg-secondary">
-                          <c:choose>
-                            <c:when test="${not empty row.docStatusName}">
-                              <c:out value="${row.docStatusName}" />
-                            </c:when>
-                            <c:otherwise>임시저장</c:otherwise>
-                          </c:choose>
-                        </span>
-                      </c:when>
-
-                      <c:when test="${row.docStatusCode == 'AS002'}">
-                        <span class="badge text-bg-primary">
-                          <c:choose>
-                            <c:when test="${not empty row.docStatusName}">
-                              <c:out value="${row.docStatusName}" />
-                            </c:when>
-                            <c:otherwise>결재중</c:otherwise>
-                          </c:choose>
-                        </span>
-                      </c:when>
-
-                      <c:when test="${row.docStatusCode == 'AS003'}">
-                        <span class="badge text-bg-success">
-                          <c:choose>
-                            <c:when test="${not empty row.docStatusName}">
-                              <c:out value="${row.docStatusName}" />
-                            </c:when>
-                            <c:otherwise>결재완료</c:otherwise>
-                          </c:choose>
-                        </span>
-                      </c:when>
-
-                      <c:when test="${row.docStatusCode == 'AS004'}">
-                        <span class="badge text-bg-danger">
-                          <c:choose>
-                            <c:when test="${not empty row.docStatusName}">
-                              <c:out value="${row.docStatusName}" />
-                            </c:when>
-                            <c:otherwise>반려</c:otherwise>
-                          </c:choose>
-                        </span>
-                      </c:when>
-
-                      <c:otherwise>
-                        <span class="badge text-bg-dark">
-                          <c:choose>
-                            <c:when test="${not empty row.docStatusName}">
-                              <c:out value="${row.docStatusName}" />
-                            </c:when>
-                            <c:otherwise>${row.docStatusCode}</c:otherwise>
-                          </c:choose>
-                        </span>
-                      </c:otherwise>
+                      <c:when test="${row.docStatusCode == 'AS001'}"><span class="badge text-bg-secondary">${not empty row.docStatusName ? row.docStatusName : '임시저장'}</span></c:when>
+                      <c:when test="${row.docStatusCode == 'AS002'}"><span class="badge text-bg-primary">${not empty row.docStatusName ? row.docStatusName : '결재중'}</span></c:when>
+                      <c:when test="${row.docStatusCode == 'AS003'}"><span class="badge text-bg-success">${not empty row.docStatusName ? row.docStatusName : '결재완료'}</span></c:when>
+                      <c:when test="${row.docStatusCode == 'AS004'}"><span class="badge text-bg-danger">${not empty row.docStatusName ? row.docStatusName : '반려'}</span></c:when>
+                      <c:otherwise><span class="badge text-bg-dark">${not empty row.docStatusName ? row.docStatusName : row.docStatusCode}</span></c:otherwise>
                     </c:choose>
                   </td>
 
                   <td class="text-nowrap">
                     <c:choose>
-                      <c:when test="${empty row.currentApproverName}">
-                        <span class="text-muted">-</span>
-                      </c:when>
-                      <c:otherwise>
-                        <c:out value="${row.currentApproverName}" />
-                      </c:otherwise>
+                      <c:when test="${empty row.currentApproverName}"><span class="text-muted">-</span></c:when>
+                      <c:otherwise><c:out value="${row.currentApproverName}" /></c:otherwise>
                     </c:choose>
                   </td>
 
                   <td class="text-nowrap">
-					  <c:out value="${fn:replace(row.createDate, 'T', ' ')}" />
-					</td>
-
+                    <c:out value="${fn:replace(row.createDate, 'T', ' ')}" />
+                  </td>
                 </tr>
               </c:forEach>
 
               <c:if test="${empty list}">
                 <tr>
-                  <td colspan="6" class="text-center py-5 text-muted">
-                    조회된 문서가 없습니다.
-                  </td>
+                  <td colspan="6" class="text-center py-5 text-muted">조회된 문서가 없습니다.</td>
                 </tr>
               </c:if>
             </tbody>
@@ -158,10 +83,7 @@
       </div>
     </div>
 
-  </main>
+  </div>
+</div>
 
-  <jsp:include page="../includes/admin_footer.jsp" />
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<jsp:include page="../includes/admin_footer.jsp" />

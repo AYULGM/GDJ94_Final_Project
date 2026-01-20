@@ -270,6 +270,7 @@ public class ApprovalController {
     @GetMapping("handle")
     public String handle(@RequestParam Long docVerId, Model model) {
         model.addAttribute("doc", approvalService.getPrintData(docVerId));
+    	model.addAttribute("pageTitle", "결재처리");
         return "approval/handle";
     }
 
