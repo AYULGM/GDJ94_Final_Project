@@ -45,153 +45,151 @@ const updateEventList = (date, allEvents) => {
 
     if (!eventList || !eventListTitle) return;
 
-    eventList.innerHTML = '';
-    const targetDate = new Date(date);
-    targetDate.setHours(0, 0, 0, 0);
-
-    const eventsForDate = allEvents.filter(event => {
-        const eventStart = new Date(event.start);
-        eventStart.setHours(0, 0, 0, 0);
-
-        if (!event.end) {
-            return eventStart.getTime() === targetDate.getTime();
-        } else {
-            const eventEnd = new Date(event.end);
-            return targetDate >= eventStart && targetDate < eventEnd;
-        }
-    });
-
-    eventListTitle.textContent = `${formatDate(date)}의 일정`;
-
-    if (eventsForDate.length === 0) {
-        eventList.innerHTML = '<li class="list-group-item">일정이 없습니다.</li>';
-        return;
-    }
-
-    eventsForDate.forEach(event => {
-        const li = document.createElement('li');
-        li.className = 'list-group-item';
-        
-        const start = new Date(event.start);
-        const timeString = event.allDay ? '종일' : start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-        li.innerHTML = `<strong>${timeString}</strong> - ${event.title}`;
-        
-        let eventBorderColor = event.borderColor;
-        if (event.rendering === 'background') {
-            eventBorderColor = '#6c757d'; 
-        }
-        li.style.borderLeft = '5px solid ' + eventBorderColor;
-        eventList.appendChild(li);
-    });
-};
-
-
-// --- Page-Specific Initializers ---
-
-/**
- * 참석자 검색 및 선택 기능을 초기화합니다.
- * #attendeeSearch 입력 필드가 있는 페이지에서 실행됩니다.
- */
-function initAttendeeSearch() {
-    const attendeeSearchInput = document.getElementById('attendeeSearch');
-    const searchResultsContainer = document.getElementById('attendee-search-results');
-    const selectedAttendeesContainer = document.getElementById('selected-attendees');
-
-    // 필수 요소가 없으면 초기화하지 않음
-    if (!attendeeSearchInput || !searchResultsContainer || !selectedAttendeesContainer) return;
-
-    // 참석자 검색 및 결과 표시
-    attendeeSearchInput.addEventListener('keyup', (e) => {
-        const query = e.target.value.trim();
-        searchResultsContainer.innerHTML = '';
-        if (query.length < 1) return;
-
-        const searchUrl = contextPath + '/schedules/users/search?name=' + encodeURIComponent(query);
-        fetch(searchUrl)
-            .then(response => response.json())
-            .then(users => {
-                searchResultsContainer.innerHTML = '';
-                const unselectedUsers = users.filter(user => !selectedAttendees.some(su => su.userId === user.userId));
+            eventList.innerHTML = '';
+            const targetDate = new Date(date);
+            targetDate.setHours(0, 0, 0, 0);
+    
+            const eventsForDate = allEvents.filter(event => {
+                const eventStart = new Date(event.start);
+                eventStart.setHours(0, 0, 0, 0);
+    
+                if (!event.end) {
+                    return eventStart.getTime() === targetDate.getTime();
+                } else {
+                    const eventEnd = new Date(event.end);
+                    return targetDate >= eventStart && targetDate < eventEnd;
+                }
+            });
+    
+            eventListTitle.textContent = `${formatDate(date)}의 일정`;
+    
+            if (eventsForDate.length === 0) {
+                eventList.innerHTML = '<li class="list-group-item">일정이 없습니다.</li>';
+                return;
+            }
+    
+            eventsForDate.forEach(event => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
                 
-                unselectedUsers.forEach(user => {
-                    const item = document.createElement('a');
-                    item.href = '#';
-                    item.className = 'list-group-item list-group-item-action';
-                    item.textContent = `${user.name} (${user.departmentName || '부서없음'})`;
-                    item.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        selectedAttendees.push(user);
-                        renderSelectedAttendees(selectedAttendeesContainer); // 컨테이너 전달
-                        attendeeSearchInput.value = '';
-                        searchResultsContainer.innerHTML = '';
-                    });
-                    searchResultsContainer.appendChild(item);
-                });
-            })
-            .catch(error => console.error('Error fetching users:', error));
-    });
-
-    // 선택된 참석자 제거
-    selectedAttendeesContainer.addEventListener('click', (e) => {
-        if (e.target.dataset.removeId) {
-            const userIdToRemove = parseInt(e.target.dataset.removeId, 10);
-            selectedAttendees = selectedAttendees.filter(user => user.userId !== userIdToRemove);
-            renderSelectedAttendees(selectedAttendeesContainer); // 컨테이너 전달
-        }
-    });
-}
-
-/**
- * FullCalendar를 초기화하고 관련 이벤트 핸들러를 설정합니다.
- * #calendar 요소가 있는 페이지에서 실행됩니다.
- */
-function initFullCalendar() {
-    const calendarEl = document.getElementById('calendar');
-    if (!calendarEl) return; // 캘린더 요소가 없으면 초기화하지 않음
-
-    calendarInstance = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'ko',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: function(fetchInfo, successCallback, failureCallback) {
-            let fetchUrl = contextPath + '/schedules/events?start=' + fetchInfo.startStr + '&end=' + fetchInfo.endStr;
-            if (currentScope !== 'all') { fetchUrl += '&scope=' + currentScope; }
-            console.log('FullCalendar fetch URL:', fetchUrl);
-            fetch(fetchUrl)
+                const start = new Date(event.start);
+                const timeString = start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+    
+                li.innerHTML = `<strong>${timeString}</strong> - ${event.title}`;
+                
+                let eventBorderColor = event.borderColor;
+                if (event.rendering === 'background') {
+                    eventBorderColor = '#6c757d'; 
+                }
+                li.style.borderLeft = '5px solid ' + eventBorderColor;
+                eventList.appendChild(li);
+            });
+        };
+    
+    
+    // --- Page-Specific Initializers ---
+    
+    /**
+     * 참석자 검색 및 선택 기능을 초기화합니다.
+     * #attendeeSearch 입력 필드가 있는 페이지에서 실행됩니다.
+     */
+    function initAttendeeSearch() {
+        const attendeeSearchInput = document.getElementById('attendeeSearch');
+        const searchResultsContainer = document.getElementById('attendee-search-results');
+        const selectedAttendeesContainer = document.getElementById('selected-attendees');
+    
+        // 필수 요소가 없으면 초기화하지 않음
+        if (!attendeeSearchInput || !searchResultsContainer || !selectedAttendeesContainer) return;
+    
+        // 참석자 검색 및 결과 표시
+        attendeeSearchInput.addEventListener('keyup', (e) => {
+            const query = e.target.value.trim();
+            searchResultsContainer.innerHTML = '';
+            if (query.length < 1) return;
+    
+            const searchUrl = contextPath + '/schedules/users/search?name=' + encodeURIComponent(query);
+            fetch(searchUrl)
                 .then(response => response.json())
-                .then(data => {
-                    const formattedEvents = data.map(event => ({
-                        id: event.eventId,
-                        title: event.title,
-                        start: event.startAt,
-                        end: event.endAt,
-                        allDay: event.allDay,
-                        color: event.scope === 'PERSONAL' ? '#007bff' : (event.scope === 'DEPARTMENT' ? '#28a745' : '#dc3545'),
-                        borderColor: event.scope === 'PERSONAL' ? '#007bff' : (event.scope === 'DEPARTMENT' ? '#28a745' : '#dc3545')
-                    }));
-                    successCallback(formattedEvents);
+                .then(users => {
+                    searchResultsContainer.innerHTML = '';
+                    const unselectedUsers = users.filter(user => !selectedAttendees.some(su => su.userId === user.userId));
+                    
+                    unselectedUsers.forEach(user => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.className = 'list-group-item list-group-item-action';
+                        item.textContent = `${user.name} (${user.departmentName || '부서없음'})`;
+                        item.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            selectedAttendees.push(user);
+                            renderSelectedAttendees(selectedAttendeesContainer); // 컨테이너 전달
+                            attendeeSearchInput.value = '';
+                            searchResultsContainer.innerHTML = '';
+                        });
+                        searchResultsContainer.appendChild(item);
+                    });
                 })
-                .catch(error => failureCallback(error));
-        },
-        dateClick: function(info) {
-            updateEventList(info.date, calendarInstance.getEvents());
-        },
-        eventClick: function(info) {
-            // 일정 클릭 시 상세보기 모달 표시
-            const eventId = info.event.id;
-            showEventDetail(eventId);
-        },
-        eventsSet: function(events) {
-            updateEventList(new Date(), events);
-        }
-    });
-    calendarInstance.render();
-
+                .catch(error => console.error('Error fetching users:', error));
+        });
+    
+        // 선택된 참석자 제거
+        selectedAttendeesContainer.addEventListener('click', (e) => {
+            if (e.target.dataset.removeId) {
+                const userIdToRemove = parseInt(e.target.dataset.removeId, 10);
+                selectedAttendees = selectedAttendees.filter(user => user.userId !== userIdToRemove);
+                renderSelectedAttendees(selectedAttendeesContainer); // 컨테이너 전달
+            }
+        });
+    }
+    
+    /**
+     * FullCalendar를 초기화하고 관련 이벤트 핸들러를 설정합니다.
+     * #calendar 요소가 있는 페이지에서 실행됩니다.
+     */
+    function initFullCalendar() {
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return; // 캘린더 요소가 없으면 초기화하지 않음
+    
+        calendarInstance = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'ko',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: function(fetchInfo, successCallback, failureCallback) {
+                let fetchUrl = contextPath + '/schedules/events?start=' + fetchInfo.startStr + '&end=' + fetchInfo.endStr;
+                if (currentScope !== 'all') { fetchUrl += '&scope=' + currentScope; }
+                console.log('FullCalendar fetch URL:', fetchUrl);
+                fetch(fetchUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        const formattedEvents = data.map(event => ({
+                            id: event.eventId,
+                            title: event.title,
+                            start: event.startAt,
+                            end: event.endAt,
+                            color: event.scope === 'PERSONAL' ? '#007bff' : (event.scope === 'DEPARTMENT' ? '#28a745' : '#dc3545'),
+                            borderColor: event.scope === 'PERSONAL' ? '#007bff' : (event.scope === 'DEPARTMENT' ? '#28a745' : '#dc3545')
+                        }));
+                        successCallback(formattedEvents);
+                    })
+                    .catch(error => failureCallback(error));
+            },
+            dateClick: function(info) {
+                updateEventList(info.date, calendarInstance.getEvents());
+            },
+            eventClick: function(info) {
+                // 일정 클릭 시 상세보기 모달 표시
+                const eventId = info.event.id;
+                showEventDetail(eventId);
+            },
+            eventsSet: function(events) {
+                updateEventList(new Date(), events);
+            }
+        });
+        calendarInstance.render();
     // 사이드바 필터 링크 클릭 시 이벤트 처리
     document.querySelectorAll('.schedule-filter').forEach(filterLink => {
         filterLink.addEventListener('click', function(e) {
@@ -215,6 +213,12 @@ function initEventModalLogic() {
     const saveEventBtn = document.getElementById('saveEventBtn');
     const eventModal = document.getElementById('eventModal');
 
+    function addRequiredAsterisks() {
+        document.querySelector('label[for="eventTitle"]').innerHTML = '일정 제목 <span style="color: red;">*</span>';
+        document.querySelector('label[for="eventStart"]').innerHTML = '시작 일시 <span style="color: red;">*</span>';
+        document.querySelector('label[for="eventEnd"]').innerHTML = '종료 일시 <span style="color: red;">*</span>';
+    }
+
     console.log('addEventBtn:', addEventBtn);
     console.log('saveEventBtn:', saveEventBtn);
     console.log('eventModal:', eventModal);
@@ -237,7 +241,6 @@ function initEventModalLogic() {
         document.getElementById('eventId').value = '';
         document.getElementById('eventModalLabel').textContent = '일정 등록';
         document.getElementById('eventStatus').value = 'SCHEDULED'; // 기본값 설정
-        document.getElementById('eventAllDay').checked = false; // 기본값 설정
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('eventStart').value = now.toISOString().slice(0, 16);
@@ -253,6 +256,7 @@ function initEventModalLogic() {
 
         const modal = new bootstrap.Modal(document.getElementById('eventModal'));
         modal.show();
+        addRequiredAsterisks();
         });
     }
 
@@ -279,10 +283,8 @@ function initEventModalLogic() {
             endAt: document.getElementById('eventEnd').value,
             location: document.getElementById('eventLocation').value,
             statusCode: document.getElementById('eventStatus').value,
-            allDay: document.getElementById('eventAllDay').checked,
             description: document.getElementById('eventDescription').value,
             attendeeIds: attendeeIds,
-            repeating: document.getElementById('eventRepeating').checked,
             useYn: true
             // createUser와 updateUser는 서버에서 자동 설정
         };
@@ -372,6 +374,14 @@ function initEventModalLogic() {
             if (calendarInstance) {
                 calendarInstance.refetchEvents();
             }
+
+            // 알림 카운트 실시간 업데이트
+            if (typeof notificationClient !== 'undefined' && notificationClient.loadUnreadCount) {
+                setTimeout(() => {
+                    notificationClient.loadUnreadCount();
+                }, 500); // 서버에서 알림 생성 완료 후 조회하도록 약간의 딜레이
+            }
+
             alert('일정이 성공적으로 저장되었습니다!');
             // 일정 관리 페이지인 경우 페이지 새로고침
             if (window.location.pathname.includes('/manage')) {
@@ -448,9 +458,7 @@ function initManagePageLogic() {
                     document.getElementById('eventEnd').value = event.endAt.slice(0, 16);
                     document.getElementById('eventLocation').value = event.location || '';
                     document.getElementById('eventStatus').value = event.statusCode || 'SCHEDULED';
-                    document.getElementById('eventAllDay').checked = event.allDay || false;
                     document.getElementById('eventDescription').value = event.description || '';
-                    document.getElementById('eventRepeating').checked = event.repeating;
 
                     selectedAttendees = event.attendees || [];
                     const selectedAttendeesContainer = document.getElementById('selected-attendees');
@@ -462,6 +470,11 @@ function initManagePageLogic() {
 
                     const modal = new bootstrap.Modal(document.getElementById('eventModal'));
                     modal.show();
+                    
+                    // Call the function to add asterisks after modal is shown
+                    document.querySelector('label[for="eventTitle"]').innerHTML = '일정 제목 <span style="color: red;">*</span>';
+                    document.querySelector('label[for="eventStart"]').innerHTML = '시작 일시 <span style="color: red;">*</span>';
+                    document.querySelector('label[for="eventEnd"]').innerHTML = '종료 일시 <span style="color: red;">*</span>';
                 })
                 .catch(error => {
                     console.error('Error fetching event for edit:', error);
@@ -535,9 +548,7 @@ function showEventDetail(eventId) {
             document.getElementById('detailEventTitle').textContent = event.title || '';
             document.getElementById('detailEventStart').textContent = event.startAt ? event.startAt.replace('T', ' ') : '';
             document.getElementById('detailEventEnd').textContent = event.endAt ? event.endAt.replace('T', ' ') : '';
-            document.getElementById('detailEventAllDay').textContent = event.allDay ? '예' : '아니오';
             document.getElementById('detailEventLocation').textContent = event.location || '-';
-            document.getElementById('detailEventRepeating').textContent = event.repeating ? '예' : '아니오';
             document.getElementById('detailEventDescription').textContent = event.description || '-';
 
             // 참석자 표시
@@ -606,7 +617,8 @@ function formatFileSize(bytes) {
 }
 
 /**
- * 기존 첨부파일 목록을 표시합니다.
+ * 
+ 첨부파일 목록을 표시합니다.
  * @param {Array} attachments - 첨부파일 배열
  */
 function renderExistingAttachments(attachments) {
@@ -702,9 +714,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('eventEnd').value = event.endAt.slice(0, 16);
                     document.getElementById('eventLocation').value = event.location || '';
                     document.getElementById('eventStatus').value = event.statusCode || 'SCHEDULED';
-                    document.getElementById('eventAllDay').checked = event.allDay || false;
                     document.getElementById('eventDescription').value = event.description || '';
-                    document.getElementById('eventRepeating').checked = event.repeating;
 
                     selectedAttendees = event.attendees || [];
                     const selectedAttendeesContainer = document.getElementById('selected-attendees');
