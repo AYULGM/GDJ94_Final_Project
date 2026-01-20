@@ -19,7 +19,7 @@
                                 <input type="number" class="form-control" id="settlementId" name="settlementId" placeholder="전체">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">액션 타입</label>
+                                <label class="form-label">작업내용</label>
                                 <select class="form-select" id="actionType" name="actionType">
                                     <option value="">전체</option>
                                     <option value="CREATE">생성</option>
@@ -61,9 +61,9 @@
                                 <tr>
                                     <th style="width: 80px">로그번호</th>
                                     <th>정산번호</th>
-                                    <th>액션</th>
-                                    <th>이전상태</th>
-                                    <th>이후상태</th>
+                                    <th>작업내용</th>
+                                    <th>변경전</th>
+                                    <th>변경후</th>
                                     <th>처리자</th>
                                     <th>처리일시</th>
                                     <th>비고</th>
