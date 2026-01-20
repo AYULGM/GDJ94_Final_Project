@@ -136,6 +136,8 @@ public interface SettlementMapper {
      */
     int releaseSettlementExpenseMaps(@Param("settlementId") Long settlementId,
                                       @Param("updateUser") Long updateUser);
+
+    /**
      * 선택된 매출의 지점별 그룹화 조회
      */
     List<Map<String, Object>> selectSelectedSalesGroupByBranch(@Param("saleIds") List<Long> saleIds);
