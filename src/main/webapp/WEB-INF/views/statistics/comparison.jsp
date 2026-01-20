@@ -293,11 +293,9 @@ function initChart() {
 
 // 차트 업데이트
 function updateChart(data) {
-    // 기간 + 지점명을 조합하여 카테고리 생성
+    // 지점명만 표시
     const categories = data.map(item => {
-        const period = item.periodLabel || item.period;
-        const branch = item.branchName || '전체';
-        return period + ' (' + branch + ')';
+        return item.branchName || '전체';
     });
 
     const salesValues = data.map(item => item.salesAmount || 0);

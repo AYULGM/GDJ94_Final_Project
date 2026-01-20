@@ -436,4 +436,122 @@
         ORDER BY sl.acted_at DESC, sl.log_id DESC
     </select>
 
+    <!-- =========================================================
+         18) 선택된 매출의 지점별 그룹화 조회
+       ========================================================= -->
+    <select id="selectSelectedSalesGroupByBranch" resultType="map">
+        SELECT
+            s.branch_id AS branchId,
+            b.branch_name AS branchName,
+            COUNT(*) AS cnt,
+            SUM(s.total_amount) AS totalAmount
+        FROM sales s
+        LEFT JOIN branch b ON b.branch_id = s.branch_id
+        WHERE s.sale_id IN
+        <foreach collection="saleIds" item="saleId" open="(" separator="," close=")">
+            #{saleId}
+        </foreach>
+          AND s.use_yn = 1
+        GROUP BY s.branch_id, b.branch_name
+    </select>
+
+    <!-- =========================================================
+         19) 선택된 지출의 지점별 그룹화 조회
+       ========================================================= -->
+    <select id="selectSelectedExpensesGroupByBranch" resultType="map">
+        SELECT
+            e.branch_id AS branchId,
+            b.branch_name AS branchName,
+            COUNT(*) AS cnt,
+            SUM(e.amount) AS totalAmount
+        FROM expenses e
+        LEFT JOIN branch b ON b.branch_id = e.branch_id
+        WHERE e.expense_id IN
+        <foreach collection="expenseIds" item="expenseId" open="(" separator="," close=")">
+            #{expenseId}
+        </foreach>
+          AND e.use_yn = 1
+        GROUP BY e.branch_id, b.branch_name
+    </select>
+
+    <!-- =========================================================
+         20) 특정 지점의 선택된 매출 합계 조회
+       ========================================================= -->
+    <select id="selectSelectedSalesTotalAmountByBranch" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(s.total_amount), 0)
+        FROM sales s
+        WHERE s.sale_id IN
+        <foreach collection="saleIds" item="saleId" open="(" separator="," close=")">
+            #{saleId}
+        </foreach>
+          AND s.use_yn = 1
+          AND s.branch_id = #{branchId}
+    </select>
+
+    <!-- =========================================================
+         21) 특정 지점의 선택된 지출 합계 조회
+       ========================================================= -->
+    <select id="selectSelectedExpensesTotalAmountByBranch" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(e.amount), 0)
+        FROM expenses e
+        WHERE e.expense_id IN
+        <foreach collection="expenseIds" item="expenseId" open="(" separator="," close=")">
+            #{expenseId}
+        </foreach>
+          AND e.use_yn = 1
+          AND e.branch_id = #{branchId}
+    </select>
+
+    <!-- =========================================================
+         22) 특정 지점의 선택된 매출 정산 매핑 등록
+       ========================================================= -->
+    <insert id="insertSelectedSettlementSaleMapsByBranch">
+        INSERT INTO settlement_sale_map (
+            settlement_id,
+            sale_id,
+            settle_status,
+            create_user,
+            use_yn
+        )
+        SELECT
+            #{settlementId},
+            s.sale_id,
+            'SETTLED',
+            #{createUser},
+            TRUE
+        FROM sales s
+        WHERE s.sale_id IN
+        <foreach collection="saleIds" item="saleId" open="(" separator="," close=")">
+            #{saleId}
+        </foreach>
+          AND s.use_yn = 1
+          AND s.branch_id = #{branchId}
+    </insert>
+
+    <!-- =========================================================
+         23) 특정 지점의 선택된 지출 정산 매핑 등록
+       ========================================================= -->
+    <insert id="insertSelectedSettlementExpenseMapsByBranch">
+        INSERT INTO settlement_expense_map (
+            settlement_id,
+            expense_id,
+            settle_status,
+            create_user,
+            use_yn
+        )
+        SELECT
+            #{settlementId},
+            e.expense_id,
+            'SETTLED',
+            #{createUser},
+            TRUE
+        FROM expenses e
+        WHERE e.expense_id IN
+        <foreach collection="expenseIds" item="expenseId" open="(" separator="," close=")">
+            #{expenseId}
+        </foreach>
+          AND e.use_yn = 1
+          AND e.branch_id = #{branchId}
+    </insert>
+
 </mapper>

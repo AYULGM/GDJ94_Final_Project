@@ -136,4 +136,38 @@ public interface SettlementMapper {
      */
     int releaseSettlementExpenseMaps(@Param("settlementId") Long settlementId,
                                       @Param("updateUser") Long updateUser);
+     * 선택된 매출의 지점별 그룹화 조회
+     */
+    List<Map<String, Object>> selectSelectedSalesGroupByBranch(@Param("saleIds") List<Long> saleIds);
+
+    /**
+     * 선택된 지출의 지점별 그룹화 조회
+     */
+    List<Map<String, Object>> selectSelectedExpensesGroupByBranch(@Param("expenseIds") List<Long> expenseIds);
+
+    /**
+     * 특정 지점의 선택된 매출 합계 조회
+     */
+    BigDecimal selectSelectedSalesTotalAmountByBranch(@Param("saleIds") List<Long> saleIds, @Param("branchId") Long branchId);
+
+    /**
+     * 특정 지점의 선택된 지출 합계 조회
+     */
+    BigDecimal selectSelectedExpensesTotalAmountByBranch(@Param("expenseIds") List<Long> expenseIds, @Param("branchId") Long branchId);
+
+    /**
+     * 특정 지점의 선택된 매출 정산 매핑 등록
+     */
+    int insertSelectedSettlementSaleMapsByBranch(@Param("settlementId") Long settlementId,
+                                                  @Param("saleIds") List<Long> saleIds,
+                                                  @Param("branchId") Long branchId,
+                                                  @Param("createUser") Long createUser);
+
+    /**
+     * 특정 지점의 선택된 지출 정산 매핑 등록
+     */
+    int insertSelectedSettlementExpenseMapsByBranch(@Param("settlementId") Long settlementId,
+                                                     @Param("expenseIds") List<Long> expenseIds,
+                                                     @Param("branchId") Long branchId,
+                                                     @Param("createUser") Long createUser);
 }

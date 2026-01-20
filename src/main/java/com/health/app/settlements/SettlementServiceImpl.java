@@ -140,67 +140,116 @@ public class SettlementServiceImpl implements SettlementService {
             throw new IllegalArgumentException("정산할 항목을 선택해주세요.");
         }
 
-        // 1. 선택된 매출/지출 합계 계산
-        BigDecimal salesAmount = BigDecimal.ZERO;
+        // 1. 선택된 매출/지출의 지점별 그룹화 조회
+        List<Map<String, Object>> salesByBranch = new java.util.ArrayList<>();
+        List<Map<String, Object>> expensesByBranch = new java.util.ArrayList<>();
+
         if (requestDto.getSaleIds() != null && !requestDto.getSaleIds().isEmpty()) {
-            salesAmount = settlementMapper.selectSelectedSalesTotalAmount(requestDto.getSaleIds());
+            salesByBranch = settlementMapper.selectSelectedSalesGroupByBranch(requestDto.getSaleIds());
         }
 
-        BigDecimal expenseAmount = BigDecimal.ZERO;
         if (requestDto.getExpenseIds() != null && !requestDto.getExpenseIds().isEmpty()) {
-            expenseAmount = settlementMapper.selectSelectedExpensesTotalAmount(requestDto.getExpenseIds());
+            expensesByBranch = settlementMapper.selectSelectedExpensesGroupByBranch(requestDto.getExpenseIds());
         }
 
-        // 2. 손익 계산
-        BigDecimal profitAmount = salesAmount.subtract(expenseAmount);
+        // 2. 모든 지점 ID 수집 (중복 제거)
+        java.util.Set<Long> allBranchIds = new java.util.HashSet<>();
+        for (Map<String, Object> sales : salesByBranch) {
+            Object branchIdObj = sales.get("branchId");
+            if (branchIdObj != null) {
+                allBranchIds.add(((Number) branchIdObj).longValue());
+            }
+        }
+        for (Map<String, Object> expense : expensesByBranch) {
+            Object branchIdObj = expense.get("branchId");
+            if (branchIdObj != null) {
+                allBranchIds.add(((Number) branchIdObj).longValue());
+            }
+        }
 
-        // 3. 정산 번호 생성
-        String settlementNo = generateSelectedSettlementNo();
+        if (allBranchIds.isEmpty()) {
+            throw new IllegalArgumentException("선택된 항목의 지점 정보를 확인할 수 없습니다.");
+        }
 
-        // 4. 정산 등록
-        SettlementDto settlementDto = SettlementDto.builder()
-                .settlementNo(settlementNo)
-                .branchId(requestDto.getBranchId())
-                .fromDate(requestDto.getFromDate())
-                .toDate(requestDto.getToDate())
-                .salesAmount(salesAmount)
-                .expenseAmount(expenseAmount)
-                .profitAmount(profitAmount)
-                .statusCode(SettlementStatus.PENDING.name())
-                .createUser(currentUserId)
-                .build();
+        // 3. 지점별로 개별 정산 생성
+        Long firstSettlementId = null;
+        for (Long branchId : allBranchIds) {
+            // 해당 지점의 매출/지출 합계 계산
+            BigDecimal salesAmount = BigDecimal.ZERO;
+            BigDecimal expenseAmount = BigDecimal.ZERO;
 
-        settlementMapper.insertSettlement(settlementDto);
-        Long settlementId = settlementDto.getSettlementId();
+            if (requestDto.getSaleIds() != null && !requestDto.getSaleIds().isEmpty()) {
+                salesAmount = settlementMapper.selectSelectedSalesTotalAmountByBranch(requestDto.getSaleIds(), branchId);
+                if (salesAmount == null) salesAmount = BigDecimal.ZERO;
+            }
 
-        // 5. 정산-매출/지출 매핑 등록 (선택된 항목만)
-        if (requestDto.getSaleIds() != null && !requestDto.getSaleIds().isEmpty()) {
-            settlementMapper.insertSelectedSettlementSaleMaps(
+            if (requestDto.getExpenseIds() != null && !requestDto.getExpenseIds().isEmpty()) {
+                expenseAmount = settlementMapper.selectSelectedExpensesTotalAmountByBranch(requestDto.getExpenseIds(), branchId);
+                if (expenseAmount == null) expenseAmount = BigDecimal.ZERO;
+            }
+
+            // 해당 지점에 매출/지출이 없으면 스킵
+            if (salesAmount.compareTo(BigDecimal.ZERO) == 0 && expenseAmount.compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+
+            // 손익 계산
+            BigDecimal profitAmount = salesAmount.subtract(expenseAmount);
+
+            // 정산 번호 생성
+            String settlementNo = generateSelectedSettlementNo();
+
+            // 정산 등록
+            SettlementDto settlementDto = SettlementDto.builder()
+                    .settlementNo(settlementNo)
+                    .branchId(branchId)
+                    .fromDate(requestDto.getFromDate())
+                    .toDate(requestDto.getToDate())
+                    .salesAmount(salesAmount)
+                    .expenseAmount(expenseAmount)
+                    .profitAmount(profitAmount)
+                    .statusCode(SettlementStatus.PENDING.name())
+                    .createUser(currentUserId)
+                    .build();
+
+            settlementMapper.insertSettlement(settlementDto);
+            Long settlementId = settlementDto.getSettlementId();
+
+            if (firstSettlementId == null) {
+                firstSettlementId = settlementId;
+            }
+
+            // 정산-매출/지출 매핑 등록 (해당 지점의 항목만)
+            if (requestDto.getSaleIds() != null && !requestDto.getSaleIds().isEmpty()) {
+                settlementMapper.insertSelectedSettlementSaleMapsByBranch(
+                        settlementId,
+                        requestDto.getSaleIds(),
+                        branchId,
+                        currentUserId
+                );
+            }
+
+            if (requestDto.getExpenseIds() != null && !requestDto.getExpenseIds().isEmpty()) {
+                settlementMapper.insertSelectedSettlementExpenseMapsByBranch(
+                        settlementId,
+                        requestDto.getExpenseIds(),
+                        branchId,
+                        currentUserId
+                );
+            }
+
+            // 정산 이력 로그 등록
+            saveSettlementHistory(
                     settlementId,
-                    requestDto.getSaleIds(),
+                    SettlementActionType.CREATE.name(),
+                    null,
+                    SettlementStatus.PENDING.name(),
+                    "선택 정산 생성 (지점별 분리)",
                     currentUserId
             );
         }
 
-        if (requestDto.getExpenseIds() != null && !requestDto.getExpenseIds().isEmpty()) {
-            settlementMapper.insertSelectedSettlementExpenseMaps(
-                    settlementId,
-                    requestDto.getExpenseIds(),
-                    currentUserId
-            );
-        }
-
-        // 6. 정산 이력 로그 등록
-        saveSettlementHistory(
-                settlementId,
-                SettlementActionType.CREATE.name(),
-                null,
-                SettlementStatus.PENDING.name(),
-                "선택 정산 생성",
-                currentUserId
-        );
-
-        return settlementId;
+        return firstSettlementId;
     }
 
     /**
