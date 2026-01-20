@@ -151,9 +151,20 @@ const userPermissions = {
 document.addEventListener('DOMContentLoaded', async function() {
     // 기본 날짜 설정 (최근 6개월)
     const today = new Date();
-    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
-    document.getElementById('startDate').value = formatDate(sixMonthsAgo);
-    document.getElementById('endDate').value = formatDate(today);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    sixMonthsAgo.setDate(1); // 해당 월의 1일로 설정
+
+    const startDateStr = sixMonthsAgo.getFullYear() + '-' +
+        String(sixMonthsAgo.getMonth() + 1).padStart(2, '0') + '-01';
+    const endDateStr = today.getFullYear() + '-' +
+        String(today.getMonth() + 1).padStart(2, '0') + '-' +
+        String(today.getDate()).padStart(2, '0');
+
+    document.getElementById('startDate').value = startDateStr;
+    document.getElementById('endDate').value = endDateStr;
+
+    console.log('기본 조회 기간:', startDateStr, '~', endDateStr);
 
     // 지점 목록 로드 - await로 완료 대기
     await loadBranchOptions();
