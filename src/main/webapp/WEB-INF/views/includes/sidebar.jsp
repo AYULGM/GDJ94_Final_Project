@@ -53,7 +53,36 @@
             <p>공지사항</p>
           </a>
         </li>
+		
+		<!-- 전자결재 -->
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-lte-toggle="treeview">
+            <i class="nav-icon bi bi-file-earmark-check"></i>
+            <p>
+              전자 결재
+              <i class="nav-arrow bi bi-chevron-right"></i>
+            </p>
+          </a>
 
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="<c:url value='/approval/list'/>" class="nav-link">
+                <p>결재 목록</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<c:url value='/approval/signature'/>" class="nav-link">
+                <p>서명창</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<c:url value='/approval/inbox'/>" class="nav-link">
+                <p>결재함</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+		
         <li class="nav-item">
           <a href="<c:url value='/inventory'/>" class="nav-link">
             <i class="nav-icon bi bi-box-seam"></i>
@@ -156,44 +185,8 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" id="sidebar-add-event">
-                <i class="nav-icon bi bi-plus-circle"></i>
-                <p>일정 등록</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="<c:url value='/schedules/manage'/>" class="nav-link">
-                <i class="nav-icon bi bi-list-task"></i>
                 <p>일정 관리</p>
-              </a>
-            </li>
-          </ul>
-        </li>
-
-        <!-- 전자결재 -->
-        <li class="nav-item">
-          <a href="#" class="nav-link" data-lte-toggle="treeview">
-            <i class="nav-icon bi bi-file-earmark-check"></i>
-            <p>
-              전자 결재
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="<c:url value='/approval/list'/>" class="nav-link">
-                <p>결재 목록</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<c:url value='/approval/signature'/>" class="nav-link">
-                <p>서명창</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<c:url value='/approval/inbox'/>" class="nav-link">
-                <p>결재함</p>
               </a>
             </li>
           </ul>
@@ -249,7 +242,7 @@
             </li>
             <li class="nav-item">
               <a href="<c:url value='/settlements/confirm'/>" class="nav-link">
-                <p>정산 생성</p>
+                <p>정산 확정</p>
               </a>
             </li>
             <li class="nav-item">
