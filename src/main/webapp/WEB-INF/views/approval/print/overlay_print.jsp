@@ -13,33 +13,33 @@
 <c:choose>
   <c:when test="${t eq 'AT001'}">
     <c:set var="bgImageUrl" value="${ctx}/approval/formPng/expense.png" />
-    <c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_expense.jspf" />
+    <%--<c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_expense.jspf" />--%>
   </c:when>
 
   <c:when test="${t eq 'AT002'}">
     <c:set var="bgImageUrl" value="${ctx}/approval/formPng/settlement.png" />
-    <c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_settlement.jspf" />
+    <%--<c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_settlement.jspf" />--%>
   </c:when>
 
   <c:when test="${t eq 'AT003'}">
     <c:set var="bgImageUrl" value="${ctx}/approval/formPng/sales.jpg" />
-    <c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_sales.jspf" />
+    <%--<c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_sales.jspf" />--%>
   </c:when>
 
   <c:when test="${t eq 'AT004'}">
     <%-- 재고조정 배경이 settlement로 되어있어서 혼동되면 나중에 inventory 전용 배경으로 교체 추천 --%>
     <c:set var="bgImageUrl" value="${ctx}/approval/formPng/settlement.png" />
-    <c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_inventory.jspf" />
+    <%--<c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_inventory.jspf" />--%>
   </c:when>
 
   <c:when test="${t eq 'AT005'}">
     <c:set var="bgImageUrl" value="${ctx}/approval/formPng/purchase_request.jpg" />
-    <c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_purchase.jspf" />
+    <%--<c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_purchase.jspf" />--%>
   </c:when>
 
   <c:when test="${t eq 'AT006'}">
     <c:set var="bgImageUrl" value="${ctx}/approval/formPng/purchase_order.png" />
-    <c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_order.jspf" />
+    <%--<c:set var="fieldsJspf" value="/WEB-INF/views/approval/print/_fields_order.jspf" />--%>
   </c:when>
 
   <c:when test="${t eq 'AT009'}">
