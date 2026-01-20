@@ -131,14 +131,12 @@
                             
                             <!-- 수정 사유 -->
 							<div class="mb-3">
-							    <label class="form-label required-label"">수정 사유</label>
+							    <label class="form-label required-label">수정 사유</label>
 							    <textarea name="reason"
 							              class="form-control"
 							              rows="3"
-							              required>
-							    </textarea>
+							              required></textarea>
 							</div>
-
                         </div>
                     </div>
 
