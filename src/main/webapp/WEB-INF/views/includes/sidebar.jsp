@@ -61,25 +61,27 @@
           </a>
         </li>
 
-        <!--  1) 발주요청(지점 → 본사) : 지점 사용자도 접근 가능 -->
-        <li class="nav-item">
-          <a href="#" class="nav-link" data-lte-toggle="treeview">
-            <i class="nav-icon bi bi-inboxes"></i>
-            <p>
-              발주요청
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
+        <!--  1) 발주요청(지점 → 본사) : 지점(CAPTAIN/CREW)만 노출 -->
+        <sec:authorize access="hasAnyRole('CAPTAIN','CREW')">
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-lte-toggle="treeview">
+              <i class="nav-icon bi bi-inboxes"></i>
+              <p>
+                발주요청
+                <i class="nav-arrow bi bi-chevron-right"></i>
+              </p>
+            </a>
 
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <!-- ✅ 변경: 기존 /inbound -> /purchase/orders -->
-              <a href="<c:url value='/purchase/orders'/>" class="nav-link">
-                <p>발주요청서 목록</p>
-              </a>
-            </li>
-          </ul>
-        </li>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <!--  변경: 기존 /inbound -> /purchase/orders -->
+                <a href="<c:url value='/purchase/orders'/>" class="nav-link">
+                  <p>발주요청서 목록</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </sec:authorize>
 
         <!--  2) 구매요청/발주(본사 → 외부) : 본사 권한만 노출 -->
         <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">

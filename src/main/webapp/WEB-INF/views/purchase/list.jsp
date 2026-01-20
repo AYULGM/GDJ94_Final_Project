@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <jsp:include page="../includes/admin_header.jsp" />
 
@@ -13,7 +14,8 @@
 
             <div class="card-body">
 
-                <form method="get" action="<c:url value='/purchase'/>" class="row g-2 mb-3">
+                <!--  FIX: redirect로 파라미터 날리는 문제 방지 -->
+                <form method="get" action="<c:url value='/purchase/orders'/>" class="row g-2 mb-3">
                     <div class="col-md-3">
                         <select class="form-select" name="branchId">
                             <option value="">전체 지점</option>
@@ -31,6 +33,7 @@
                             <option value="REQUESTED" <c:if test="${statusCode == 'REQUESTED'}">selected</c:if>>요청</option>
                             <option value="APPROVED"  <c:if test="${statusCode == 'APPROVED'}">selected</c:if>>승인</option>
                             <option value="REJECTED"  <c:if test="${statusCode == 'REJECTED'}">selected</c:if>>반려</option>
+                            <option value="FULFILLED" <c:if test="${statusCode == 'FULFILLED'}">selected</c:if>>입고완료</option>
                         </select>
                     </div>
 
@@ -38,10 +41,13 @@
                         <input class="form-control" type="text" name="keyword" value="${keyword}" placeholder="발주번호/지점/상품 검색" />
                     </div>
 
-                    <!-- ✅ 조회 버튼 옆으로 '발주 요청' 버튼 이동 -->
                     <div class="col-md-2 d-flex gap-2">
                         <button class="btn btn-primary flex-grow-1" type="submit">조회</button>
-                        <a class="btn btn-outline-primary flex-grow-1" href="<c:url value='/purchase/new'/>">발주 요청</a>
+
+                        <!--  지점만 노출 -->
+                        <sec:authorize access="hasAnyRole('CAPTAIN','CREW')">
+                            <a class="btn btn-outline-primary flex-grow-1" href="<c:url value='/purchase/new'/>">발주 요청</a>
+                        </sec:authorize>
                     </div>
                 </form>
 
@@ -49,7 +55,7 @@
                     <thead>
                     <tr>
                         <th style="width: 90px;">ID</th>
-                        <th style="width: 140px;">발주번호</th>
+                        <th style="width: 160px;">발주번호</th>
                         <th style="width: 120px;">지점</th>
                         <th style="width: 110px;">상태</th>
                         <th style="width: 160px;">요청일시</th>
@@ -69,6 +75,7 @@
                                 <tr>
                                     <td>${row.purchaseId}</td>
                                     <td>
+                                        <!--  /purchase/{id} 상세로 이동 -->
                                         <a href="<c:url value='/purchase/${row.purchaseId}'/>">${row.purchaseNo}</a>
                                     </td>
                                     <td>${row.branchName}</td>
@@ -76,10 +83,11 @@
                                         <c:choose>
                                             <c:when test="${row.statusCode == 'REQUESTED'}"><span class="badge bg-warning">요청</span></c:when>
                                             <c:when test="${row.statusCode == 'APPROVED'}"><span class="badge bg-success">승인</span></c:when>
-                                            <c:otherwise><span class="badge bg-danger">반려</span></c:otherwise>
+                                            <c:when test="${row.statusCode == 'REJECTED'}"><span class="badge bg-danger">반려</span></c:when>
+                                            <c:when test="${row.statusCode == 'FULFILLED'}"><span class="badge bg-primary">입고완료</span></c:when>
+                                            <c:otherwise><span class="badge bg-secondary">${row.statusCode}</span></c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <!-- ✅ 'T' 제거 -->
                                     <td>${fn:replace(row.requestedAt, 'T', ' ')}</td>
                                     <td class="text-end">${row.totalQuantity}</td>
                                     <td class="text-end">${row.totalAmount}</td>

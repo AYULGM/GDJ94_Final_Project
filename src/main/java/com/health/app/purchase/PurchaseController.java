@@ -1,10 +1,15 @@
 package com.health.app.purchase;
 
+import com.health.app.security.model.LoginUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/purchase")
@@ -13,20 +18,12 @@ public class PurchaseController {
 
     private final PurchaseService purchaseService;
 
-    /**
-     * 발주 요청(= PO 전자결재 폼으로 이동)
-     * - 네 프로젝트에 이미 있는 전자결재 PO 폼 그대로 사용
-     */
     @GetMapping("/new")
     @PreAuthorize("hasAnyRole('GRANDMASTER','MASTER','ADMIN','CAPTAIN','CREW')")
     public String newPurchaseForm() {
         return "redirect:/approval/form?entry=buy&typeCode=AT006";
     }
 
-    /**
-     * 구매요청서(PR) 작성도 같은 흐름(전자결재 폼)으로 보낸다.
-     * - sidebar에서 PR작성 링크를 이쪽으로 붙이면 UX가 자연스럽게 통일됨
-     */
     @GetMapping("/request/new")
     @PreAuthorize("hasAnyRole('GRANDMASTER','MASTER','ADMIN')")
     public String newPurchaseRequestForm() {
@@ -34,8 +31,8 @@ public class PurchaseController {
     }
 
     /**
-     * ✅ 구매/발주 통합 목록
-     * - docType: ALL | PR | PO
+     *  구매/발주 통합 목록
+     * - 지점(CAPTAIN/CREW)은 '자기 지점만' 서버단에서 강제 필터
      */
     @GetMapping("/orders")
     @PreAuthorize("hasAnyRole('GRANDMASTER','MASTER','ADMIN','CAPTAIN','CREW')")
@@ -43,21 +40,63 @@ public class PurchaseController {
                          @RequestParam(required = false) String statusCode,
                          @RequestParam(required = false) String keyword,
                          @RequestParam(required = false, defaultValue = "ALL") String docType,
+                         @AuthenticationPrincipal LoginUser loginUser,
                          Model model) {
 
-        model.addAttribute("branches", purchaseService.getBranchOptions());
+        if (loginUser != null && (loginUser.isCaptain() || loginUser.isCrew())) {
+            branchId = loginUser.getBranchId(); //  강제
+        }
+
+        List<PurchaseOptionDto> branches = purchaseService.getBranchOptions();
+        if (loginUser != null && (loginUser.isCaptain() || loginUser.isCrew()) && branchId != null) {
+            Long myBranchId = branchId;
+            branches = branches.stream()
+                    .filter(b -> b != null && b.getId() != null && b.getId().equals(myBranchId))
+                    .collect(Collectors.toList());
+        }
+
+        model.addAttribute("branches", branches);
         model.addAttribute("list", purchaseService.getPurchaseList(branchId, statusCode, keyword, docType));
 
-        // 화면 표기/검색 유지용
         model.addAttribute("branchId", branchId);
         model.addAttribute("statusCode", statusCode);
         model.addAttribute("keyword", keyword);
         model.addAttribute("docType", docType);
 
-        // ✅ 이제 페이지 타이틀을 정확하게
         model.addAttribute("pageTitle", "구매/발주 목록");
-
         return "purchase/list";
+    }
+
+    /**
+     *  발주 상세 (뷰 전용)
+     * - /purchase/12 로 들어올 때 여기서 받아줘야 No static resource가 사라짐
+     * - 지점(CAPTAIN/CREW)은 자기 지점 문서만 접근 가능
+     */
+    @GetMapping("/{purchaseId}")
+    @PreAuthorize("hasAnyRole('GRANDMASTER','MASTER','ADMIN','CAPTAIN','CREW')")
+    public String detail(@PathVariable Long purchaseId,
+                         @AuthenticationPrincipal LoginUser loginUser,
+                         Model model) {
+
+        PurchaseDetailDto detail = purchaseService.getPurchaseDetail(purchaseId);
+        if (detail == null) {
+            model.addAttribute("error", "발주 정보를 찾을 수 없습니다.");
+            model.addAttribute("detail", null);
+            return "purchase/detail";
+        }
+
+        //  지점 계정 접근 제한(서버 강제)
+        if (loginUser != null && (loginUser.isCaptain() || loginUser.isCrew())) {
+            Long myBranchId = loginUser.getBranchId();
+            if (myBranchId != null && detail.getBranchId() != null && !myBranchId.equals(detail.getBranchId())) {
+                model.addAttribute("error", "해당 문서를 열람할 권한이 없습니다.");
+                model.addAttribute("detail", null);
+                return "purchase/detail";
+            }
+        }
+
+        model.addAttribute("detail", detail);
+        return "purchase/detail";
     }
 
     /** /purchase 루트는 통합 목록으로 */
