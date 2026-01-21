@@ -118,6 +118,7 @@ public class ApprovalApplyService {
                 .memo(plain)
                 .settlementFlag(true)
                 .createUser(actorUserId)
+                .handledBy(actorUserId) // Add this line to set the handledBy user
                 .useYn(true)
                 .build();
 
