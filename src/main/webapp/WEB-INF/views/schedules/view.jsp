@@ -41,7 +41,7 @@
                                     
                                     <div class="form-group">
                                         <label for="eventType">일정 유형</label>
-                                        <select class="form-control" id="eventType">
+                                        <select class="form-select" id="eventType">
                                             <option value="PERSONAL">개인</option>
                                             <option value="DEPARTMENT">부서</option>
                                             <option value="COMPANY">전사</option>
@@ -55,7 +55,7 @@
 
                                     <div class="form-group">
                                         <label for="eventStatus">상태</label>
-                                        <select class="form-control" id="eventStatus">
+                                        <select class="form-select" id="eventStatus">
                                             <option value="SCHEDULED">예정</option>
                                             <option value="COMPLETED">완료</option>
                                             <option value="CANCELLED">취소</option>
@@ -83,29 +83,16 @@
                                             <!-- Search results will be shown here -->
                                         </div>
                                     </div>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="eventAllDay">
-                                        <label class="form-check-label" for="eventAllDay">종일</label>
-                                    </div>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="eventRepeating">
-                                        <label class="form-check-label" for="eventRepeating">반복 여부</label>
-                                    </div>
                                     <div class="form-group">
                                         <label>기존 첨부파일</label>
                                         <div id="existingAttachments" class="mb-2">
-                                            <!-- 기존 첨부파일 목록이 여기에 표시됩니다 -->
+                                        
                                         </div>
                                     </div>
                                     <div class="form-group">
                                         <label for="eventAttachments">파일 추가</label>
                                         <input type="file" class="form-control-file" id="eventAttachments" multiple>
                                         <small class="form-text text-muted">다중 파일 첨부 가능</small>
-                                    </div>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="eventNotification">
-                                        <label class="form-check-label" for="eventNotification">알림 설정</label>
-                                        <small class="form-text text-muted">알림 설정 기능은 추후 추가 예정입니다.</small>
                                     </div>
                                     <div class="form-group">
                                         <label for="eventDescription">내용</label>
@@ -156,10 +143,6 @@
                                         <div class="col-md-9" id="detailEventEnd"></div>
                                     </div>
                                     <div class="row mb-3">
-                                        <div class="col-md-3"><strong>종일</strong></div>
-                                        <div class="col-md-9" id="detailEventAllDay"></div>
-                                    </div>
-                                    <div class="row mb-3">
                                         <div class="col-md-3"><strong>장소</strong></div>
                                         <div class="col-md-9" id="detailEventLocation"></div>
                                     </div>
@@ -170,10 +153,6 @@
                                     <div class="row mb-3">
                                         <div class="col-md-3"><strong>등록자</strong></div>
                                         <div class="col-md-9" id="detailEventCreator"></div>
-                                    </div>
-                                    <div class="row mb-3">
-                                        <div class="col-md-3"><strong>반복 여부</strong></div>
-                                        <div class="col-md-9" id="detailEventRepeating"></div>
                                     </div>
                                     <div class="row mb-3">
                                         <div class="col-md-3"><strong>참고 파일</strong></div>

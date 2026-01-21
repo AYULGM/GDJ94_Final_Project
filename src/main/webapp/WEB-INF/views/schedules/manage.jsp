@@ -5,6 +5,13 @@
 
 <jsp:include page="../includes/admin_header.jsp" />
 
+<style>
+    .required-label::after {
+        content: " *";
+        color: red;
+    }
+</style>
+
 <!-- Main content -->
 <div class="row">
     <div class="col-12">
@@ -81,7 +88,7 @@
 </div>
 
 <!-- 일정 등록/수정 Modal -->
-                <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
+                <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel">
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -94,7 +101,7 @@
                                     
                                     <div class="form-group">
                                         <label for="eventType">일정 유형</label>
-                                        <select class="form-control" id="eventType">
+                                        <select class="form-select" id="eventType">
                                             <option value="PERSONAL">개인</option>
                                             <option value="DEPARTMENT">부서</option>
                                             <option value="COMPANY">전사</option>
@@ -102,24 +109,24 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="eventTitle">일정 제목</label>
+                                        <label for="eventTitle" class="required-label">일정 제목*</label>
                                         <input type="text" class="form-control" id="eventTitle" required>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="eventStatus">상태</label>
-                                        <select class="form-control" id="eventStatus">
+                                        <select class="form-select" id="eventStatus">
                                             <option value="SCHEDULED">예정</option>
                                             <option value="COMPLETED">완료</option>
                                             <option value="CANCELLED">취소</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="eventStart">시작 일시</label>
+                                        <label for="eventStart" class="required-label">시작 일시</label>
                                         <input type="datetime-local" class="form-control" id="eventStart" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="eventEnd">종료 일시</label>
+                                        <label for="eventEnd" class="required-label">종료 일시</label>
                                         <input type="datetime-local" class="form-control" id="eventEnd" required>
                                     </div>
                                     <div class="form-group">
@@ -136,14 +143,6 @@
                                             <!-- Search results will be shown here -->
                                         </div>
                                     </div>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="eventAllDay">
-                                        <label class="form-check-label" for="eventAllDay">종일</label>
-                                    </div>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="eventRepeating">
-                                        <label class="form-check-label" for="eventRepeating">반복 여부</label>
-                                    </div>
                                     <div class="form-group">
                                         <label>기존 첨부파일</label>
                                         <div id="existingAttachments" class="mb-2">
@@ -153,7 +152,6 @@
                                     <div class="form-group">
                                         <label for="eventAttachments">파일 추가</label>
                                         <input type="file" class="form-control-file" id="eventAttachments" multiple>
-                                        <small class="form-text text-muted">다중 파일 첨부 가능</small>
                                     </div>
                                     <div class="form-group">
                                         <label for="eventDescription">내용</label>

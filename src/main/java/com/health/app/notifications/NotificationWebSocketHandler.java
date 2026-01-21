@@ -1,6 +1,8 @@
 package com.health.app.notifications;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -22,7 +24,13 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
     // 사용자별 WebSocket 세션을 저장하는 맵 (userId -> List of WebSocketSession)
     // 한 사용자가 여러 탭/디바이스에서 접속 가능
     private final Map<Long, List<WebSocketSession>> userSessions = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public NotificationWebSocketHandler() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     /**
      * 클라이언트가 WebSocket 연결을 수립할 때 호출됩니다.

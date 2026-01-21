@@ -118,11 +118,22 @@ public class ScheduleService {
             }
         }
 
-        // 알림 전송: 참석자들에게 일정 등록 알림
-        if (calendarEvent.getAttendeeIds() != null && !calendarEvent.getAttendeeIds().isEmpty()) {
+        // 알림 전송: 참석자 및 생성자에게 일정 등록 알림
+        List<Long> recipientIds = new ArrayList<>();
+        if (calendarEvent.getAttendeeIds() != null) {
+            recipientIds.addAll(calendarEvent.getAttendeeIds());
+        }
+        
+        // 생성자도 알림 수신자에 포함 (중복 제외)
+        Long creatorId = calendarEvent.getCreateUser();
+        if (!recipientIds.contains(creatorId)) {
+            recipientIds.add(creatorId);
+        }
+
+        if (!recipientIds.isEmpty()) {
             String notificationTitle = "새로운 일정: " + calendarEvent.getTitle();
             String notificationMessage = String.format(
-                "일정이 등록되었습니다.\n시작: %s\n종료: %s",
+                "일정이 등록되었습니다.<br>시작: %s<br>종료: %s",
                 calendarEvent.getStartAt(),
                 calendarEvent.getEndAt()
             );
@@ -133,8 +144,8 @@ public class ScheduleService {
                 notificationMessage,
                 "CALENDAR_EVENT",
                 eventId,
-                calendarEvent.getAttendeeIds(),
-                calendarEvent.getCreateUser()
+                recipientIds,
+                creatorId
             );
         }
 
@@ -185,7 +196,7 @@ public class ScheduleService {
         if (!attendeeIds.isEmpty() && event != null) {
             String notificationTitle = "일정 취소: " + event.getTitle();
             String notificationMessage = String.format(
-                "일정이 취소되었습니다.\n시작 예정이었던 시간: %s",
+                "일정이 취소되었습니다.<br>시작 예정이었던 시간: %s",
                 event.getStartAt()
             );
 
@@ -288,7 +299,7 @@ public class ScheduleService {
         if (calendarEvent.getAttendeeIds() != null && !calendarEvent.getAttendeeIds().isEmpty()) {
             String notificationTitle = "일정 수정: " + calendarEvent.getTitle();
             String notificationMessage = String.format(
-                "일정이 수정되었습니다.\n시작: %s\n종료: %s",
+                "일정이 수정되었습니다.<br>시작: %s<br>종료: %s",
                 calendarEvent.getStartAt(),
                 calendarEvent.getEndAt()
             );
