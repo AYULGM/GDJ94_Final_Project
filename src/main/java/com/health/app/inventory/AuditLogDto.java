@@ -22,4 +22,10 @@ public class AuditLogDto {
     private String branchName;
     private Long productId;
     private String productName;
+
+    // =========================
+    // 화면 표시용(서비스단에서 세팅)
+    // =========================
+    private String actionTypeName;   // 상태(한글)
+    private String reasonDisplay;    // 사유(한글/자연어)
 }
