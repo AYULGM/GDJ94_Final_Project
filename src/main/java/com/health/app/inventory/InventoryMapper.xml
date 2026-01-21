@@ -432,5 +432,33 @@
         ORDER BY al.audit_id DESC
         LIMIT 300
     </select>
+<!-- =========================================================
+     X) 재고 생성 (inventory row 생성)
+     - 지점에 상품 재고 row가 없을 때 자동 생성용
+   ========================================================= -->
+<insert id="insertInventory" parameterType="map">
+    INSERT INTO inventory
+    (
+      branch_id,
+      product_id,
+      quantity,
+      create_user,
+      create_date,
+      update_user,
+      update_date,
+      use_yn
+    )
+    VALUES
+    (
+      #{branchId},
+      #{productId},
+      #{quantity},
+      #{createUser},
+      NOW(),
+      #{createUser},
+      NOW(),
+      1
+    )
+</insert>
 
 </mapper>

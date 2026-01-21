@@ -354,7 +354,7 @@ public class ApprovalApplyService {
 
     /* =========================================================
      * AT005 구매요청(PR)
-     * - ✅ 최종 승인 시: 본사(HQ_BRANCH_ID=10000) 재고 IN
+     * - ✅ 최종 승인 시: 본사(HQ_BRANCH_ID=1) 재고 IN
      * ========================================================= */
     private void applyPurchaseRequest(ApprovalDraftDTO draft, Long actorUserId) {
 
@@ -520,16 +520,17 @@ public class ApprovalApplyService {
                     actorUserId
             );
 
-            // 2) 요청 지점 재고 증가(IN)
-            applyStockInOrThrow(
-                    requestBranchId,
-                    productId,
-                    qty,
-                    "AT006_FINAL_APPROVED",
-                    "INBOUND_REQUEST",
-                    inboundRequestId,
-                    actorUserId
-            );
+            // 2) 요청 지점 재고 증가(IN) - 없으면 자동 생성
+            applyStockInOrCreate(
+            	    requestBranchId,
+            	    productId,
+            	    qty,
+            	    "AT006_FINAL_APPROVED",
+            	    "INBOUND_REQUEST",
+            	    inboundRequestId,
+            	    actorUserId
+            	);
+
         }
 
     }
@@ -663,4 +664,67 @@ public class ApprovalApplyService {
 
         return sb.toString().trim();
     }
+    /**
+     * ✅ 재고 IN 반영 (없으면 inventory row 자동 생성)
+     * - AT006 전용 정책
+     */
+    private void applyStockInOrCreate(
+            Long branchId,
+            Long productId,
+            Long qty,
+            String reason,
+            String refType,
+            Long refId,
+            Long actorUserId
+    ) {
+        if (branchId == null || branchId <= 0) {
+            throw new IllegalArgumentException("재고반영: branchId가 올바르지 않습니다.");
+        }
+        if (productId == null || productId <= 0) {
+            throw new IllegalArgumentException("재고반영: productId가 올바르지 않습니다.");
+        }
+        if (qty == null || qty <= 0) return;
+
+        InventoryDetailDto current = inventoryMapper.selectInventoryDetail(branchId, productId);
+
+        // ✅ 없으면 inventory row 생성
+        if (current == null) {
+            inventoryMapper.insertInventory(
+                    branchId,
+                    productId,
+                    0L,
+                    actorUserId
+            );
+            current = inventoryMapper.selectInventoryDetail(branchId, productId);
+            if (current == null) {
+                throw new IllegalStateException(
+                        "재고반영: inventory row 생성 실패 branchId="
+                                + branchId + ", productId=" + productId
+                );
+            }
+        }
+
+        long beforeQty = current.getQuantity() == null ? 0L : current.getQuantity();
+        long afterQty = beforeQty + qty;
+
+        inventoryMapper.updateInventoryQuantity(
+                branchId,
+                productId,
+                afterQty,
+                null,
+                actorUserId
+        );
+
+        inventoryMapper.insertInventoryHistory(
+                branchId,
+                productId,
+                "IN",
+                qty,
+                reason,
+                refType,
+                refId,
+                actorUserId
+        );
+    }
+
 }

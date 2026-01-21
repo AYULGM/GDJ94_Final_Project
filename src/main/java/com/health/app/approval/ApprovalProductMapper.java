@@ -17,4 +17,5 @@ public interface ApprovalProductMapper {
 
     // AT006(발주서): inventory 에 등록된 "내 지점" 상품만
     List<ApprovalProductDTO> selectInventoryProductsByBranch(@Param("branchId") Long branchId);
+    
 }

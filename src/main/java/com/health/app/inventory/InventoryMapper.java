@@ -105,4 +105,11 @@ public interface InventoryMapper {
             @Param("productId") Long productId,
             @Param("keyword") String keyword
     );
+    int insertInventory(
+            @Param("branchId") Long branchId,
+            @Param("productId") Long productId,
+            @Param("quantity") Long quantity,
+            @Param("createUser") Long createUser
+    );
+
 }
