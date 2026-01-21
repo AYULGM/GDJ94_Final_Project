@@ -16,9 +16,7 @@
       <div class="card-body">
 
         <c:if test="${detail == null}">
-          <div class="alert alert-warning">
-            상세 정보를 찾을 수 없습니다.
-          </div>
+          <div class="alert alert-warning">상세 정보를 찾을 수 없습니다.</div>
           <a class="btn btn-secondary" href="<c:url value='/inventory'/>">목록으로</a>
         </c:if>
 
@@ -28,13 +26,11 @@
           <table class="table table-bordered mb-4">
             <tbody>
             <tr>
-              <th style="width: 180px;">지점</th>
-              <!--  (ID: xx) 제거 -->
+              <th style="width:180px;">지점</th>
               <td>${detail.branchName}</td>
             </tr>
             <tr>
               <th>상품</th>
-              <!--  (ID: xx) 제거 -->
               <td>${detail.productName}</td>
             </tr>
             <tr>
@@ -63,7 +59,7 @@
 
           <a class="btn btn-secondary mb-4" href="<c:url value='/inventory'/>">목록으로</a>
 
-          <!--  기준 수량 설정 : 본사 Admin / Master / Grandmaster만 노출 -->
+          <!-- 기준 수량 설정 (권한자만) -->
           <sec:authorize access="hasAnyRole('GRANDMASTER','MASTER','ADMIN')">
             <div class="card mb-4">
               <div class="card-header">
@@ -79,21 +75,24 @@
                 </c:if>
 
                 <form method="post" action="<c:url value='/inventory/threshold'/>" class="row g-3">
-                  <input type="hidden" name="branchId" value="${detail.branchId}"/>
-                  <input type="hidden" name="productId" value="${detail.productId}"/>
+                  <input type="hidden" name="branchId" value="${detail.branchId}" />
+                  <input type="hidden" name="productId" value="${detail.productId}" />
 
                   <div class="col-md-4">
-                    <label class="form-label">지점 기준 수량 (0이면 상품 기본값 사용)</label>
-                    <input type="number" name="lowStockThreshold" min="0"
+                    <label class="form-label">
+                      지점 기준 수량 (0이면 상품 기본값 사용)
+                    </label>
+                    <input type="number"
+                           name="lowStockThreshold"
+                           min="0"
                            class="form-control"
-                           value="<c:out value='${detail.lowStockThreshold}'/>"
-                           placeholder="예: 10 (0이면 기본값)"/>
+                           value="<c:out value='${detail.lowStockThreshold}'/>" />
                   </div>
 
                   <div class="col-md-8 d-flex align-items-end">
                     <div class="text-muted">
-                      현재 적용 기준: <strong>${detail.standardQuantity}</strong>
-                      <!--  '(상품 기본 reorder_point)' 삭제 -->
+                      현재 적용 기준:
+                      <strong>${detail.standardQuantity}</strong>
                       <c:choose>
                         <c:when test="${detail.lowStockThreshold != null and detail.lowStockThreshold > 0}">
                           지점별 기준
@@ -113,10 +112,7 @@
             </div>
           </sec:authorize>
 
-          <!--  재고 조정 UI 제거 (전자결재로 이관) -->
-          <%-- 재고 조정은 전자결재(재고조정요청서)로 처리 예정이므로 화면에서 제거 --%>
-
-          <!--  이력 -->
+          <!-- 재고 변동 이력 -->
           <div class="card">
             <div class="card-header">
               <h4 class="card-title mb-0">재고 변동 이력</h4>
@@ -126,26 +122,30 @@
               <table class="table table-bordered mb-0">
                 <thead>
                 <tr>
-                  <th class="text-center" style="width: 180px;">일시</th>
-                  <th class="text-center" style="width: 120px;">유형</th>
-                  <th class="text-center" style="width: 90px;">수량</th>
+                  <th class="text-center" style="width:180px;">일시</th>
+                  <th class="text-center" style="width:120px;">유형</th>
+                  <th class="text-center" style="width:90px;">수량</th>
                   <th class="text-center">사유</th>
-                  <th class="text-center" style="width: 140px;">연결 문서</th>
-                  <th class="text-center" style="width: 110px;">문서 ID</th>
-                  <th class="text-center" style="width: 110px;">작성자</th>
+                  <th class="text-center" style="width:140px;">연결 문서</th>
+                  <th class="text-center" style="width:110px;">문서 ID</th>
+                  <th class="text-center" style="width:110px;">작성자</th>
                 </tr>
                 </thead>
 
                 <tbody>
                 <c:if test="${empty history}">
                   <tr>
-                    <td colspan="7" class="text-center text-muted">이력이 없습니다.</td>
+                    <td colspan="7" class="text-center text-muted">
+                      이력이 없습니다.
+                    </td>
                   </tr>
                 </c:if>
 
                 <c:forEach var="h" items="${history}">
                   <tr>
-                    <td class="text-center align-middle">${fn:replace(h.createDate, 'T', ' ')}</td>
+                    <td class="text-center align-middle">
+                        ${fn:replace(h.createDate, 'T', ' ')}
+                    </td>
 
                     <td class="text-center align-middle">
                       <c:choose>
@@ -156,21 +156,37 @@
                       </c:choose>
                     </td>
 
-                    <td class="text-end align-middle">${h.quantity}</td>
+                    <td class="text-center align-middle">
+                        ${h.quantity}
+                    </td>
 
-                    <!--  사유: 글씨 정렬(좌측 + 세로 가운데) -->
-                    <td class="text-start align-middle">${h.reason}</td>
+                    <td class="text-start align-middle">
+                      <c:choose>
+                        <c:when test="${h.reason eq 'DAMAGED'}">
+                          파손으로 인한 재고 차감
+                        </c:when>
+                        <c:when test="${h.reason eq 'AT005_FINAL_APPROVED'}">
+                          구매요청 승인에 따른 입고
+                        </c:when>
+                        <c:when test="${not empty h.reason and fn:startsWith(h.reason, 'AT')}">
+                          내부 승인 처리
+                        </c:when>
+                        <c:when test="${empty h.reason}">
+                          -
+                        </c:when>
+                        <c:otherwise>
+                          기타 재고 처리
+                        </c:otherwise>
+                      </c:choose>
+                    </td>
 
                     <td class="text-center align-middle">
                       <c:choose>
-                        <c:when test="${empty h.refType}">-</c:when>
                         <c:when test="${h.refType eq 'PURCHASE_REQUEST'}">구매요청서</c:when>
                         <c:when test="${h.refType eq 'PURCHASE_ORDER'}">발주서</c:when>
                         <c:when test="${h.refType eq 'INBOUND_REQUEST'}">입고요청서</c:when>
-                        <c:when test="${h.refType eq 'INBOUND'}">입고</c:when>
-                        <c:when test="${h.refType eq 'OUTBOUND'}">출고</c:when>
                         <c:when test="${h.refType eq 'INVENTORY_ADJUST'}">재고조정</c:when>
-                        <c:otherwise>${h.refType}</c:otherwise>
+                        <c:otherwise>-</c:otherwise>
                       </c:choose>
                     </td>
 
@@ -181,7 +197,9 @@
                       </c:choose>
                     </td>
 
-                    <td class="text-center align-middle">${h.createUser}</td>
+                    <td class="text-center align-middle">
+                        ${h.createUser}
+                    </td>
                   </tr>
                 </c:forEach>
                 </tbody>
