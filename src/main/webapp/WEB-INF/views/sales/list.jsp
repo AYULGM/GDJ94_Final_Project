@@ -77,11 +77,11 @@
                             <thead>
                                 <tr>
                                     <th style="width: 80px">번호</th>
-                                    <th>매출번호</th>
                                     <th>지점</th>
-                                    <th>판매일시</th>
+                                    <th style="width: 120px">판매일시</th>
                                     <th>카테고리</th>
                                     <th class="text-end">금액</th>
+                                    <th>내용</th>
                                     <th>담당자</th>
                                     <th style="width: 100px">정산여부</th>
                                     <th style="width: 80px">상세</th>
@@ -216,14 +216,14 @@ function renderSaleTable(list) {
     tbody.innerHTML = list.map(sale =>
         '<tr>' +
             '<td>' + sale.saleId + '</td>' +
-            '<td>' + (sale.saleNo || '-') + '</td>' +
             '<td>' + (sale.branchName || '-') + '</td>' +
             '<td>' + formatDateTime(sale.soldAt) + '</td>' +
             '<td>' + getCategoryName(sale.categoryCode) + '</td>' +
             '<td class="text-end">' + formatCurrency(sale.totalAmount) + '</td>' +
+            '<td>' + (sale.memo || '-') + '</td>' +
             '<td>' + (sale.createUserName || '-') + '</td>' +
             '<td>' +
-                '<span class="badge ' + (sale.settled ? 'bg-secondary' : 'bg-warning') + '">' +
+                '<span class="badge ' + (sale.settled ? 'bg-success' : 'bg-warning') + '">' +
                     (sale.settled ? '정산됨' : '미정산') +
                 '</span>' +
             '</td>' +
@@ -311,7 +311,10 @@ function getStatusBadgeClass(code) {
 function formatDateTime(dateString) {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return date.toLocaleString('ko-KR');
+    if (isNaN(date.getTime())) { // Check if date is valid
+        return '-'; // Return '-' for invalid dates
+    }
+    return date.toLocaleDateString('ko-KR');
 }
 
 // 금액 포맷

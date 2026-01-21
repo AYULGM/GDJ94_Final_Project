@@ -144,7 +144,7 @@
             s.category_code     AS categoryCode,
             s.total_amount      AS totalAmount,
             s.memo              AS memo,
-            CASE WHEN ssm.sale_id IS NOT NULL THEN TRUE ELSE FALSE END AS settled,
+            (SELECT COUNT(*) > 0 FROM settlement_sale_map ssm WHERE ssm.sale_id = s.sale_id AND ssm.use_yn = 1) AS settled,
             s.create_user       AS createUser,
             cu.name             AS createUserName,
             s.create_date       AS createDate,
@@ -152,10 +152,9 @@
             uu.name             AS updateUserName,
             s.update_date       AS updateDate
         FROM sales s
-        JOIN branch b ON b.branch_id = s.branch_id
+        LEFT JOIN branch b ON b.branch_id = s.branch_id
         LEFT JOIN users cu ON cu.user_id = s.create_user
         LEFT JOIN users uu ON uu.user_id = s.update_user
-        LEFT JOIN settlement_sale_map ssm ON ssm.sale_id = s.sale_id AND ssm.use_yn = 1
         WHERE s.sale_id = #{saleId}
           AND s.use_yn = 1
     </select>
