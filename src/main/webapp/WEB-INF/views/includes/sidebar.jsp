@@ -253,7 +253,7 @@
             </li>
             <li class="nav-item">
               <a href="<c:url value='/settlements/history'/>" class="nav-link">
-                <p>정산 이력 로그</p>
+                <p>정산 처리 이력</p>
               </a>
             </li>
           </ul>

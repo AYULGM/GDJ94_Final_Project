@@ -52,7 +52,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">정산 이력 목록</h3>
+                        <h3 class="card-title">정산 처리 이력</h3>
                     </div>
 
                     <div class="card-body p-0">
