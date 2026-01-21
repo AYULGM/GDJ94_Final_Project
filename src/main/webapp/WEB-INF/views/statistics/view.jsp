@@ -114,7 +114,6 @@
                     ※ 법인세: <span id="corporateTax" >-</span><br>
                     ※ 계산기준: (매출 - 지출) - 법인세<br>
                     ※ 법인세율: 2억 이하 9%, 2억 초과 19%<br>
-                    ※ 법인세: <span id="corporateTax">-</span>
                 </div>
             </div>
 
