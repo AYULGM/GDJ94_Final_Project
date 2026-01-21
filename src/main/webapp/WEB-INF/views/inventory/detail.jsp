@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <jsp:include page="../includes/admin_header.jsp" />
@@ -95,10 +96,10 @@
                       <!--  '(상품 기본 reorder_point)' 삭제 -->
                       <c:choose>
                         <c:when test="${detail.lowStockThreshold != null and detail.lowStockThreshold > 0}">
-                          (지점별 기준)
+                          지점별 기준
                         </c:when>
                         <c:otherwise>
-                          (상품 기본값)
+                          상품 기본값
                         </c:otherwise>
                       </c:choose>
                     </div>
@@ -131,7 +132,7 @@
                   <th class="text-center">사유</th>
                   <th class="text-center" style="width: 140px;">연결 문서</th>
                   <th class="text-center" style="width: 110px;">문서 ID</th>
-                  <th class="text-center" style="width: 110px;">작성자(ID)</th>
+                  <th class="text-center" style="width: 110px;">작성자</th>
                 </tr>
                 </thead>
 
@@ -144,7 +145,7 @@
 
                 <c:forEach var="h" items="${history}">
                   <tr>
-                    <td class="text-center align-middle">${h.createDate}</td>
+                    <td class="text-center align-middle">${fn:replace(h.createDate, 'T', ' ')}</td>
 
                     <td class="text-center align-middle">
                       <c:choose>
@@ -163,9 +164,12 @@
                     <td class="text-center align-middle">
                       <c:choose>
                         <c:when test="${empty h.refType}">-</c:when>
-                        <c:when test="${h.refType eq 'INBOUND_REQUEST'}">구매요청/입고</c:when>
-                        <c:when test="${h.refType eq 'PURCHASE'}">구매/발주</c:when>
-                        <c:when test="${h.refType eq 'INVENTORY_ADJUST'}">재고조정(수기)</c:when>
+                        <c:when test="${h.refType eq 'PURCHASE_REQUEST'}">구매요청서</c:when>
+                        <c:when test="${h.refType eq 'PURCHASE_ORDER'}">발주서</c:when>
+                        <c:when test="${h.refType eq 'INBOUND_REQUEST'}">입고요청서</c:when>
+                        <c:when test="${h.refType eq 'INBOUND'}">입고</c:when>
+                        <c:when test="${h.refType eq 'OUTBOUND'}">출고</c:when>
+                        <c:when test="${h.refType eq 'INVENTORY_ADJUST'}">재고조정</c:when>
                         <c:otherwise>${h.refType}</c:otherwise>
                       </c:choose>
                     </td>
