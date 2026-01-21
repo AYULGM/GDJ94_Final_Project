@@ -66,8 +66,11 @@ public class SaleController {
      */
     @GetMapping("/api/{saleId}")
     @ResponseBody
-    public ResponseEntity<SaleDetailDto> getSaleDetail(@PathVariable Long saleId) {
+    public ResponseEntity<?> getSaleDetail(@PathVariable Long saleId) {
         SaleDetailDto sale = saleService.getSaleDetail(saleId);
+        if (sale == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(sale);
     }
 

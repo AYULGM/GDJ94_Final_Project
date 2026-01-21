@@ -84,7 +84,7 @@ public class SettlementServiceImpl implements SettlementService {
         // 3. 정산 번호 생성
         String settlementNo = generateSettlementNo(requestDto);
 
-        // 4. 정산 등록
+        // 4. 정산 등록 (바로 확정 상태로 생성)
         SettlementDto settlementDto = SettlementDto.builder()
                 .settlementNo(settlementNo)
                 .branchId(requestDto.getBranchId())
@@ -93,7 +93,9 @@ public class SettlementServiceImpl implements SettlementService {
                 .salesAmount(salesAmount)
                 .expenseAmount(expenseAmount)
                 .profitAmount(profitAmount)
-                .statusCode(SettlementStatus.PENDING.name())
+                .statusCode(SettlementStatus.CONFIRMED.name())
+                .settledAt(LocalDateTime.now())
+                .settledBy(currentUserId)
                 .createUser(currentUserId)
                 .build();
 
@@ -117,13 +119,13 @@ public class SettlementServiceImpl implements SettlementService {
                 currentUserId
         );
 
-        // 6. 정산 이력 로그 등록
+        // 6. 정산 이력 로그 등록 (바로 확정)
         saveSettlementHistory(
                 settlementId,
-                SettlementActionType.CREATE.name(),
+                SettlementActionType.CONFIRM.name(),
                 null,
-                SettlementStatus.PENDING.name(),
-                "정산 생성",
+                SettlementStatus.CONFIRMED.name(),
+                "정산 확정",
                 currentUserId
         );
 
@@ -199,7 +201,7 @@ public class SettlementServiceImpl implements SettlementService {
             // 정산 번호 생성
             String settlementNo = generateSelectedSettlementNo();
 
-            // 정산 등록
+            // 정산 등록 (바로 확정 상태로 생성)
             SettlementDto settlementDto = SettlementDto.builder()
                     .settlementNo(settlementNo)
                     .branchId(branchId)
@@ -208,7 +210,9 @@ public class SettlementServiceImpl implements SettlementService {
                     .salesAmount(salesAmount)
                     .expenseAmount(expenseAmount)
                     .profitAmount(profitAmount)
-                    .statusCode(SettlementStatus.PENDING.name())
+                    .statusCode(SettlementStatus.CONFIRMED.name())
+                    .settledAt(LocalDateTime.now())
+                    .settledBy(currentUserId)
                     .createUser(currentUserId)
                     .build();
 
@@ -238,13 +242,13 @@ public class SettlementServiceImpl implements SettlementService {
                 );
             }
 
-            // 정산 이력 로그 등록
+            // 정산 이력 로그 등록 (바로 확정)
             saveSettlementHistory(
                     settlementId,
-                    SettlementActionType.CREATE.name(),
+                    SettlementActionType.CONFIRM.name(),
                     null,
-                    SettlementStatus.PENDING.name(),
-                    "선택 정산 생성 (지점별 분리)",
+                    SettlementStatus.CONFIRMED.name(),
+                    "선택 정산 확정",
                     currentUserId
             );
         }

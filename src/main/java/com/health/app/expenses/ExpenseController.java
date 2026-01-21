@@ -70,8 +70,11 @@ public class ExpenseController {
      */
     @GetMapping("/api/{expenseId}")
     @ResponseBody
-    public ResponseEntity<ExpenseDetailDto> getExpenseDetail(@PathVariable Long expenseId) {
+    public ResponseEntity<?> getExpenseDetail(@PathVariable Long expenseId) {
         ExpenseDetailDto expense = expenseService.getExpenseDetail(expenseId);
+        if (expense == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(expense);
     }
 

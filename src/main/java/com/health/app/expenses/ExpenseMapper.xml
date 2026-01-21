@@ -128,7 +128,7 @@
             e.handled_by        AS handledBy,
             h.name              AS handledByName,
             e.settlement_flag   AS settlementFlag,
-            CASE WHEN sem.expense_id IS NOT NULL THEN TRUE ELSE FALSE END AS settled,
+            (SELECT COUNT(*) > 0 FROM settlement_expense_map sem WHERE sem.expense_id = e.expense_id AND sem.use_yn = 1) AS settled,
             e.create_user       AS createUser,
             cu.name             AS createUserName,
             e.create_date       AS createDate,
@@ -136,11 +136,10 @@
             uu.name             AS updateUserName,
             e.update_date       AS updateDate
         FROM expenses e
-        JOIN branch b ON b.branch_id = e.branch_id
+        LEFT JOIN branch b ON b.branch_id = e.branch_id
         LEFT JOIN users h ON h.user_id = e.handled_by
         LEFT JOIN users cu ON cu.user_id = e.create_user
         LEFT JOIN users uu ON uu.user_id = e.update_user
-        LEFT JOIN settlement_expense_map sem ON sem.expense_id = e.expense_id AND sem.use_yn = 1
         WHERE e.expense_id = #{expenseId}
           AND e.use_yn = 1
     </select>

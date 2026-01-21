@@ -25,6 +25,7 @@ import com.health.app.sales.SaleDto;
 import com.health.app.sales.SaleMapper;
 import com.health.app.sales.SaleStatus;
 import com.health.app.settlements.SettlementDto;
+import com.health.app.settlements.SettlementHistoryDto;
 import com.health.app.settlements.SettlementMapper;
 import com.health.app.settlements.SettlementStatus;
 import com.health.app.purchase.PurchaseMapper;
@@ -160,6 +161,20 @@ public class ApprovalApplyService {
                 .build();
 
         settlementMapper.insertSettlement(dto);
+
+        // 정산 이력 로그 등록 (생성 - 대기)
+        SettlementHistoryDto historyDto = SettlementHistoryDto.builder()
+                .settlementId(dto.getSettlementId())
+                .actionType("CREATE")
+                .beforeStatus(null)
+                .afterStatus(SettlementStatus.PENDING.name())
+                .reason("전자결재 승인으로 정산 생성")
+                .actorUserId(actorUserId)
+                .actedAt(LocalDateTime.now())
+                .createUser(actorUserId)
+                .build();
+
+        settlementMapper.insertSettlementHistory(historyDto);
     }
 
     /* =========================================================

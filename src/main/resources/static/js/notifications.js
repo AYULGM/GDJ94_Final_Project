@@ -312,23 +312,21 @@ class NotificationClient {
      * @returns {string} 포맷된 시간 문자열
      */
     formatNotificationTime(timestamp) {
-        const now = new Date();
         const time = new Date(timestamp);
-        const diffMs = now - time;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
 
-        if (diffMins < 1) return '방금 전';
-        if (diffMins < 60) return `${diffMins}분 전`;
-        if (diffHours < 24) return `${diffHours}시간 전`;
-        if (diffDays < 7) return `${diffDays}일 전`;
+        // 유효하지 않은 날짜인 경우 빈 문자열 반환
+        if (isNaN(time.getTime())) {
+            return '';
+        }
 
-        // 일주일 이상 지난 경우 날짜 표시
         const year = time.getFullYear();
         const month = String(time.getMonth() + 1).padStart(2, '0');
         const day = String(time.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        const hours = String(time.getHours()).padStart(2, '0');
+        const minutes = String(time.getMinutes()).padStart(2, '0');
+        const seconds = String(time.getSeconds()).padStart(2, '0');
+
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 
     /**
