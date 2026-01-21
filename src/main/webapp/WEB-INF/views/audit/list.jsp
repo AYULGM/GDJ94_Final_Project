@@ -99,8 +99,7 @@
                         <tbody>
                         <c:if test="${empty logs}">
                             <tr>
-                                <td colspan="8"
-                                    class="text-center text-muted py-4">
+                                <td colspan="8" class="text-center text-muted py-4">
                                     조회 결과가 없습니다.
                                 </td>
                             </tr>
@@ -108,45 +107,28 @@
 
                         <c:forEach var="l" items="${logs}">
                             <tr>
+                                <td class="text-center align-middle">${l.createdAt}</td>
 
-                                <!-- ✅ 실제 시간 그대로 출력 -->
+                                <!-- ✅ 상태: actionTypeName -->
                                 <td class="text-center align-middle">
-                                        ${l.createdAt}
-                                </td>
-
-                                <td class="text-start align-middle">
                                     <c:choose>
-                                        <c:when test="${l.reason eq 'low_stock_threshold 변경'}">
-                                            기준 수량 변경
-                                        </c:when>
-                                        <c:when test="${l.reason eq 'low_stock_threshold'}">
-                                            기준 수량 변경
-                                        </c:when>
-                                        <c:when test="${empty l.reason}">
-                                            -
-                                        </c:when>
-                                        <c:otherwise>
-                                            ${l.reason}
-                                        </c:otherwise>
-                                    </c:choose>
-                                </td>
-
-                                <!-- 지점 (ID 제거) -->
-                                <td class="text-start align-middle">
-                                    <c:choose>
-                                        <c:when test="${not empty l.branchName}">
-                                            ${l.branchName}
+                                        <c:when test="${not empty l.actionTypeName}">
+                                            ${l.actionTypeName}
                                         </c:when>
                                         <c:otherwise>-</c:otherwise>
                                     </c:choose>
                                 </td>
 
-                                <!-- 상품 (ID 제거) -->
                                 <td class="text-start align-middle">
                                     <c:choose>
-                                        <c:when test="${not empty l.productName}">
-                                            ${l.productName}
-                                        </c:when>
+                                        <c:when test="${not empty l.branchName}">${l.branchName}</c:when>
+                                        <c:otherwise>-</c:otherwise>
+                                    </c:choose>
+                                </td>
+
+                                <td class="text-start align-middle">
+                                    <c:choose>
+                                        <c:when test="${not empty l.productName}">${l.productName}</c:when>
                                         <c:otherwise>-</c:otherwise>
                                     </c:choose>
                                 </td>
@@ -154,15 +136,17 @@
                                 <td class="text-end align-middle">${l.beforeValue}</td>
                                 <td class="text-end align-middle">${l.afterValue}</td>
 
-                                <!-- 사유 (하단 대상 문구 없음) -->
+                                <!-- ✅ 사유: reasonDisplay -->
                                 <td class="text-start align-middle">
-                                        ${l.reason}
+                                    <c:choose>
+                                        <c:when test="${not empty l.reasonDisplay}">
+                                            ${l.reasonDisplay}
+                                        </c:when>
+                                        <c:otherwise>-</c:otherwise>
+                                    </c:choose>
                                 </td>
 
-                                <td class="text-center align-middle">
-                                        ${l.actorUserId}
-                                </td>
-
+                                <td class="text-center align-middle">${l.actorUserId}</td>
                             </tr>
                         </c:forEach>
                         </tbody>
