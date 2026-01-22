@@ -32,6 +32,7 @@
                   <th style="width:50px;" class="text-center">ID</th>
                   <th>제목</th>
                   <th style="width:110px;">유형</th>
+                  <th style="width:120px;" class="text-center">대상</th>
                   <th style="width:120px;">작성자</th>
                   <th style="width:90px;" class="text-center">조회수</th>
                   <th style="width:170px;">작성일</th>
@@ -53,6 +54,22 @@
                       </a>
                     </td>
 					<td><c:out value="${noticeTypeMap[n.noticeType]}" /></td>
+					<td class="text-center">
+                        <c:set var="ttClass" value="text-bg-secondary"/>
+                        <c:choose>
+                          <c:when test="${n.targetType == 'TT001'}">
+                            <c:set var="ttClass" value="text-bg-dark"/>
+                          </c:when>
+                          <c:when test="${n.targetType == 'TT002'}">
+                            <c:set var="ttClass" value="text-bg-info"/>
+                          </c:when>
+                        </c:choose>
+
+                        <span class="badge ${ttClass}">
+                          <c:out value="${targetTypeMap[n.targetType]}" />
+                        </span>
+                      </td>
+					
                     <td><c:out value="${n.writerName}" /></td>
 
                     <td class="text-center"><c:out value="${n.viewCount}" /></td>
