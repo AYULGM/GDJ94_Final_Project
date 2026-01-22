@@ -255,13 +255,27 @@ public class ScheduleService {
             calendarEvent.setOwnerUserId(calendarEvent.getUpdateUser());
         }
 
+        // allDay와 repeating 필드가 null일 경우 기본값 설정
+        if (calendarEvent.getAllDay() == null) {
+            calendarEvent.setAllDay(false);
+        }
+        if (calendarEvent.getRepeating() == null) {
+            calendarEvent.setRepeating(false);
+        }
+
         // 1. 시간 충돌 확인 (수정 중인 이벤트 제외)
         List<AttendeeConflictDto> conflicts = checkTimeConflicts(calendarEvent.getEventId(), calendarEvent.getStartAt(), calendarEvent.getEndAt(), calendarEvent.getAttendeeIds());
         if (!conflicts.isEmpty()) {
             throw new TimeConflictException("참석자들의 일정에 충돌이 발생했습니다.", conflicts);
         }
 
-        // 1. 캘린더 이벤트 업데이트
+        // 1. 캘린더 이벤트 업데이트 전에 원본 이벤트의 생성자 정보를 가져옵니다.
+        CalendarEventDto originalEvent = getEventById(calendarEvent.getEventId());
+        if (originalEvent == null) {
+            throw new IllegalArgumentException("Original event not found for update.");
+        }
+        Long originalCreatorId = originalEvent.getCreateUser();
+
         calendarEventMapper.updateCalendarEvent(calendarEvent);
 
         // 2. 참석자 업데이트: 기존 참석자 논리적 삭제 후 새로 삽입
@@ -273,7 +287,7 @@ public class ScheduleService {
                 attendee.setEventId(calendarEvent.getEventId());
                 attendee.setUserId(attendeeUserId);
                 attendee.setAcceptanceStatus(AttendanceStatus.PENDING); // 수정 시에도 초기 PENDING
-                attendee.setCreateUser(calendarEvent.getCreateUser()); // 생성자는 변경 없음
+                attendee.setCreateUser(originalCreatorId); // 원본 이벤트의 생성자를 사용
                 scheduleAttendeeMapper.insertScheduleAttendee(attendee);
             }
         }

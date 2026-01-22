@@ -109,7 +109,7 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="eventTitle" class="required-label">일정 제목*</label>
+                                        <label for="eventTitle" class="">일정 제목</label>
                                         <input type="text" class="form-control" id="eventTitle" required>
                                     </div>
 
@@ -122,11 +122,11 @@
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="eventStart" class="required-label">시작 일시</label>
+                                        <label for="eventStart" class="">시작 일시</label>
                                         <input type="datetime-local" class="form-control" id="eventStart" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="eventEnd" class="required-label">종료 일시</label>
+                                        <label for="eventEnd" class="">종료 일시</label>
                                         <input type="datetime-local" class="form-control" id="eventEnd" required>
                                     </div>
                                     <div class="form-group">

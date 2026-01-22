@@ -28,7 +28,7 @@ public class SettlementController {
      */
     @GetMapping
     public String settlementListPage(Model model) {
-        model.addAttribute("pageTitle", "정산 관리");
+        model.addAttribute("pageTitle", "정산 내역");
         return "settlements/list";
     }
 
@@ -56,7 +56,7 @@ public class SettlementController {
      */
     @GetMapping("/history")
     public String settlementHistoryPage(Model model) {
-        model.addAttribute("pageTitle", "정산 이력 로그");
+        model.addAttribute("pageTitle", "정산 처리 이력");
         return "settlements/history";
     }
 
